@@ -105,7 +105,7 @@ A > 10 > K > Q > J > 9 > 8 > 7
 1. **Must follow suit** if able
 2. If unable to follow suit: **must trump** if possible
 3. If trump is already played: **must overtrump** if possible
-4. **Partner exception**: If partner is currently winning the trick, overtrumping may not be required (regional rule — **needs decision**)
+4. **Partner exception**: Must always overtrump, even if partner is currently winning (**decided**: strict rule)
 
 ### Trick Winner
 
@@ -154,7 +154,7 @@ These items vary by region and **must be locked down** before implementation:
 | Decision                       | Options                            | Status                                     |
 | ------------------------------ | ---------------------------------- | ------------------------------------------ |
 | Exact bidding system           | Value-based (80-160) vs simplified | **Decided**: Value-based, 80-160 step 10   |
-| Overtrump when partner winning | Required vs optional               | **TBD**                                    |
+| Overtrump when partner winning | Required vs optional               | **Decided**: Always required (strict rule) |
 | Announcement support           | None / Belote only / Full set      | **TBD**                                    |
 | Deal pattern                   | 3-2-3 vs 2-3-3 vs 8-at-once        | **Decided**: 8-at-once (round-robin)       |
 | All-trumps / No-trumps         | Supported vs not                   | **Deferred**: Not in current scope         |

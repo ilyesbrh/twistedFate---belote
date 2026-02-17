@@ -19,6 +19,8 @@ export type { Suit, Rank, Card } from "./models/index.js";
 export { createPlayer, setPlayerHand, createTeam, dealCards } from "./models/index.js";
 export type { PlayerPosition, Player, Team } from "./models/index.js";
 
+export { getNextPlayerPosition, isOnSameTeam } from "./models/index.js";
+
 export {
   BID_VALUES,
   createPassBid,
@@ -29,8 +31,6 @@ export {
   placeBid,
   isValidBid,
   getContract,
-  getNextPlayerPosition,
-  isOnSameTeam,
 } from "./models/index.js";
 export type {
   BidType,
@@ -40,3 +40,12 @@ export type {
   BiddingRound,
   Contract,
 } from "./models/index.js";
+
+export {
+  createTrick,
+  playCard,
+  isValidPlay,
+  getTrickWinner,
+  removeCardFromHand,
+} from "./models/index.js";
+export type { TrickState, PlayedCard, Trick } from "./models/index.js";

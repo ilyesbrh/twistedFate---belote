@@ -1,6 +1,7 @@
 import type { IdGenerator } from "../utils/id.js";
 import type { Suit } from "./card.js";
 import type { PlayerPosition } from "./player.js";
+import { getNextPlayerPosition, isOnSameTeam } from "./player-helpers.js";
 
 export type BidType = "pass" | "suit" | "coinche" | "surcoinche";
 
@@ -37,15 +38,9 @@ export interface Contract {
   readonly coincheLevel: 1 | 2 | 4;
 }
 
-// ── Helpers ──
+// ── Helpers (re-exported from shared module) ──
 
-export function getNextPlayerPosition(position: PlayerPosition): PlayerPosition {
-  return ((position + 1) % 4) as PlayerPosition;
-}
-
-export function isOnSameTeam(pos1: PlayerPosition, pos2: PlayerPosition): boolean {
-  return pos1 === pos2 || Math.abs(pos1 - pos2) === 2;
-}
+export { getNextPlayerPosition, isOnSameTeam } from "./player-helpers.js";
 
 // ── Bid Factories ──
 
