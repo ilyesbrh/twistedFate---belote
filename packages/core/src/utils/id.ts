@@ -6,6 +6,8 @@ export type EntityType =
   | "trick"
   | "round"
   | "team"
+  | "bid"
+  | "contract"
   | "ui-component"
   | "animation-instance";
 
