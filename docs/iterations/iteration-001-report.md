@@ -18,16 +18,17 @@ Set up a clean monorepo from zero with strict tooling, test infrastructure, and 
 
 ## Packages Created
 
-| Package | Description | Status |
-|---------|-------------|--------|
-| `@belote/core` | Pure domain engine (zero deps) | Active - ID utility implemented |
-| `@belote/app` | Command/event orchestration | Shell |
-| `@belote/animation` | Isolated animation engine | Shell |
-| `@belote/ui` | PixiJS mobile-first rendering | Shell |
+| Package             | Description                    | Status                          |
+| ------------------- | ------------------------------ | ------------------------------- |
+| `@belote/core`      | Pure domain engine (zero deps) | Active - ID utility implemented |
+| `@belote/app`       | Command/event orchestration    | Shell                           |
+| `@belote/animation` | Isolated animation engine      | Shell                           |
+| `@belote/ui`        | PixiJS mobile-first rendering  | Shell                           |
 
 ## Tests Written (TDD - written before implementation)
 
 41 test cases covering:
+
 - ID format validation (9 entity types, prefix, alphanumeric unique part)
 - Deterministic mode (same seed = same sequence, reproducibility)
 - Reset functionality (sequence replay after reset)
@@ -49,13 +50,13 @@ Set up a clean monorepo from zero with strict tooling, test infrastructure, and 
 
 ## Technical Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| PRNG algorithm | mulberry32 | Zero deps, excellent 32-bit distribution, deterministic |
-| ID format (seeded) | 8-char base-36 | Readable in test output, sufficient entropy |
-| ID format (random) | 12-char hex from UUID | Collision-resistant for production |
-| TypeScript config | Separate tsconfig.json (IDE/ESLint) + tsconfig.build.json (compilation) | Clean separation of concerns |
-| ESLint config | Flat config, disableTypeChecked for config files | Avoids projectService issues with non-tsconfig files |
+| Decision           | Choice                                                                  | Rationale                                               |
+| ------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------- |
+| PRNG algorithm     | mulberry32                                                              | Zero deps, excellent 32-bit distribution, deterministic |
+| ID format (seeded) | 8-char base-36                                                          | Readable in test output, sufficient entropy             |
+| ID format (random) | 12-char hex from UUID                                                   | Collision-resistant for production                      |
+| TypeScript config  | Separate tsconfig.json (IDE/ESLint) + tsconfig.build.json (compilation) | Clean separation of concerns                            |
+| ESLint config      | Flat config, disableTypeChecked for config files                        | Avoids projectService issues with non-tsconfig files    |
 
 ## Refactoring Performed
 
@@ -77,6 +78,7 @@ Set up a clean monorepo from zero with strict tooling, test infrastructure, and 
 ## Next Iteration Candidate
 
 **Iteration 2: Card Entity (TDD)**
+
 - Card type definitions (suits, ranks)
 - Card value system for Belote scoring
 - Card comparison logic

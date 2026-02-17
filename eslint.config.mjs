@@ -44,6 +44,17 @@ export default tseslint.config(
     },
   },
 
+  // Test files: relax rules that fight against natural test patterns
+  {
+    files: ["**/__tests__/**/*.ts", "**/*.test.ts"],
+    rules: {
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/explicit-function-return-type": "off",
+      "@typescript-eslint/non-nullable-type-assertion-style": "off",
+    },
+  },
+
   // Disable type-checked rules for config files (no full tsconfig coverage)
   {
     files: ["eslint.config.mjs", "vitest.config.ts", "packages/*/vitest.config.ts"],

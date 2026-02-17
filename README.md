@@ -6,12 +6,12 @@ Mobile-first Belote card game built with TypeScript and PixiJS.
 
 pnpm monorepo with strict layer separation:
 
-| Package | Description | Status |
-|---------|-------------|--------|
-| `@belote/core` | Pure domain engine (zero deps, deterministic, testable) | In Progress |
-| `@belote/app` | Application layer (command/event orchestration) | Shell |
-| `@belote/animation` | Isolated animation engine (testable, framework-independent) | Shell |
-| `@belote/ui` | PixiJS mobile-first rendering | Shell |
+| Package             | Description                                                 | Status      |
+| ------------------- | ----------------------------------------------------------- | ----------- |
+| `@belote/core`      | Pure domain engine (zero deps, deterministic, testable)     | In Progress |
+| `@belote/app`       | Application layer (command/event orchestration)             | Shell       |
+| `@belote/animation` | Isolated animation engine (testable, framework-independent) | Shell       |
+| `@belote/ui`        | PixiJS mobile-first rendering                               | Shell       |
 
 ## Prerequisites
 
