@@ -44,13 +44,13 @@ Implement the Card domain entity with Belote-specific point values, rank orderin
 
 ## Technical Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Card immutability | Object.freeze | Prevents accidental mutation, enforces value semantics |
-| Shuffle algorithm | Fisher-Yates | O(n), unbiased, well-proven |
-| Shuffle immutability | Returns new array | Original deck preserved, functional style |
-| RNG injection | `rng: () => number` parameter | Allows deterministic testing with seeded PRNG |
-| ESLint test rules | Relaxed for test files | Tests are the spec - config adapts to tests, not reverse |
+| Decision             | Choice                        | Rationale                                                |
+| -------------------- | ----------------------------- | -------------------------------------------------------- |
+| Card immutability    | Object.freeze                 | Prevents accidental mutation, enforces value semantics   |
+| Shuffle algorithm    | Fisher-Yates                  | O(n), unbiased, well-proven                              |
+| Shuffle immutability | Returns new array             | Original deck preserved, functional style                |
+| RNG injection        | `rng: () => number` parameter | Allows deterministic testing with seeded PRNG            |
+| ESLint test rules    | Relaxed for test files        | Tests are the spec - config adapts to tests, not reverse |
 
 ## Refactoring Performed
 
@@ -68,10 +68,19 @@ Implement the Card domain entity with Belote-specific point values, rank orderin
 - `pnpm run lint`: Clean
 - `pnpm run format:check`: Clean
 
-## Next Iteration Candidate
+## Next Iteration: N+1 (Iteration 3)
 
-**Iteration 3: Player and Team Models (TDD)**
+**Player and Team Models (TDD)**
 
-- Player entity (id, name, hand, team reference)
-- Team entity (id, players, score)
-- Deal cards to players (8 cards each from shuffled deck)
+- Player entity (id, name, position, hand)
+- Team entity (id, two partner players)
+- Immutable hand updates via `setPlayerHand()`
+- `dealCards()` distributes 32 cards round-robin to 4 players (8 each)
+
+## Iteration N+2 Preview (Iteration 4)
+
+**Bidding System (TDD)**
+
+- Bid types (pass, suit bid, coinche, surcoinche)
+- Bidding round logic (clockwise, 3 consecutive passes to end)
+- Contract entity (winning bid result)

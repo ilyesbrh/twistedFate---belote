@@ -12,3 +12,6 @@ export {
   shuffleDeck,
 } from "./card.js";
 export type { Suit, Rank, Card } from "./card.js";
+
+export { createPlayer, setPlayerHand, createTeam, dealCards } from "./player.js";
+export type { PlayerPosition, Player, Team } from "./player.js";

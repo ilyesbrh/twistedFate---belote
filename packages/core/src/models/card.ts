@@ -104,10 +104,13 @@ export function shuffleDeck(deck: Card[], rng: () => number): Card[] {
     const j = Math.floor(rng() * (i + 1));
     const temp = shuffled[i];
     const swap = shuffled[j];
-    if (temp !== undefined && swap !== undefined) {
-      shuffled[i] = swap;
-      shuffled[j] = temp;
+    if (temp === undefined || swap === undefined) {
+      throw new Error(
+        `Shuffle invariant violated: invalid index access at i=${String(i)}, j=${String(j)}`,
+      );
     }
+    shuffled[i] = swap;
+    shuffled[j] = temp;
   }
   return shuffled;
 }

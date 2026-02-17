@@ -75,11 +75,20 @@ Set up a clean monorepo from zero with strict tooling, test infrastructure, and 
 - `pnpm run lint`: Clean
 - `pnpm run format:check`: Clean
 
-## Next Iteration Candidate
+## Next Iteration: N+1 (Iteration 2)
 
-**Iteration 2: Card Entity (TDD)**
+**Card Entity (TDD)**
 
 - Card type definitions (suits, ranks)
-- Card value system for Belote scoring
-- Card comparison logic
+- Card value system for Belote scoring (trump/non-trump points)
+- Card rank ordering (trump and non-trump)
 - Card creation with deterministic IDs
+- Deck creation (32 cards) and Fisher-Yates shuffle
+
+## Iteration N+2 Preview (Iteration 3)
+
+**Player and Team Models (TDD)**
+
+- Player entity (id, name, position, hand)
+- Team entity (id, two partner players)
+- Deal cards to players from shuffled deck

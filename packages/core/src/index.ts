@@ -15,3 +15,6 @@ export {
   shuffleDeck,
 } from "./models/index.js";
 export type { Suit, Rank, Card } from "./models/index.js";
+
+export { createPlayer, setPlayerHand, createTeam, dealCards } from "./models/index.js";
+export type { PlayerPosition, Player, Team } from "./models/index.js";
