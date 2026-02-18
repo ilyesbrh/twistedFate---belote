@@ -53,31 +53,49 @@ Implement AI decision-making for computer-controlled players — basic heuristic
 
 ```typescript
 // Domain utilities
-function getValidPlays(trick: Trick, playerPosition: PlayerPosition, playerHand: readonly Card[]): Card[]
-function getValidBids(biddingRound: BiddingRound, playerPosition: PlayerPosition, idGenerator: IdGenerator): Bid[]
+function getValidPlays(
+  trick: Trick,
+  playerPosition: PlayerPosition,
+  playerHand: readonly Card[],
+): Card[];
+function getValidBids(
+  biddingRound: BiddingRound,
+  playerPosition: PlayerPosition,
+  idGenerator: IdGenerator,
+): Bid[];
 
 // AI Card Play
-function chooseCard(hand: readonly Card[], trick: Trick, trumpSuit: Suit, playerPosition: PlayerPosition): Card
-function chooseCardForRound(round: Round, playerPosition: PlayerPosition): Card
+function chooseCard(
+  hand: readonly Card[],
+  trick: Trick,
+  trumpSuit: Suit,
+  playerPosition: PlayerPosition,
+): Card;
+function chooseCardForRound(round: Round, playerPosition: PlayerPosition): Card;
 
 // AI Bidding
-function chooseBid(hand: readonly Card[], biddingRound: BiddingRound, playerPosition: PlayerPosition, idGenerator: IdGenerator): Bid
+function chooseBid(
+  hand: readonly Card[],
+  biddingRound: BiddingRound,
+  playerPosition: PlayerPosition,
+  idGenerator: IdGenerator,
+): Bid;
 
 // Hand Evaluation (exported for testing)
-function evaluateHandForSuit(hand: readonly Card[], suit: Suit): number
+function evaluateHandForSuit(hand: readonly Card[], suit: Suit): number;
 ```
 
 ### Card Play Heuristics
 
-| Situation | Strategy |
-|-----------|----------|
-| Leading | Play highest non-trump card (aces > tens > kings). If all trump: play lowest |
-| Following suit (partner winning) | Play lowest suit card |
-| Following suit (can win) | Play cheapest winning card (economy) |
-| Following suit (can't win) | Play lowest card of suit |
-| Must trump (can overtrump) | Play lowest winning trump |
-| Must trump (can't overtrump) | Play lowest trump |
-| Discarding | Play lowest value card |
+| Situation                        | Strategy                                                                     |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| Leading                          | Play highest non-trump card (aces > tens > kings). If all trump: play lowest |
+| Following suit (partner winning) | Play lowest suit card                                                        |
+| Following suit (can win)         | Play cheapest winning card (economy)                                         |
+| Following suit (can't win)       | Play lowest card of suit                                                     |
+| Must trump (can overtrump)       | Play lowest winning trump                                                    |
+| Must trump (can't overtrump)     | Play lowest trump                                                            |
+| Discarding                       | Play lowest value card                                                       |
 
 ### Bidding Heuristics
 
@@ -88,15 +106,15 @@ function evaluateHandForSuit(hand: readonly Card[], suit: Suit): number
 
 ## Technical Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| `getValidPlays`/`getValidBids` in existing modules | trick.ts / bid.ts | Companion utilities to `isValidPlay`/`isValidBid`, not AI-specific |
-| AI module location | `packages/core/src/ai/` | Separate concern from domain models, but still in core (pure functions) |
-| `chooseCard` takes decomposed params | Not full Round | More testable, tests don't need full Round objects |
-| `chooseCardForRound` as convenience wrapper | Extracts state from Round | Clean API for callers who have a Round |
-| `evaluateHandForSuit` exported | For testing | Allows direct testing of hand evaluation logic |
-| `firstElement`/`lastElement` helpers | Avoids `!` and `as Type` | Both `no-non-null-assertion` and `non-nullable-type-assertion-style` ESLint rules active |
-| `getValidBids` consumes IDs | Acceptable | Uses `idGenerator` for each candidate bid; fine in production (random), tests use separate generators |
+| Decision                                           | Choice                    | Rationale                                                                                             |
+| -------------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `getValidPlays`/`getValidBids` in existing modules | trick.ts / bid.ts         | Companion utilities to `isValidPlay`/`isValidBid`, not AI-specific                                    |
+| AI module location                                 | `packages/core/src/ai/`   | Separate concern from domain models, but still in core (pure functions)                               |
+| `chooseCard` takes decomposed params               | Not full Round            | More testable, tests don't need full Round objects                                                    |
+| `chooseCardForRound` as convenience wrapper        | Extracts state from Round | Clean API for callers who have a Round                                                                |
+| `evaluateHandForSuit` exported                     | For testing               | Allows direct testing of hand evaluation logic                                                        |
+| `firstElement`/`lastElement` helpers               | Avoids `!` and `as Type`  | Both `no-non-null-assertion` and `non-nullable-type-assertion-style` ESLint rules active              |
+| `getValidBids` consumes IDs                        | Acceptable                | Uses `idGenerator` for each candidate bid; fine in production (random), tests use separate generators |
 
 ## Risks Identified
 
