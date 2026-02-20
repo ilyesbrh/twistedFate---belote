@@ -1,4 +1,13 @@
-import type { Game, IdGenerator, Player, PlayerPosition, Round } from "@belote/core";
+import type {
+  BidValue,
+  Card,
+  Game,
+  IdGenerator,
+  Player,
+  PlayerPosition,
+  Round,
+  Suit,
+} from "@belote/core";
 import {
   addCompletedRound,
   chooseBid,
@@ -18,7 +27,7 @@ import {
   createSurcoincheBid,
   getNextPlayerPosition,
 } from "@belote/core";
-import type { GameCommand } from "./commands.js";
+import type { GameCommand, PlaceBidCommand, PlayCardCommand } from "./commands.js";
 import type { GameEvent, GameEventListener } from "./events.js";
 
 // ── Session Configuration ──
@@ -190,12 +199,7 @@ export class GameSession {
 
   // ── Private: Place Bid ──
 
-  private _handlePlaceBid(command: {
-    readonly playerPosition: PlayerPosition;
-    readonly bidType: "pass" | "suit" | "coinche" | "surcoinche";
-    readonly value?: number;
-    readonly suit?: string;
-  }): void {
+  private _handlePlaceBid(command: PlaceBidCommand): void {
     if (this._state !== "round_bidding") {
       throw new Error(
         `Cannot place bid: session state is "${this._state}", expected "round_bidding"`,
@@ -231,8 +235,8 @@ export class GameSession {
   private _createBid(
     playerPosition: PlayerPosition,
     bidType: "pass" | "suit" | "coinche" | "surcoinche",
-    value?: number,
-    suit?: string,
+    value: BidValue | undefined,
+    suit: Suit | undefined,
   ): ReturnType<typeof createPassBid> {
     switch (bidType) {
       case "pass":
@@ -241,12 +245,7 @@ export class GameSession {
         if (value === undefined || suit === undefined) {
           throw new Error("Suit bid requires value and suit");
         }
-        return createSuitBid(
-          playerPosition,
-          value as Parameters<typeof createSuitBid>[1],
-          suit as Parameters<typeof createSuitBid>[2],
-          this._idGenerator,
-        );
+        return createSuitBid(playerPosition, value, suit, this._idGenerator);
       }
       case "coinche":
         return createCoincheBid(playerPosition, this._idGenerator);
@@ -282,48 +281,58 @@ export class GameSession {
     this._processAiBids();
   }
 
-  // ── Private: Process AI Bids ──
+  // ── Private: Process AI Bids (iterative) ──
 
   private _processAiBids(): void {
-    if (this._currentRound?.phase !== "bidding") {
-      return;
+    while (this._currentRound?.phase === "bidding") {
+      const currentPos = this._currentRound.biddingRound.currentPlayerPosition;
+      if (this._playerTypes[currentPos] !== "ai") {
+        return;
+      }
+
+      const player = this._currentRound.players.find((p) => p.position === currentPos);
+      if (player === undefined) {
+        return;
+      }
+
+      const bid = chooseBid(
+        player.hand,
+        this._currentRound.biddingRound,
+        currentPos,
+        this._idGenerator,
+      );
+
+      this._currentRound = placeBidInRound(this._currentRound, bid, this._idGenerator);
+
+      this._emit({
+        type: "bid_placed",
+        bid,
+        playerPosition: currentPos,
+      });
+
+      // Check state after AI bid
+      if (this._currentRound.phase === "playing" && this._currentRound.contract !== null) {
+        this._emit({
+          type: "bidding_completed",
+          contract: this._currentRound.contract,
+        });
+        this._state = "round_playing";
+        this._processAiCards();
+        return;
+      }
+
+      if (this._currentRound.phase === "cancelled") {
+        this._finishRound();
+        return;
+      }
+
+      // Still bidding — loop continues to check next bidder
     }
-
-    const currentPos = this._currentRound.biddingRound.currentPlayerPosition;
-    if (this._playerTypes[currentPos] !== "ai") {
-      return;
-    }
-
-    // Find the AI player's hand
-    const player = this._currentRound.players.find((p) => p.position === currentPos);
-    if (player === undefined) {
-      return;
-    }
-
-    const bid = chooseBid(
-      player.hand,
-      this._currentRound.biddingRound,
-      currentPos,
-      this._idGenerator,
-    );
-
-    this._currentRound = placeBidInRound(this._currentRound, bid, this._idGenerator);
-
-    this._emit({
-      type: "bid_placed",
-      bid,
-      playerPosition: currentPos,
-    });
-
-    this._afterBidding();
   }
 
   // ── Private: Play Card (single card) ──
 
-  private _playSingleCard(
-    playerPosition: PlayerPosition,
-    card: Parameters<typeof playCardInRound>[1],
-  ): void {
+  private _playSingleCard(playerPosition: PlayerPosition, card: Card): void {
     if (this._currentRound === null) {
       return;
     }
@@ -360,10 +369,7 @@ export class GameSession {
 
   // ── Private: Play Card Command ──
 
-  private _handlePlayCard(command: {
-    readonly playerPosition: PlayerPosition;
-    readonly card: { readonly id: string; readonly suit: string; readonly rank: string };
-  }): void {
+  private _handlePlayCard(command: PlayCardCommand): void {
     if (this._state !== "round_playing") {
       throw new Error(
         `Cannot play card: session state is "${this._state}", expected "round_playing"`,
@@ -381,7 +387,7 @@ export class GameSession {
       throw new Error(`Cannot play card: position ${String(playerPosition)} is AI-controlled`);
     }
 
-    this._playSingleCard(playerPosition, card as Parameters<typeof playCardInRound>[1]);
+    this._playSingleCard(playerPosition, card);
     this._afterCardPlay();
   }
 
@@ -402,34 +408,39 @@ export class GameSession {
     this._processAiCards();
   }
 
-  // ── Private: Process AI Cards ──
+  // ── Private: Process AI Cards (iterative) ──
 
   private _processAiCards(): void {
-    if (this._currentRound?.phase !== "playing" || this._currentRound.currentTrick === null) {
-      return;
-    }
+    for (;;) {
+      if (this._currentRound?.phase !== "playing" || this._currentRound.currentTrick === null) {
+        break;
+      }
 
-    const trick = this._currentRound.currentTrick;
-    let currentPos: PlayerPosition;
+      const trick = this._currentRound.currentTrick;
+      let currentPos: PlayerPosition;
 
-    if (trick.cards.length === 0) {
-      currentPos = trick.leadingPlayerPosition;
-    } else {
-      const lastPlayed = trick.cards[trick.cards.length - 1];
-      if (lastPlayed === undefined) {
+      if (trick.cards.length === 0) {
+        currentPos = trick.leadingPlayerPosition;
+      } else {
+        const lastPlayed = trick.cards[trick.cards.length - 1];
+        if (lastPlayed === undefined) {
+          return;
+        }
+        currentPos = getNextPlayerPosition(lastPlayed.playerPosition);
+      }
+
+      if (this._playerTypes[currentPos] !== "ai") {
         return;
       }
-      currentPos = getNextPlayerPosition(lastPlayed.playerPosition);
+
+      const card = chooseCardForRound(this._currentRound, currentPos);
+      this._playSingleCard(currentPos, card);
     }
 
-    if (this._playerTypes[currentPos] !== "ai") {
-      return;
+    // Round completed after AI cards — finish it
+    if (this._currentRound?.phase === "completed") {
+      this._finishRound();
     }
-
-    const card = chooseCardForRound(this._currentRound, currentPos);
-
-    this._playSingleCard(currentPos, card);
-    this._afterCardPlay();
   }
 
   // ── Private: Finish Round ──

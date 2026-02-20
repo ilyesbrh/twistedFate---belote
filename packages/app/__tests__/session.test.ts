@@ -305,19 +305,14 @@ describe("GameSession — place_bid (all human)", () => {
     const session = new GameSession(makeConfig(["human", "ai", "human", "ai"]));
     startGame(session);
     startRound(session);
-    // AI at position 1 should have auto-bid; trying to place a human bid should fail
-    // Since AI at pos 1 goes first, after start_round the AI bids automatically
-    // Now it's pos 2's turn (human)
-    // But if we try to bid as pos 1 (AI), it should throw
-    // After AI auto-bid at pos 1, the current bidder depends on what AI did
-    // Let's verify the constraint: dispatching a bid for an AI position throws
-    const round = session.currentRound!;
-    const currentBidder = round.biddingRound.currentPlayerPosition;
-    // If current bidder is human (pos 2 or pos 0), try bidding as the other AI (pos 3)
-    if (currentBidder === 2 || currentBidder === 0) {
-      // Just pass so we advance, and check that AI positions auto-play
-      expect(session.currentRound!.biddingRound.bids.length).toBeGreaterThan(0);
-    }
+    // AI at positions 1 and 3 auto-bid after start_round
+    // Dispatching a bid for an AI position must throw
+    expect(() => {
+      session.dispatch(createPlaceBidCommand(1 as PlayerPosition, "pass"));
+    }).toThrow(/AI-controlled/);
+    expect(() => {
+      session.dispatch(createPlaceBidCommand(3 as PlayerPosition, "pass"));
+    }).toThrow(/AI-controlled/);
   });
 });
 
