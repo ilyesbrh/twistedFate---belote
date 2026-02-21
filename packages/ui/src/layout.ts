@@ -12,6 +12,9 @@ export type Orientation = "portrait" | "landscape";
 
 export type Breakpoint = "compact" | "standard" | "expanded" | "medium" | "large";
 
+/** Cardinal seat position around the table — shared by all components. */
+export type Seat = "south" | "north" | "west" | "east";
+
 export interface Viewport {
   readonly width: number;
   readonly height: number;
