@@ -13,12 +13,24 @@
     }
   },
   "scripts": {
+    "dev": "vite",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "build": "tsc --build"
+    "build": "tsc --build",
+    "storybook": "storybook dev -p 6006 --config-dir .storybook",
+    "storybook:build": "storybook build --config-dir .storybook -o storybook-static"
   },
   "dependencies": {
     "@belote/core": "workspace:*",
     "@belote/app": "workspace:*",
-    "@belote/animation": "workspace:*"
+    "@belote/animation": "workspace:*",
+    "pixi.js": "^8.16.0"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0",
+    "storybook": "~8.6.0",
+    "@pixi/storybook-renderer": "^1.0.0",
+    "@pixi/storybook-vite": "^1.0.0"
   }
 }

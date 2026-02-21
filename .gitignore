@@ -29,6 +29,9 @@ coverage/
 npm-debug.log*
 pnpm-debug.log*
 
+# Storybook
+storybook-static/
+
 # Temporary
 tmp/
 temp/
