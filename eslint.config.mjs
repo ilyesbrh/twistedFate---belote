@@ -5,7 +5,7 @@ import prettierConfig from "eslint-config-prettier";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist/", "**/node_modules/", "**/coverage/"],
+    ignores: ["**/dist/", "**/node_modules/", "**/coverage/", "**/storybook-static/"],
   },
 
   js.configs.recommended,
@@ -17,7 +17,12 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ["eslint.config.mjs", "vitest.config.ts"],
+          allowDefaultProject: [
+            "eslint.config.mjs",
+            "vitest.config.ts",
+            "packages/*/vite.config.ts",
+            "packages/ui/.storybook/*.ts",
+          ],
         },
         tsconfigRootDir: import.meta.dirname,
       },
@@ -44,6 +49,14 @@ export default tseslint.config(
     },
   },
 
+  // Story files: relax explicit return types (story API is loosely typed)
+  {
+    files: ["**/*.stories.ts"],
+    rules: {
+      "@typescript-eslint/explicit-function-return-type": "off",
+    },
+  },
+
   // Test files: relax rules that fight against natural test patterns
   {
     files: ["**/__tests__/**/*.ts", "**/*.test.ts"],
@@ -62,7 +75,13 @@ export default tseslint.config(
 
   // Disable type-checked rules for config files (no full tsconfig coverage)
   {
-    files: ["eslint.config.mjs", "vitest.config.ts", "packages/*/vitest.config.ts"],
+    files: [
+      "eslint.config.mjs",
+      "vitest.config.ts",
+      "packages/*/vitest.config.ts",
+      "packages/*/vite.config.ts",
+      "packages/ui/.storybook/*.ts",
+    ],
     ...tseslint.configs.disableTypeChecked,
   },
 
