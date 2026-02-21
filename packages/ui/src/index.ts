@@ -107,6 +107,28 @@ export { BiddingPanel } from "./components/bidding/bidding-panel.js";
 export { TableLayout } from "./components/table/table-layout.js";
 export type { TableLayoutZoneContainers } from "./components/table/table-layout.js";
 
+// Game View (pure state mapping)
+export {
+  positionToSeat,
+  seatToPosition,
+  opponentOrientation,
+  mapHandToView,
+  mapTrickToView,
+  mapGameStateToView,
+} from "./game-view.js";
+export type {
+  PlayerView,
+  OpponentView,
+  GamePhase,
+  GameView,
+  RoundSnapshot,
+  GameStateInput,
+} from "./game-view.js";
+
+// Game Renderer (integration)
+export { GameRenderer } from "./game-renderer.js";
+export type { GameRendererConfig } from "./game-renderer.js";
+
 // Bootstrap
 export { createApp } from "./bootstrap.js";
 export type { AppConfig } from "./bootstrap.js";

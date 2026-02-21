@@ -17,3 +17,4 @@ Reference: [UI_LAYOUT_STRUCTURE.md](../UI_LAYOUT_STRUCTURE.md)
 | 18        | TurnIndicator  | Center  | Done   | turn-indicator.ts, stories                            |
 | 19        | BiddingPanel   | Bottom  | Done   | bidding-layout.ts, bidding-panel.ts, stories          |
 | 20        | TableLayout    | Root    | Done   | table-layout.ts, stories                              |
+| 21        | GameRenderer   | All     | Done   | game-view.ts, game-renderer.ts, stories               |
