@@ -100,12 +100,14 @@ export class HandDisplay extends Container {
   private applyCardInteraction(): void {
     if (!this.cardTapCallback) return;
     for (const [i, sprite] of this.cardSprites.entries()) {
+      const card = this.currentCards[i];
+      if (!card?.playable) continue;
+
       sprite.eventMode = "static";
       sprite.cursor = "pointer";
       sprite.removeAllListeners("pointerdown");
       sprite.on("pointerdown", () => {
-        const card = this.currentCards[i];
-        if (card && this.cardTapCallback) {
+        if (this.cardTapCallback) {
           this.cardTapCallback(i, card);
         }
       });

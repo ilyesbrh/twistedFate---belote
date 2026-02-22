@@ -113,7 +113,8 @@ function markPlayableCards(
   round: RoundSnapshot,
   humanPlayer: { readonly hand: readonly Card[] },
 ): HandCard[] {
-  if (phase !== "playing" || !isHumanTurn || !round.currentTrick) return hand;
+  if (phase !== "playing" || !isHumanTurn || round.currentTrick?.state !== "in_progress")
+    return hand;
 
   const validPlays = getValidPlays(round.currentTrick, 0 as PlayerPosition, humanPlayer.hand);
   const validSet = new Set(validPlays.map((c) => `${c.suit}-${c.rank}`));
