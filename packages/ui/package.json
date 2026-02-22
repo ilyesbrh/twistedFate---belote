@@ -26,13 +26,20 @@
     "@belote/animation": "workspace:*",
     "@belote/app": "workspace:*",
     "@belote/core": "workspace:*",
+    "@pixi/layout": "^3.2.0",
+    "@pixi/react": "^8.0.5",
+    "@pixi/ui": "^2.3.2",
     "pixi-filters": "^6.1.5",
-    "pixi.js": "^8.16.0"
+    "pixi.js": "^8.16.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@pixi/storybook-renderer": "^1.0.0",
     "@pixi/storybook-vite": "^1.0.0",
     "@playwright/test": "^1.58.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "serve": "^14.2.5",
     "storybook": "~8.6.0",
     "vite": "^7.0.0"

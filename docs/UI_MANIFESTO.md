@@ -13,6 +13,10 @@ The UI layer must match the engineering rigor of the core engine (iterations 1�
 | Layer                 | Tool                               | Version                      | Purpose                                              |
 | --------------------- | ---------------------------------- | ---------------------------- | ---------------------------------------------------- |
 | **Rendering**         | PixiJS                             | v8.16.0 (installed)          | Scene graph, sprites, WebGL2/WebGPU, touch events    |
+| **React Binding**     | @pixi/react                        | v8.0.5 (installed)           | Declarative JSX for PixiJS via React 19              |
+| **Layout Engine**     | @pixi/layout _(planned iter. 28)_  | v3.x                         | Yoga-powered flexbox for zone positioning            |
+| **UI Widgets**        | @pixi/ui _(planned iter. 28)_      | v2.x                         | Pre-built buttons, sliders, scroll boxes             |
+| **React**             | React + React DOM                  | v19.2.4 (installed)          | Component model, hooks, declarative rendering        |
 | **Card Assets**       | SVG card set (open-source)         | TBD                          | French-style card faces, 32 Belote cards + card back |
 | **Asset Pipeline**    | Build-time sprite sheet generation | TBD                          | SVG → PNG/WebP atlas + JSON manifest                 |
 | **Animation Runtime** | GSAP + PixiPlugin                  | v3.x (free since April 2025) | Timeline-based sequences on PixiJS display objects   |
@@ -24,13 +28,19 @@ The UI layer must match the engineering rigor of the core engine (iterations 1�
 
 ## Rejected Tools (with rationale)
 
-| Tool               | Why Not                                                                                                                             |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **React / Vue**    | PixiJS is the view layer. DOM frameworks add impedance mismatch with canvas rendering. No benefit for a game with no complex forms. |
-| **Phaser**         | Full game engine wrapping PixiJS internally. Physics, tilemaps, cameras — 80% unused for a card game. Overkill.                     |
-| **anime.js**       | GSAP covers the same ground with superior PixiJS integration (official PixiPlugin). Redundant.                                      |
-| **Framer Motion**  | React-only. Not applicable.                                                                                                         |
-| **CSS-only cards** | Don't integrate with PixiJS scene graph. Lack visual polish of designed SVG faces.                                                  |
+| Tool               | Why Not                                                                                                         |
+| ------------------ | --------------------------------------------------------------------------------------------------------------- |
+| **Phaser**         | Full game engine wrapping PixiJS internally. Physics, tilemaps, cameras — 80% unused for a card game. Overkill. |
+| **anime.js**       | GSAP covers the same ground with superior PixiJS integration (official PixiPlugin). Redundant.                  |
+| **CSS-only cards** | Don't integrate with PixiJS scene graph. Lack visual polish of designed SVG faces.                              |
+
+## Previously Rejected, Now Adopted
+
+| Tool             | Original Concern                         | Why Adopted (Iteration 27+)                                                                                                                                                        |
+| ---------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **React**        | Impedance mismatch with canvas rendering | `@pixi/react` v8 eliminates the mismatch — components render directly into the PixiJS scene graph via a custom JSX pragma (`pixiContainer`, `pixiSprite`, etc.), not into the DOM. |
+| **@pixi/layout** | N/A (not previously evaluated)           | Yoga-powered flexbox replaces manual zone math. Opt-in per container, compatible with @pixi/react.                                                                                 |
+| **@pixi/ui**     | N/A (not previously evaluated)           | Pre-built interactive widgets (FancyButton, ScrollBox) reduce boilerplate for bidding panel and future UI.                                                                         |
 
 ---
 

@@ -53,7 +53,7 @@ export default tseslint.config(
 
   // Story files: relax explicit return types (story API is loosely typed)
   {
-    files: ["**/*.stories.ts"],
+    files: ["**/*.stories.ts", "**/*.stories.tsx"],
     rules: {
       "@typescript-eslint/explicit-function-return-type": "off",
     },
@@ -61,7 +61,7 @@ export default tseslint.config(
 
   // Test files: relax rules that fight against natural test patterns
   {
-    files: ["**/__tests__/**/*.ts", "**/*.test.ts"],
+    files: ["**/__tests__/**/*.ts", "**/__tests__/**/*.tsx", "**/*.test.ts", "**/*.test.tsx"],
     rules: {
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unused-vars": "off",

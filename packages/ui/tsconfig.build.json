@@ -6,8 +6,15 @@
     "composite": true,
     "lib": ["ES2022", "DOM"]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/main.ts", "src/harness/**/*.ts", "src/**/*.stories.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/main.ts",
+    "src/harness/**/*.ts",
+    "src/**/*.stories.ts",
+    "src/**/*.stories.tsx"
+  ],
   "references": [
     { "path": "../core/tsconfig.build.json" },
     { "path": "../app/tsconfig.build.json" },

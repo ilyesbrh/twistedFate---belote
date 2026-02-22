@@ -94,12 +94,38 @@ export type { PlayerSeat, PlayerInfoOptions } from "./components/player-info/pla
 export { ScorePanel } from "./components/hud/score-panel.js";
 export type { ScorePanelOptions } from "./components/hud/score-panel.js";
 
+// HUD — Score Panel (React)
+export {
+  ScorePanelReact,
+  drawScorePanelBg,
+  drawScoreDivider,
+  drawTeamMarker,
+} from "./components/hud/score-panel-react.js";
+export type { ScorePanelReactProps } from "./components/hud/score-panel-react.js";
+
 // HUD — Trump Indicator
 export { TrumpIndicator } from "./components/hud/trump-indicator.js";
+
+// HUD — Trump Indicator (React)
+export {
+  TrumpIndicatorReact,
+  drawTrumpBadge,
+  trumpTextConfig,
+} from "./components/hud/trump-indicator-react.js";
+export type { TrumpIndicatorProps } from "./components/hud/trump-indicator-react.js";
 
 // HUD — Turn Indicator
 export { TurnIndicator } from "./components/hud/turn-indicator.js";
 export type { TurnSeat } from "./components/hud/turn-indicator.js";
+
+// HUD — Turn Indicator (React)
+export {
+  TurnIndicatorReact,
+  arrowForSeat,
+  drawTurnPill,
+  turnTextConfigs,
+} from "./components/hud/turn-indicator-react.js";
+export type { TurnIndicatorProps } from "./components/hud/turn-indicator-react.js";
 
 // Bidding Layout
 export { computeBiddingLayout } from "./components/bidding/bidding-layout.js";
@@ -141,3 +167,9 @@ export type { GameSessionAccess, RenderTarget, InputSource } from "./game-contro
 // Bootstrap
 export { createApp } from "./bootstrap.js";
 export type { AppConfig } from "./bootstrap.js";
+
+// React / PixiJS integration
+export { initPixiReact } from "./pixi-react-setup.js";
+
+// React hooks
+export { useTheme } from "./hooks/use-theme.js";
