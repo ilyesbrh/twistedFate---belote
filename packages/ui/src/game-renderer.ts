@@ -51,6 +51,7 @@ export class GameRenderer implements InputSource {
   private readonly biddingPanel: BiddingPanel;
   private trumpIndicator: TrumpIndicator | null = null;
   private turnIndicator: TurnIndicator | null = null;
+  private lastView: GameView | null = null;
 
   constructor(config: GameRendererConfig) {
     const { viewport, atlas, playerNames } = config;
@@ -121,6 +122,7 @@ export class GameRenderer implements InputSource {
 
   /** Update all components from a GameView snapshot. */
   update(view: GameView): void {
+    this.lastView = view;
     const layout = this.tableLayout.getLayout();
 
     // Hand — use local zone rect (zone container is already positioned)
@@ -152,7 +154,9 @@ export class GameRenderer implements InputSource {
       info.setCardCount(pv.cardCount);
     }
 
-    // Score panel
+    // Score panel — reposition on every update (handles resize)
+    this.scorePanel.x = layout.zones.top.width - 108;
+    this.scorePanel.y = THEME.spacing.xs;
     this.scorePanel.setScores(view.scores.team1, view.scores.team2);
 
     // Trump indicator
@@ -170,9 +174,12 @@ export class GameRenderer implements InputSource {
     }
   }
 
-  /** Resize the renderer to a new viewport. */
+  /** Resize the renderer to a new viewport and re-render with cached view. */
   resize(viewport: Viewport): void {
     this.tableLayout.resize(viewport);
+    if (this.lastView) {
+      this.update(this.lastView);
+    }
   }
 
   /** Get the root container for adding to the stage. */

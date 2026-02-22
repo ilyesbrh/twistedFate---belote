@@ -639,6 +639,7 @@ describe("GameController input dispatch", () => {
     const input = createMockInput();
     const controller = new GameController(session, renderer, PLAYER_NAMES);
 
+    session.setRound(makeEmptyRound("bidding"));
     controller.wireInput(input);
     controller.start();
 
@@ -659,6 +660,7 @@ describe("GameController input dispatch", () => {
     const input = createMockInput();
     const controller = new GameController(session, renderer, PLAYER_NAMES);
 
+    session.setRound(makeEmptyRound("bidding"));
     controller.wireInput(input);
     controller.start();
 
@@ -678,6 +680,7 @@ describe("GameController input dispatch", () => {
     const input = createMockInput();
     const controller = new GameController(session, renderer, PLAYER_NAMES);
 
+    session.setRound(makeEmptyRound("bidding"));
     controller.wireInput(input);
     controller.start();
 
@@ -697,8 +700,140 @@ describe("GameController input dispatch", () => {
     const controller = new GameController(session, renderer, PLAYER_NAMES);
 
     controller.wireInput(input);
+    session.setRound(makeEmptyRound("bidding"));
     input.firePass();
 
     expect(session.dispatched).toHaveLength(1);
+  });
+});
+
+// ====================================================================
+// Phase-gated input — commands only dispatch during valid phases
+// ====================================================================
+
+describe("GameController phase-gated input", () => {
+  it("blocks play_card during bidding phase", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const controller = new GameController(session, renderer, PLAYER_NAMES);
+
+    session.setRound(makeRoundWithCards("bidding"));
+    controller.wireInput(input);
+    controller.start();
+
+    input.fireCardTap(0, { suit: "spades" as Suit, rank: "ace" });
+
+    expect(session.dispatched).toHaveLength(0);
+  });
+
+  it("blocks play_card during completed phase", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const controller = new GameController(session, renderer, PLAYER_NAMES);
+
+    session.setRound(makeRoundWithCards("completed"));
+    controller.wireInput(input);
+    controller.start();
+
+    input.fireCardTap(0, { suit: "spades" as Suit, rank: "ace" });
+
+    expect(session.dispatched).toHaveLength(0);
+  });
+
+  it("allows play_card during playing phase", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const controller = new GameController(session, renderer, PLAYER_NAMES);
+
+    session.setRound(makeRoundWithCards("playing"));
+    controller.wireInput(input);
+    controller.start();
+
+    input.fireCardTap(0, { suit: "spades" as Suit, rank: "ace" });
+
+    expect(session.dispatched).toHaveLength(1);
+    expect(session.dispatched[0]?.type).toBe("play_card");
+  });
+
+  it("blocks suit bid during playing phase", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const controller = new GameController(session, renderer, PLAYER_NAMES);
+
+    session.setRound(makeRoundWithCards("playing"));
+    controller.wireInput(input);
+    controller.start();
+
+    input.fireSuitBid("hearts");
+
+    expect(session.dispatched).toHaveLength(0);
+  });
+
+  it("blocks pass during playing phase", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const controller = new GameController(session, renderer, PLAYER_NAMES);
+
+    session.setRound(makeRoundWithCards("playing"));
+    controller.wireInput(input);
+    controller.start();
+
+    input.firePass();
+
+    expect(session.dispatched).toHaveLength(0);
+  });
+
+  it("allows suit bid during bidding phase", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const controller = new GameController(session, renderer, PLAYER_NAMES);
+
+    session.setRound(makeEmptyRound("bidding"));
+    controller.wireInput(input);
+    controller.start();
+
+    input.fireSuitBid("hearts");
+
+    expect(session.dispatched).toHaveLength(1);
+    expect(session.dispatched[0]?.type).toBe("place_bid");
+  });
+
+  it("allows pass during bidding phase", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const controller = new GameController(session, renderer, PLAYER_NAMES);
+
+    session.setRound(makeEmptyRound("bidding"));
+    controller.wireInput(input);
+    controller.start();
+
+    input.firePass();
+
+    expect(session.dispatched).toHaveLength(1);
+    expect(session.dispatched[0]?.type).toBe("place_bid");
+  });
+
+  it("blocks all input when no round exists (idle)", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const controller = new GameController(session, renderer, PLAYER_NAMES);
+
+    // No round set (null)
+    controller.wireInput(input);
+    controller.start();
+
+    input.fireCardTap(0, { suit: "spades" as Suit, rank: "ace" });
+    input.fireSuitBid("hearts");
+    input.firePass();
+
+    expect(session.dispatched).toHaveLength(0);
   });
 });

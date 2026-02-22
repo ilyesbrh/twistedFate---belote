@@ -59,9 +59,10 @@ export class GameController {
     this.unsubscribe = null;
   }
 
-  /** Wire UI input callbacks to session command dispatch. */
+  /** Wire UI input callbacks to session command dispatch. Phase-gated. */
   wireInput(input: InputSource): void {
     input.onCardTap((_index, card) => {
+      if (this.currentPhase() !== "playing") return;
       const fullCard = this.findCardInHand(card.suit, card.rank);
       if (!fullCard) return;
       this.session.dispatch({
@@ -72,6 +73,7 @@ export class GameController {
     });
 
     input.onSuitBid((suit) => {
+      if (this.currentPhase() !== "bidding") return;
       this.session.dispatch({
         type: "place_bid",
         playerPosition: 0 as PlayerPosition,
@@ -82,6 +84,7 @@ export class GameController {
     });
 
     input.onPass(() => {
+      if (this.currentPhase() !== "bidding") return;
       this.session.dispatch({
         type: "place_bid",
         playerPosition: 0 as PlayerPosition,
@@ -129,6 +132,10 @@ export class GameController {
         this.activeTurn = null;
         break;
     }
+  }
+
+  private currentPhase(): string | null {
+    return this.session.currentRound?.phase ?? null;
   }
 
   private findCardInHand(suit: Suit, rank: string): Card | undefined {
