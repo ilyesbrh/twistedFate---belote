@@ -54,11 +54,11 @@ Rewrite ScorePanel as a React functional component with team scores, color marke
 
 ## Technical Decisions
 
-| Decision | Choice | Rationale |
-| --- | --- | --- |
-| Separate draw helpers | 3 functions (bg, divider, marker) | Each maps to a distinct `<pixiGraphics>` element; independently testable |
-| drawTeamMarker parameterized | Takes `rowIndex` + `color` | Reusable for both team rows; tested independently for each row position |
-| Score as string in component | `String(team1Score)` inline | Simple, no helper needed — Text elements receive string props |
+| Decision                     | Choice                            | Rationale                                                                |
+| ---------------------------- | --------------------------------- | ------------------------------------------------------------------------ |
+| Separate draw helpers        | 3 functions (bg, divider, marker) | Each maps to a distinct `<pixiGraphics>` element; independently testable |
+| drawTeamMarker parameterized | Takes `rowIndex` + `color`        | Reusable for both team rows; tested independently for each row position  |
+| Score as string in component | `String(team1Score)` inline       | Simple, no helper needed — Text elements receive string props            |
 
 ## Refactoring Performed
 

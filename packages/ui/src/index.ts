@@ -90,6 +90,14 @@ export type { TrickCard } from "./components/trick/trick-display.js";
 export { PlayerInfo, teamForSeat } from "./components/player-info/player-info.js";
 export type { PlayerSeat, PlayerInfoOptions } from "./components/player-info/player-info.js";
 
+// Player Info (React)
+export {
+  PlayerInfoReact,
+  drawPlayerAvatar,
+  playerInitial,
+} from "./components/player-info/player-info-react.js";
+export type { PlayerInfoReactProps } from "./components/player-info/player-info-react.js";
+
 // HUD — Score Panel
 export { ScorePanel } from "./components/hud/score-panel.js";
 export type { ScorePanelOptions } from "./components/hud/score-panel.js";
