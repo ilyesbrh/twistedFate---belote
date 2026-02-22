@@ -142,6 +142,15 @@ export type { ButtonRect, BiddingLayoutResult } from "./components/bidding/biddi
 // Bidding Panel
 export { BiddingPanel } from "./components/bidding/bidding-panel.js";
 
+// Bidding Panel (React)
+export {
+  BiddingPanelReact,
+  drawSuitButtonBg,
+  drawPassButtonBg,
+  suitButtonConfig,
+} from "./components/bidding/bidding-panel-react.js";
+export type { BiddingPanelReactProps } from "./components/bidding/bidding-panel-react.js";
+
 // Table Layout (root)
 export { TableLayout } from "./components/table/table-layout.js";
 export type { TableLayoutZoneContainers } from "./components/table/table-layout.js";

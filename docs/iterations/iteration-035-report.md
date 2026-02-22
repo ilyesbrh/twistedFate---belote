@@ -26,12 +26,12 @@ Add Storybook stories for the 4 React components created in iterations 30-33, sa
 
 None. Stories are Tier 2 visual verification (UI_MANIFESTO Testing Strategy). All component logic already tested:
 
-| Component | Tests | Source |
-| --- | --- | --- |
-| TrumpIndicatorReact | 7 | Iteration 30 |
-| TurnIndicatorReact | 7 | Iteration 31 |
-| ScorePanelReact | 9 | Iteration 32 |
-| PlayerInfoReact | 8 | Iteration 33 |
+| Component           | Tests | Source       |
+| ------------------- | ----- | ------------ |
+| TrumpIndicatorReact | 7     | Iteration 30 |
+| TurnIndicatorReact  | 7     | Iteration 31 |
+| ScorePanelReact     | 9     | Iteration 32 |
+| PlayerInfoReact     | 8     | Iteration 33 |
 
 ## Implementation Summary
 
@@ -66,21 +66,21 @@ export const Story: StoryFn = () => (
 
 ### Stories Created (4 files, 11 variants)
 
-| Story File | Title | Variants |
-| --- | --- | --- |
-| `hud/trump-indicator-react.stories.tsx` | React/HUD/TrumpIndicator | AllSuits, Hearts, Spades |
-| `hud/turn-indicator-react.stories.tsx` | React/HUD/TurnIndicator | YourTurn, AllDirections |
-| `hud/score-panel-react.stories.tsx` | React/HUD/ScorePanel | ZeroZero, MidGame, CloseGame |
-| `player-info/player-info-react.stories.tsx` | React/PlayerInfo | ActiveSouth, InactiveNorth, AllPlayers |
+| Story File                                  | Title                    | Variants                               |
+| ------------------------------------------- | ------------------------ | -------------------------------------- |
+| `hud/trump-indicator-react.stories.tsx`     | React/HUD/TrumpIndicator | AllSuits, Hearts, Spades               |
+| `hud/turn-indicator-react.stories.tsx`      | React/HUD/TurnIndicator  | YourTurn, AllDirections                |
+| `hud/score-panel-react.stories.tsx`         | React/HUD/ScorePanel     | ZeroZero, MidGame, CloseGame           |
+| `player-info/player-info-react.stories.tsx` | React/PlayerInfo         | ActiveSouth, InactiveNorth, AllPlayers |
 
 ## Technical Decisions
 
-| Decision | Choice | Rationale |
-| --- | --- | --- |
-| `<Application>` over `<StoryCanvas>` | Native @pixi/react rendering | React components use pixi* JSX — wrapping in StoryCanvas would require imperative mounting, defeating the purpose |
-| `React/` story namespace | Separate from `Components/` | Allows side-by-side visual comparison of imperative vs React versions during migration |
-| No unit tests | Stories = Tier 2 visual verification | Component logic (drawTrumpBadge, trumpTextConfig, etc.) already tested via iterations 30-33 |
-| `pixiContainer` for positioning | Offset via x/y props | Components render at origin — wrapping container provides canvas-relative positioning |
+| Decision                             | Choice                               | Rationale                                                                                                          |
+| ------------------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `<Application>` over `<StoryCanvas>` | Native @pixi/react rendering         | React components use pixi\* JSX — wrapping in StoryCanvas would require imperative mounting, defeating the purpose |
+| `React/` story namespace             | Separate from `Components/`          | Allows side-by-side visual comparison of imperative vs React versions during migration                             |
+| No unit tests                        | Stories = Tier 2 visual verification | Component logic (drawTrumpBadge, trumpTextConfig, etc.) already tested via iterations 30-33                        |
+| `pixiContainer` for positioning      | Offset via x/y props                 | Components render at origin — wrapping container provides canvas-relative positioning                              |
 
 ## Refactoring Performed
 
