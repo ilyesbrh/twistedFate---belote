@@ -21,3 +21,5 @@ Reference: [UI_LAYOUT_STRUCTURE.md](../UI_LAYOUT_STRUCTURE.md)
 | 22        | GameController | Bridge  | Done   | game-controller.ts, tests                             |
 | 23        | Input Wiring   | Bridge  | Done   | hand-display.ts, bidding-panel.ts, game-controller.ts |
 | 24        | Game Bootstrap | All     | Done   | game-renderer.ts, game-demo.scene.ts                  |
+| 25        | Phase Gating   | Bridge  | Done   | game-controller.ts, game-renderer.ts                  |
+| 26        | Playable Cards | Bottom  | Done   | game-view.ts, hand-display.ts                         |
