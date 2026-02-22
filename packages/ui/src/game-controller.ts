@@ -38,12 +38,16 @@ export class GameController {
   private unsubscribe: (() => void) | null = null;
   private activeTurn: PlayerPosition | null = null;
   private dealerPosition: PlayerPosition | null = null;
+  private readonly humanPosition: PlayerPosition;
 
   constructor(
     private readonly session: GameSessionAccess,
     private readonly renderer: RenderTarget,
     private readonly playerNames: readonly [string, string, string, string],
-  ) {}
+    humanPosition: PlayerPosition = 0 as PlayerPosition,
+  ) {
+    this.humanPosition = humanPosition;
+  }
 
   /** Subscribe to session events and render the initial view. */
   start(): void {
@@ -67,7 +71,7 @@ export class GameController {
       if (!fullCard) return;
       this.session.dispatch({
         type: "play_card",
-        playerPosition: 0 as PlayerPosition,
+        playerPosition: this.humanPosition,
         card: fullCard,
       });
     });
@@ -76,7 +80,7 @@ export class GameController {
       if (this.currentPhase() !== "bidding") return;
       this.session.dispatch({
         type: "place_bid",
-        playerPosition: 0 as PlayerPosition,
+        playerPosition: this.humanPosition,
         bidType: "suit",
         value: 80,
         suit,
@@ -87,7 +91,7 @@ export class GameController {
       if (this.currentPhase() !== "bidding") return;
       this.session.dispatch({
         type: "place_bid",
-        playerPosition: 0 as PlayerPosition,
+        playerPosition: this.humanPosition,
         bidType: "pass",
       });
     });
@@ -141,7 +145,7 @@ export class GameController {
   private findCardInHand(suit: Suit, rank: string): Card | undefined {
     const round = this.session.currentRound;
     if (!round) return undefined;
-    const humanPlayer = round.players.find((p) => p.position === 0);
+    const humanPlayer = round.players.find((p) => p.position === this.humanPosition);
     if (!humanPlayer) return undefined;
     return humanPlayer.hand.find((c) => c.suit === suit && c.rank === rank);
   }

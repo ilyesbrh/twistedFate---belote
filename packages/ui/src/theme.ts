@@ -45,6 +45,11 @@ export interface TextColors {
   readonly muted: string;
 }
 
+export interface TeamColors {
+  readonly team1: number;
+  readonly team2: number;
+}
+
 export interface ThemeColors {
   readonly table: TableColors;
   readonly card: CardColors;
@@ -52,6 +57,7 @@ export interface ThemeColors {
   readonly accent: AccentColors;
   readonly ui: UiColors;
   readonly text: TextColors;
+  readonly team: TeamColors;
 }
 
 export type FontWeight =
@@ -80,6 +86,8 @@ export interface Typography {
   readonly cardIndex: FontSpec;
   readonly cardSuitSmall: FontSpec;
   readonly cardCenter: FontSpec;
+  readonly cardPip: FontSpec;
+  readonly cardFaceLetter: FontSpec;
   readonly score: Required<FontSpec>;
   readonly playerName: Required<FontSpec>;
   readonly label: Required<FontSpec>;
@@ -115,12 +123,62 @@ export interface AnimationTiming {
   readonly aiDelay: RangeValue;
 }
 
+export interface ShadowSpec {
+  readonly color: number;
+  readonly alpha: number;
+  readonly blur: number;
+  readonly offsetX: number;
+  readonly offsetY: number;
+}
+
+export interface Shadows {
+  readonly card: ShadowSpec;
+  readonly panel: ShadowSpec;
+  readonly avatar: ShadowSpec;
+}
+
+export interface CardDesign {
+  readonly borderWidth: number;
+  readonly innerBorderInset: number;
+  readonly innerBorderColor: string;
+  readonly cornerFlourishSize: number;
+  readonly backgroundPatternOpacity: number;
+  readonly backCheckerSize: number;
+  readonly backCheckerColor: string;
+}
+
+export interface IndicatorDesign {
+  readonly badgeSize: number;
+  readonly badgeRadius: number;
+  readonly borderWidth: number;
+  readonly borderColor: string;
+  readonly suitFontSize: number;
+}
+
+export interface AvatarDesign {
+  readonly size: number;
+  readonly borderRadius: number;
+  readonly activeGlowColor: number;
+  readonly activeGlowStrength: number;
+  readonly initialsFontSize: number;
+}
+
+export interface TableTexture {
+  readonly feltPatternOpacity: number;
+  readonly feltPatternScale: number;
+}
+
 export interface Theme {
   readonly colors: ThemeColors;
   readonly typography: Typography;
   readonly spacing: Spacing;
   readonly cardDimensions: CardDimensions;
   readonly animationTiming: AnimationTiming;
+  readonly shadows: Shadows;
+  readonly cardDesign: CardDesign;
+  readonly indicators: IndicatorDesign;
+  readonly avatar: AvatarDesign;
+  readonly tableTexture: TableTexture;
 }
 
 // ---- Token values ---------------------------------------------------
@@ -154,14 +212,20 @@ export const THEME: Theme = deepFreeze({
       dark: "#212121",
       muted: "#9E9E9E",
     },
+    team: {
+      team1: 0xff8c00, // warm orange — visible on green felt
+      team2: 0x1565c0, // strong blue — visible on green felt
+    },
   },
 
   typography: {
     fontFamily:
       "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    cardIndex: { fontWeight: "bold", minSize: 14 },
-    cardSuitSmall: { fontWeight: "normal", minSize: 12 },
-    cardCenter: { fontWeight: "normal", minSize: 36 },
+    cardIndex: { fontWeight: "bold", minSize: 18 },
+    cardSuitSmall: { fontWeight: "bold", minSize: 14 },
+    cardCenter: { fontWeight: "bold", minSize: 48 },
+    cardPip: { fontWeight: "normal", minSize: 16 },
+    cardFaceLetter: { fontWeight: "bold", minSize: 40 },
     score: { fontWeight: "bold", minSize: 18, maxSize: 24 },
     playerName: { fontWeight: "500", minSize: 12, maxSize: 14 },
     label: { fontWeight: "normal", minSize: 11, maxSize: 13 },
@@ -197,5 +261,42 @@ export const THEME: Theme = deepFreeze({
     scoreUpdate: 500,
     roundTransition: { min: 800, max: 1000 },
     aiDelay: { min: 500, max: 1000 },
+  },
+
+  shadows: {
+    card: { color: 0x000000, alpha: 0.35, blur: 6, offsetX: 2, offsetY: 3 },
+    panel: { color: 0x000000, alpha: 0.4, blur: 8, offsetX: 0, offsetY: 4 },
+    avatar: { color: 0x000000, alpha: 0.3, blur: 4, offsetX: 1, offsetY: 2 },
+  },
+
+  cardDesign: {
+    borderWidth: 2,
+    innerBorderInset: 5,
+    innerBorderColor: "#FFD54F",
+    cornerFlourishSize: 8,
+    backgroundPatternOpacity: 0.04,
+    backCheckerSize: 10,
+    backCheckerColor: "#C62828",
+  },
+
+  indicators: {
+    badgeSize: 48,
+    badgeRadius: 10,
+    borderWidth: 2,
+    borderColor: "#FFD54F",
+    suitFontSize: 26,
+  },
+
+  avatar: {
+    size: 64,
+    borderRadius: 14,
+    activeGlowColor: 0xffd54f,
+    activeGlowStrength: 3,
+    initialsFontSize: 28,
+  },
+
+  tableTexture: {
+    feltPatternOpacity: 0.06,
+    feltPatternScale: 12,
   },
 });

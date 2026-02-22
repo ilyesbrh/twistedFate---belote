@@ -19,18 +19,22 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc --build",
     "storybook": "storybook dev -p 6006 --config-dir .storybook",
-    "storybook:build": "storybook build --config-dir .storybook -o storybook-static"
+    "storybook:build": "storybook build --config-dir .storybook -o storybook-static",
+    "visual-review": "npx playwright test"
   },
   "dependencies": {
-    "@belote/core": "workspace:*",
-    "@belote/app": "workspace:*",
     "@belote/animation": "workspace:*",
+    "@belote/app": "workspace:*",
+    "@belote/core": "workspace:*",
+    "pixi-filters": "^6.1.5",
     "pixi.js": "^8.16.0"
   },
   "devDependencies": {
-    "vite": "^7.0.0",
-    "storybook": "~8.6.0",
     "@pixi/storybook-renderer": "^1.0.0",
-    "@pixi/storybook-vite": "^1.0.0"
+    "@pixi/storybook-vite": "^1.0.0",
+    "@playwright/test": "^1.58.2",
+    "serve": "^14.2.5",
+    "storybook": "~8.6.0",
+    "vite": "^7.0.0"
   }
 }

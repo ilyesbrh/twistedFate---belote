@@ -5,7 +5,7 @@
 // Verified visually in Storybook.
 // ====================================================================
 
-import { Container, Text } from "pixi.js";
+import { Container, Graphics, Text } from "pixi.js";
 import type { Seat } from "../../layout.js";
 import { THEME } from "../../theme.js";
 
@@ -22,15 +22,24 @@ const ARROWS: Record<TurnSeat, string> = {
   east: "\u2192",
 };
 
+const PILL_HEIGHT = 28;
+const PILL_PADDING_X = 14;
+
 // ---- TurnIndicator --------------------------------------------------
 
 export class TurnIndicator extends Container {
   private readonly arrowText: Text;
   private readonly nameText: Text;
+  private readonly pillBg: Graphics;
 
   constructor(seat: TurnSeat, playerName: string) {
     super();
     this.label = "turn-indicator";
+
+    // Pill-shaped background
+    this.pillBg = new Graphics();
+    this.pillBg.label = "turn-bg";
+    this.addChild(this.pillBg);
 
     // Arrow
     this.arrowText = new Text({
@@ -38,6 +47,7 @@ export class TurnIndicator extends Container {
       style: {
         fontFamily: THEME.typography.fontFamily,
         fontSize: THEME.typography.heading.minSize,
+        fontWeight: "bold",
         fill: THEME.colors.accent.gold,
       },
     });
@@ -59,10 +69,37 @@ export class TurnIndicator extends Container {
     this.nameText.anchor.set(0.5, 0);
     this.nameText.y = THEME.typography.heading.minSize / 2 + THEME.spacing.xs;
     this.addChild(this.nameText);
+
+    this.drawPill();
   }
 
   setTurn(seat: TurnSeat, playerName: string): void {
     this.arrowText.text = ARROWS[seat];
     this.nameText.text = playerName;
+    this.drawPill();
+  }
+
+  private drawPill(): void {
+    const totalHeight = PILL_HEIGHT + THEME.typography.label.minSize + THEME.spacing.xs;
+    const textWidth = Math.max(this.nameText.width, 60);
+    const pillWidth = textWidth + PILL_PADDING_X * 2;
+
+    this.pillBg.clear();
+    this.pillBg.roundRect(
+      -pillWidth / 2,
+      -PILL_HEIGHT / 2,
+      pillWidth,
+      totalHeight,
+      PILL_HEIGHT / 2,
+    );
+    this.pillBg.fill({ color: 0x000000, alpha: 0.35 });
+    this.pillBg.roundRect(
+      -pillWidth / 2,
+      -PILL_HEIGHT / 2,
+      pillWidth,
+      totalHeight,
+      PILL_HEIGHT / 2,
+    );
+    this.pillBg.stroke({ width: 1, color: THEME.colors.accent.gold, alpha: 0.4 });
   }
 }

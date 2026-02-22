@@ -5,14 +5,10 @@
 // ====================================================================
 
 import { Container, Graphics, Text } from "pixi.js";
+import { DropShadowFilter } from "pixi-filters";
 import type { Suit } from "@belote/core";
 import { THEME } from "../../theme.js";
 import { suitSymbol, suitColor } from "../../card-textures.js";
-
-// ---- Constants ------------------------------------------------------
-
-const BADGE_SIZE = 32;
-const BADGE_RADIUS = 6;
 
 // ---- TrumpIndicator -------------------------------------------------
 
@@ -24,10 +20,15 @@ export class TrumpIndicator extends Container {
     super();
     this.label = "trump-indicator";
 
+    const { badgeSize, badgeRadius, borderWidth, borderColor } = THEME.indicators;
+    const half = badgeSize / 2;
+
     // Background badge
     this.bg = new Graphics();
-    this.bg.roundRect(-BADGE_SIZE / 2, -BADGE_SIZE / 2, BADGE_SIZE, BADGE_SIZE, BADGE_RADIUS);
-    this.bg.fill(THEME.colors.ui.overlayLight);
+    this.bg.roundRect(-half, -half, badgeSize, badgeSize, badgeRadius);
+    this.bg.fill(THEME.colors.ui.overlay);
+    this.bg.roundRect(-half, -half, badgeSize, badgeSize, badgeRadius);
+    this.bg.stroke({ width: borderWidth, color: borderColor });
     this.bg.label = "trump-bg";
     this.addChild(this.bg);
 
@@ -36,13 +37,24 @@ export class TrumpIndicator extends Container {
       text: suitSymbol(suit),
       style: {
         fontFamily: THEME.typography.fontFamily,
-        fontSize: THEME.typography.heading.minSize,
+        fontSize: THEME.indicators.suitFontSize,
         fill: suitColor(suit),
       },
     });
     this.suitText.label = "trump-suit";
     this.suitText.anchor.set(0.5);
     this.addChild(this.suitText);
+
+    // Drop shadow
+    const shadow = THEME.shadows.panel;
+    this.filters = [
+      new DropShadowFilter({
+        color: shadow.color,
+        alpha: shadow.alpha,
+        blur: shadow.blur,
+        offset: { x: shadow.offsetX, y: shadow.offsetY },
+      }),
+    ];
   }
 
   setSuit(suit: Suit): void {

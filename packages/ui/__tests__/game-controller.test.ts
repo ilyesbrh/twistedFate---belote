@@ -854,3 +854,140 @@ describe("GameController phase-gated input", () => {
     expect(session.dispatched).toHaveLength(0);
   });
 });
+
+// ====================================================================
+// Human position parameterization
+// ====================================================================
+
+function makeRoundWithCardsAtPosition(phase: RoundPhase, position: PlayerPosition): RoundSnapshot {
+  return {
+    players: [
+      { position: 0 as PlayerPosition, hand: position === 0 ? [fakeCard("spades", "ace")] : [] },
+      { position: 1 as PlayerPosition, hand: position === 1 ? [fakeCard("spades", "ace")] : [] },
+      { position: 2 as PlayerPosition, hand: position === 2 ? [fakeCard("spades", "ace")] : [] },
+      { position: 3 as PlayerPosition, hand: position === 3 ? [fakeCard("spades", "ace")] : [] },
+    ],
+    contract: null,
+    currentTrick: null,
+    phase,
+  };
+}
+
+describe("GameController humanPosition parameterization", () => {
+  it("defaults humanPosition to 0 when not specified", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const controller = new GameController(session, renderer, PLAYER_NAMES);
+
+    session.setRound(makeRoundWithCards("bidding"));
+    controller.wireInput(input);
+    controller.start();
+
+    input.firePass();
+
+    expect(session.dispatched).toHaveLength(1);
+    expect(session.dispatched[0]).toMatchObject({
+      type: "place_bid",
+      playerPosition: 0,
+    });
+  });
+
+  it("dispatches play_card with custom humanPosition", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const humanPos = 2 as PlayerPosition;
+    const controller = new GameController(session, renderer, PLAYER_NAMES, humanPos);
+
+    session.setRound(makeRoundWithCardsAtPosition("playing", humanPos));
+    controller.wireInput(input);
+    controller.start();
+
+    input.fireCardTap(0, { suit: "spades" as Suit, rank: "ace" });
+
+    expect(session.dispatched).toHaveLength(1);
+    expect(session.dispatched[0]).toMatchObject({
+      type: "play_card",
+      playerPosition: 2,
+    });
+  });
+
+  it("dispatches suit bid with custom humanPosition", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const humanPos = 3 as PlayerPosition;
+    const controller = new GameController(session, renderer, PLAYER_NAMES, humanPos);
+
+    session.setRound(makeEmptyRound("bidding"));
+    controller.wireInput(input);
+    controller.start();
+
+    input.fireSuitBid("hearts");
+
+    expect(session.dispatched).toHaveLength(1);
+    expect(session.dispatched[0]).toMatchObject({
+      type: "place_bid",
+      playerPosition: 3,
+      bidType: "suit",
+      suit: "hearts",
+    });
+  });
+
+  it("dispatches pass bid with custom humanPosition", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const humanPos = 1 as PlayerPosition;
+    const controller = new GameController(session, renderer, PLAYER_NAMES, humanPos);
+
+    session.setRound(makeEmptyRound("bidding"));
+    controller.wireInput(input);
+    controller.start();
+
+    input.firePass();
+
+    expect(session.dispatched).toHaveLength(1);
+    expect(session.dispatched[0]).toMatchObject({
+      type: "place_bid",
+      playerPosition: 1,
+      bidType: "pass",
+    });
+  });
+
+  it("finds card in hand using custom humanPosition", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const humanPos = 2 as PlayerPosition;
+    const controller = new GameController(session, renderer, PLAYER_NAMES, humanPos);
+
+    // Card only in position 2's hand — position 0 has no cards
+    session.setRound(makeRoundWithCardsAtPosition("playing", humanPos));
+    controller.wireInput(input);
+    controller.start();
+
+    input.fireCardTap(0, { suit: "spades" as Suit, rank: "ace" });
+
+    expect(session.dispatched).toHaveLength(1);
+    expect(session.dispatched[0]?.type).toBe("play_card");
+  });
+
+  it("does not find card when it is in a different player hand", () => {
+    const session = createMockSession();
+    const renderer = createMockRenderer();
+    const input = createMockInput();
+    const humanPos = 2 as PlayerPosition;
+    const controller = new GameController(session, renderer, PLAYER_NAMES, humanPos);
+
+    // Card only in position 0's hand — human is at position 2
+    session.setRound(makeRoundWithCardsAtPosition("playing", 0 as PlayerPosition));
+    controller.wireInput(input);
+    controller.start();
+
+    input.fireCardTap(0, { suit: "spades" as Suit, rank: "ace" });
+
+    expect(session.dispatched).toHaveLength(0);
+  });
+});

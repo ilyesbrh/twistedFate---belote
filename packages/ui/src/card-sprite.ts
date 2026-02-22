@@ -5,8 +5,10 @@
 // ====================================================================
 
 import { Container, Sprite } from "pixi.js";
+import { DropShadowFilter } from "pixi-filters";
 import type { Suit, Rank } from "@belote/core";
 import type { CardTextureAtlas } from "./card-textures.js";
+import { THEME } from "./theme.js";
 
 // ---- Pure functions (unit-tested) ------------------------------------
 
@@ -43,6 +45,17 @@ export class CardSprite extends Container {
 
     this.addChild(this.faceSprite);
     this.addChild(this.backSprite);
+
+    // Drop shadow
+    const shadow = THEME.shadows.card;
+    this.filters = [
+      new DropShadowFilter({
+        color: shadow.color,
+        alpha: shadow.alpha,
+        blur: shadow.blur,
+        offset: { x: shadow.offsetX, y: shadow.offsetY },
+      }),
+    ];
 
     // Default: face-down
     this._faceUp = false;

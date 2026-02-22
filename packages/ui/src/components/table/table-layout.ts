@@ -5,7 +5,7 @@
 // Verified visually in Storybook.
 // ====================================================================
 
-import { Container, Graphics } from "pixi.js";
+import { Container, FillGradient, Graphics } from "pixi.js";
 import type { Viewport, Layout } from "../../layout.js";
 import { computeLayout } from "../../layout.js";
 import { THEME } from "../../theme.js";
@@ -24,6 +24,8 @@ export interface TableLayoutZoneContainers {
 
 export class TableLayout extends Container {
   private readonly background: Graphics;
+  private readonly feltOverlay: Graphics;
+  private readonly centerSurface: Graphics;
   private readonly zoneContainers: TableLayoutZoneContainers;
   private currentLayout: Layout;
 
@@ -31,10 +33,20 @@ export class TableLayout extends Container {
     super();
     this.label = "table-layout";
 
-    // Background
+    // Background (radial gradient)
     this.background = new Graphics();
     this.background.label = "table-bg";
     this.addChild(this.background);
+
+    // Felt texture overlay (subtle dot pattern)
+    this.feltOverlay = new Graphics();
+    this.feltOverlay.label = "felt-overlay";
+    this.addChild(this.feltOverlay);
+
+    // Center play area inset surface
+    this.centerSurface = new Graphics();
+    this.centerSurface.label = "center-surface";
+    this.addChild(this.centerSurface);
 
     // Zone containers — child components are added to these
     this.zoneContainers = {
@@ -75,11 +87,62 @@ export class TableLayout extends Container {
 
   private applyLayout(): void {
     const { viewport, zones } = this.currentLayout;
+    const { width, height } = viewport;
 
-    // Redraw background
+    // Redraw background with radial gradient
     this.background.clear();
-    this.background.rect(0, 0, viewport.width, viewport.height);
-    this.background.fill(THEME.colors.table.bgDark);
+    const cx = width / 2;
+    const cy = height / 2;
+    const radius = Math.max(width, height) * 0.65;
+
+    const gradient = new FillGradient({
+      type: "radial",
+      center: { x: cx, y: cy },
+      innerRadius: 0,
+      outerCenter: { x: cx, y: cy },
+      outerRadius: radius,
+      colorStops: [
+        { offset: 0, color: THEME.colors.table.surface },
+        { offset: 0.35, color: THEME.colors.table.bgLight },
+        { offset: 1, color: THEME.colors.table.bgDark },
+      ],
+    });
+
+    this.background.rect(0, 0, width, height);
+    this.background.fill(gradient);
+
+    // Redraw felt texture overlay (sparse dot pattern)
+    this.feltOverlay.clear();
+    const step = THEME.tableTexture.feltPatternScale;
+    const alpha = THEME.tableTexture.feltPatternOpacity;
+
+    for (let x = step; x < width; x += step) {
+      for (let y = step; y < height; y += step) {
+        this.feltOverlay.circle(x, y, 0.8);
+      }
+    }
+    this.feltOverlay.fill({ color: 0x000000, alpha });
+
+    // Draw center play area inset surface
+    this.centerSurface.clear();
+    const cz = zones.center;
+    const inset = THEME.spacing.sm;
+    this.centerSurface.roundRect(
+      cz.x + inset,
+      cz.y + inset,
+      cz.width - inset * 2,
+      cz.height - inset * 2,
+      THEME.spacing.md,
+    );
+    this.centerSurface.fill({ color: 0x000000, alpha: 0.12 });
+    this.centerSurface.roundRect(
+      cz.x + inset,
+      cz.y + inset,
+      cz.width - inset * 2,
+      cz.height - inset * 2,
+      THEME.spacing.md,
+    );
+    this.centerSurface.stroke({ width: 1, color: 0xffffff, alpha: 0.06 });
 
     // Position zone containers at their zone origins
     this.zoneContainers.top.position.set(zones.top.x, zones.top.y);

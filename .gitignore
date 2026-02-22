@@ -32,6 +32,51 @@ pnpm-debug.log*
 # Storybook
 storybook-static/
 
+# Playwright
+e2e/screenshots/
+test-results/
+playwright-report/
+
 # Temporary
 tmp/
 temp/
+packages/ui/e2e/screenshots/cards-cardsprite--all-suits.png
+packages/ui/e2e/screenshots/cards-cardsprite--face-down.png
+packages/ui/e2e/screenshots/cards-cardsprite--face-up.png
+packages/ui/e2e/screenshots/cards-gallery--default.png
+packages/ui/e2e/screenshots/components-biddingpanel--landscape.png
+packages/ui/e2e/screenshots/components-biddingpanel--portrait.png
+packages/ui/e2e/screenshots/components-handdisplay--five-cards.png
+packages/ui/e2e/screenshots/components-handdisplay--full-hand.png
+packages/ui/e2e/screenshots/components-handdisplay--portrait-zone.png
+packages/ui/e2e/screenshots/components-handdisplay--single-card.png
+packages/ui/e2e/screenshots/components-handdisplay--three-cards.png
+packages/ui/e2e/screenshots/components-hud-scorepanel--close-game.png
+packages/ui/e2e/screenshots/components-hud-scorepanel--mid-game.png
+packages/ui/e2e/screenshots/components-hud-scorepanel--zero-zero.png
+packages/ui/e2e/screenshots/components-hud-trumpindicator--all-suits.png
+packages/ui/e2e/screenshots/components-hud-trumpindicator--hearts.png
+packages/ui/e2e/screenshots/components-hud-trumpindicator--spades.png
+packages/ui/e2e/screenshots/components-hud-turnindicator--all-directions.png
+packages/ui/e2e/screenshots/components-hud-turnindicator--your-turn.png
+packages/ui/e2e/screenshots/components-opponenthand--horizontal-four.png
+packages/ui/e2e/screenshots/components-opponenthand--horizontal-full.png
+packages/ui/e2e/screenshots/components-opponenthand--vertical-left.png
+packages/ui/e2e/screenshots/components-opponenthand--vertical-right.png
+packages/ui/e2e/screenshots/components-opponenthand--vertical-three.png
+packages/ui/e2e/screenshots/components-playerinfo--active-south.png
+packages/ui/e2e/screenshots/components-playerinfo--all-players.png
+packages/ui/e2e/screenshots/components-playerinfo--inactive-north.png
+packages/ui/e2e/screenshots/components-tablelayout--desktop.png
+packages/ui/e2e/screenshots/components-tablelayout--landscape-baseline.png
+packages/ui/e2e/screenshots/components-tablelayout--portrait-fallback.png
+packages/ui/e2e/screenshots/components-tablelayout--tablet-landscape.png
+packages/ui/e2e/screenshots/components-trickdisplay--empty.png
+packages/ui/e2e/screenshots/components-trickdisplay--full-trick.png
+packages/ui/e2e/screenshots/components-trickdisplay--one-card.png
+packages/ui/e2e/screenshots/components-trickdisplay--two-cards.png
+packages/ui/e2e/screenshots/integration-gamerenderer--bidding-phase.png
+packages/ui/e2e/screenshots/integration-gamerenderer--playing-phase.png
+packages/ui/e2e/screenshots/integration-gamerenderer--portrait-fallback.png
+packages/ui/e2e/screenshots/integration-gamerenderer--tablet-landscape.png
+packages/ui/e2e/screenshots/table-background--default.png

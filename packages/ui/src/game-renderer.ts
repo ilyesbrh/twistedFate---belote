@@ -30,13 +30,10 @@ export interface GameRendererConfig {
   readonly playerNames: readonly [string, string, string, string];
 }
 
-// ---- Team colors (from THEME accents) -------------------------------
-
-const TEAM1_COLOR = 0x2e7d32; // green — south/north team
-const TEAM2_COLOR = 0x1565c0; // blue — west/east team
+// ---- Team colors (from THEME) ---------------------------------------
 
 function teamColor(seat: Seat): number {
-  return teamForSeat(seat) === "team1" ? TEAM1_COLOR : TEAM2_COLOR;
+  return teamForSeat(seat) === "team1" ? THEME.colors.team.team1 : THEME.colors.team.team2;
 }
 
 // ---- GameRenderer ---------------------------------------------------
@@ -94,10 +91,8 @@ export class GameRenderer implements InputSource {
         teamColor: teamColor(seat),
       });
 
-      // Place in appropriate zone
+      // Place in appropriate zone with seat-aware positioning
       const zoneContainer = this.getZoneForSeat(seat, zones);
-      info.x = THEME.spacing.md;
-      info.y = THEME.spacing.md;
       zoneContainer.addChild(info);
       this.playerInfos.set(seat, info);
     }
@@ -143,12 +138,33 @@ export class GameRenderer implements InputSource {
     const localCenter: Rect = { x: 0, y: 0, width: centerZone.width, height: centerZone.height };
     this.trickDisplay.update(localCenter, view.trick);
 
-    // Player info
+    // Player info — seat-aware positioning
+    const avatarHalf = THEME.avatar.size / 2;
     for (const pv of view.players) {
       const info = this.playerInfos.get(pv.seat);
       if (!info) continue;
       info.setActive(pv.isActive);
       info.setCardCount(pv.cardCount);
+
+      const zone = this.getZoneRectForSeat(pv.seat, layout.zones);
+      switch (pv.seat) {
+        case "south":
+          info.x = THEME.spacing.md + avatarHalf;
+          info.y = zone.height / 2 - avatarHalf;
+          break;
+        case "north":
+          info.x = THEME.spacing.md + avatarHalf;
+          info.y = zone.height / 2;
+          break;
+        case "west":
+          info.x = zone.width / 2;
+          info.y = THEME.spacing.sm;
+          break;
+        case "east":
+          info.x = zone.width / 2;
+          info.y = THEME.spacing.sm;
+          break;
+      }
     }
 
     // Score panel — reposition on every update (handles resize)
@@ -259,9 +275,10 @@ export class GameRenderer implements InputSource {
       } else {
         this.trumpIndicator.setSuit(trumpSuit);
       }
-      // Position: bottom-left of center zone
-      this.trumpIndicator.x = THEME.spacing.md;
-      this.trumpIndicator.y = layout.zones.center.height - THEME.spacing.md;
+      // Position: bottom-left of center zone (badge is drawn centered at origin)
+      const badgeHalf = THEME.indicators.badgeSize / 2;
+      this.trumpIndicator.x = THEME.spacing.md + badgeHalf;
+      this.trumpIndicator.y = layout.zones.center.height - THEME.spacing.md - badgeHalf;
       this.trumpIndicator.visible = true;
     } else if (this.trumpIndicator) {
       this.trumpIndicator.visible = false;
@@ -282,9 +299,9 @@ export class GameRenderer implements InputSource {
       } else {
         this.turnIndicator.setTurn(view.activeSeat, name);
       }
-      // Position: bottom-right of center zone
-      this.turnIndicator.x = layout.zones.center.width - THEME.spacing.md;
-      this.turnIndicator.y = layout.zones.center.height - THEME.spacing.md;
+      // Position: bottom-right of center zone (pill is drawn centered horizontally)
+      this.turnIndicator.x = layout.zones.center.width - THEME.spacing.md - 40;
+      this.turnIndicator.y = layout.zones.center.height - THEME.spacing.md - 20;
       this.turnIndicator.visible = true;
     } else if (this.turnIndicator) {
       this.turnIndicator.visible = false;

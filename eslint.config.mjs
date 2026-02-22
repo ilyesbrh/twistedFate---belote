@@ -22,6 +22,8 @@ export default tseslint.config(
             "vitest.config.ts",
             "packages/*/vite.config.ts",
             "packages/ui/.storybook/*.ts",
+            "packages/ui/playwright.config.ts",
+            "packages/ui/e2e/visual-review.spec.ts",
           ],
         },
         tsconfigRootDir: import.meta.dirname,
@@ -73,6 +75,14 @@ export default tseslint.config(
     },
   },
 
+  // E2e files: relax rules (Playwright API is loosely typed)
+  {
+    files: ["packages/ui/e2e/**/*.ts"],
+    rules: {
+      "@typescript-eslint/explicit-function-return-type": "off",
+    },
+  },
+
   // Disable type-checked rules for config files (no full tsconfig coverage)
   {
     files: [
@@ -81,6 +91,8 @@ export default tseslint.config(
       "packages/*/vitest.config.ts",
       "packages/*/vite.config.ts",
       "packages/ui/.storybook/*.ts",
+      "packages/ui/playwright.config.ts",
+      "packages/ui/e2e/**/*.ts",
     ],
     ...tseslint.configs.disableTypeChecked,
   },

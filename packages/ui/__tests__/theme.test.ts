@@ -19,6 +19,7 @@ describe("THEME", () => {
       expect(Object.isFrozen(THEME.colors.accent)).toBe(true);
       expect(Object.isFrozen(THEME.colors.ui)).toBe(true);
       expect(Object.isFrozen(THEME.colors.text)).toBe(true);
+      expect(Object.isFrozen(THEME.colors.team)).toBe(true);
     });
 
     it("typography is deeply frozen", () => {
@@ -26,6 +27,8 @@ describe("THEME", () => {
       expect(Object.isFrozen(THEME.typography.cardIndex)).toBe(true);
       expect(Object.isFrozen(THEME.typography.cardSuitSmall)).toBe(true);
       expect(Object.isFrozen(THEME.typography.cardCenter)).toBe(true);
+      expect(Object.isFrozen(THEME.typography.cardPip)).toBe(true);
+      expect(Object.isFrozen(THEME.typography.cardFaceLetter)).toBe(true);
       expect(Object.isFrozen(THEME.typography.score)).toBe(true);
       expect(Object.isFrozen(THEME.typography.playerName)).toBe(true);
       expect(Object.isFrozen(THEME.typography.label)).toBe(true);
@@ -63,7 +66,18 @@ describe("THEME", () => {
     it("has exactly the expected top-level keys", () => {
       const keys = Object.keys(THEME).sort();
       expect(keys).toEqual(
-        ["animationTiming", "cardDimensions", "colors", "spacing", "typography"].sort(),
+        [
+          "animationTiming",
+          "avatar",
+          "cardDesign",
+          "cardDimensions",
+          "colors",
+          "indicators",
+          "shadows",
+          "spacing",
+          "tableTexture",
+          "typography",
+        ].sort(),
       );
     });
   });
@@ -144,6 +158,16 @@ describe("THEME", () => {
     });
   });
 
+  describe("colors.team", () => {
+    it("team1 is 0xFF8C00 (warm orange)", () => {
+      expect(THEME.colors.team.team1).toBe(0xff8c00);
+    });
+
+    it("team2 is 0x1565C0 (strong blue)", () => {
+      expect(THEME.colors.team.team2).toBe(0x1565c0);
+    });
+  });
+
   // ====================================================================
   // Typography tokens
   // ====================================================================
@@ -154,19 +178,29 @@ describe("THEME", () => {
       expect(THEME.typography.fontFamily.length).toBeGreaterThan(0);
     });
 
-    it("cardIndex is bold, min 14", () => {
+    it("cardIndex is bold, min 18", () => {
       expect(THEME.typography.cardIndex.fontWeight).toBe("bold");
-      expect(THEME.typography.cardIndex.minSize).toBe(14);
+      expect(THEME.typography.cardIndex.minSize).toBe(18);
     });
 
-    it("cardSuitSmall is normal, min 12", () => {
-      expect(THEME.typography.cardSuitSmall.fontWeight).toBe("normal");
-      expect(THEME.typography.cardSuitSmall.minSize).toBe(12);
+    it("cardSuitSmall is bold, min 14", () => {
+      expect(THEME.typography.cardSuitSmall.fontWeight).toBe("bold");
+      expect(THEME.typography.cardSuitSmall.minSize).toBe(14);
     });
 
-    it("cardCenter is normal, min 36", () => {
-      expect(THEME.typography.cardCenter.fontWeight).toBe("normal");
-      expect(THEME.typography.cardCenter.minSize).toBe(36);
+    it("cardCenter is bold, min 48", () => {
+      expect(THEME.typography.cardCenter.fontWeight).toBe("bold");
+      expect(THEME.typography.cardCenter.minSize).toBe(48);
+    });
+
+    it("cardPip is normal, min 16", () => {
+      expect(THEME.typography.cardPip.fontWeight).toBe("normal");
+      expect(THEME.typography.cardPip.minSize).toBe(16);
+    });
+
+    it("cardFaceLetter is bold, min 40", () => {
+      expect(THEME.typography.cardFaceLetter.fontWeight).toBe("bold");
+      expect(THEME.typography.cardFaceLetter.minSize).toBe(40);
     });
 
     it("score is bold, 18-24", () => {

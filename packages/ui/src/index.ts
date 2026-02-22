@@ -11,6 +11,7 @@ export type {
   AccentColors,
   UiColors,
   TextColors,
+  TeamColors,
   Typography,
   FontWeight,
   FontSpec,
@@ -46,6 +47,10 @@ export {
   createCardBackGraphics,
 } from "./card-textures.js";
 export type { CardTextureAtlas } from "./card-textures.js";
+
+// Pip Layout
+export { pipPositions } from "./pip-layout.js";
+export type { PipPosition } from "./pip-layout.js";
 
 // Card Sprite
 export { CardSprite, cardLabel, CARD_BACK_LABEL } from "./card-sprite.js";

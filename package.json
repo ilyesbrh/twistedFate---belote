@@ -19,7 +19,8 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --build",
     "build": "pnpm -r --filter './packages/*' run build",
-    "storybook": "pnpm --filter @belote/ui storybook"
+    "storybook": "pnpm --filter @belote/ui storybook",
+    "visual-review": "pnpm --filter @belote/ui visual-review"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
