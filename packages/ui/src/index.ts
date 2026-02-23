@@ -102,6 +102,13 @@ export type {
 export { TrickDisplay } from "./components/trick/trick-display.js";
 export type { TrickCard } from "./components/trick/trick-display.js";
 
+// Trick Display (React)
+export { TrickDisplayReact } from "./components/trick/trick-display-react.js";
+export type {
+  TrickCardReact,
+  TrickDisplayReactProps,
+} from "./components/trick/trick-display-react.js";
+
 // Player Info
 export { PlayerInfo, teamForSeat } from "./components/player-info/player-info.js";
 export type { PlayerSeat, PlayerInfoOptions } from "./components/player-info/player-info.js";
@@ -180,6 +187,14 @@ export type { BiddingDialogReactProps } from "./components/bidding/bidding-dialo
 export { TableLayout } from "./components/table/table-layout.js";
 export type { TableLayoutZoneContainers } from "./components/table/table-layout.js";
 
+// Table Layout (React — @pixi/layout flexbox)
+export {
+  TableLayoutReact,
+  zoneRatios,
+  drawTableBackground,
+} from "./components/table/table-layout-react.js";
+export type { TableLayoutReactProps } from "./components/table/table-layout-react.js";
+
 // Game View (pure state mapping)
 export {
   positionToSeat,
@@ -198,6 +213,10 @@ export type {
   GameStateInput,
 } from "./game-view.js";
 
+// Game Root (React integration)
+export { GameRoot, teamColor, playerInfoPosition } from "./game-root.js";
+export type { GameRootProps } from "./game-root.js";
+
 // Game Renderer (integration)
 export { GameRenderer } from "./game-renderer.js";
 export type { GameRendererConfig } from "./game-renderer.js";
@@ -215,6 +234,19 @@ export { initPixiReact } from "./pixi-react-setup.js";
 
 // React hooks
 export { useTheme } from "./hooks/use-theme.js";
+export {
+  useGameController,
+  controllerReducer,
+  buildGameView,
+  canPlayCard,
+  canBid,
+  INITIAL_CONTROLLER_STATE,
+} from "./hooks/use-game-controller.js";
+export type {
+  ControllerState,
+  UseGameControllerOptions,
+  UseGameControllerResult,
+} from "./hooks/use-game-controller.js";
 
 // Storybook helpers (React bridge for imperative components)
 export { StoryCanvas } from "./storybook-helpers.js";
