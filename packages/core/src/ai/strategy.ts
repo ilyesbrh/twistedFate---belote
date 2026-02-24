@@ -14,6 +14,13 @@ import type { IdGenerator } from "../utils/id.js";
 
 const TRUMP_LENGTH_BONUS = 5;
 const ACE_SUPPORT_VALUE = 11;
+/**
+ * Ratio between hand-strength score and bid value for the AI to consider bidding.
+ * evaluateHandForSuit returns ~50–110 for decent hands; bid values are 80–160.
+ * 0.65 means: AI bids when strength >= 65% of the minimum bid value.
+ * Example: opening at 80 requires strength >= 52 (a J+9+A hand scores ~60 → bids).
+ */
+const BID_STRENGTH_RATIO = 0.65;
 
 // ── Hand Evaluation ──
 
@@ -353,8 +360,8 @@ export function chooseBid(
     }
   }
 
-  // Can't bid if no valid value or no strong suit
-  if (bestSuit === null || minBidValue === null || bestStrength < minBidValue) {
+  // Can't bid if no valid value or hand too weak for the required bid level
+  if (bestSuit === null || minBidValue === null || bestStrength < minBidValue * BID_STRENGTH_RATIO) {
     return createPassBid(playerPosition, idGenerator);
   }
 

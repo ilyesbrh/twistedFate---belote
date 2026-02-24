@@ -1,0 +1,224 @@
+/* ── Full-screen overlay ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Glass panel ── */
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding: 36px 40px;
+  min-width: 360px;
+  max-width: 460px;
+  width: 90vw;
+  border-radius: 22px;
+  background: rgba(8, 16, 36, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.9),
+    0 1px 0 rgba(255, 255, 255, 0.07) inset;
+  animation: scaleIn 0.42s cubic-bezier(0.34, 1.4, 0.64, 1);
+  font-family: var(--font);
+  color: var(--text-light);
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.86); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Game Over label ── */
+.gameOverLabel {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.28);
+}
+
+/* ── Winner section ── */
+.winnerSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.trophy {
+  font-size: 48px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 12px rgba(255, 200, 50, 0.5));
+  animation: bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
+}
+
+.trophyGold   { filter: drop-shadow(0 4px 16px rgba(255, 200, 50, 0.6)); }
+.trophySilver { filter: drop-shadow(0 4px 12px rgba(200, 200, 200, 0.3)); }
+
+@keyframes bounce {
+  from { transform: scale(0.4) translateY(-20px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);       opacity: 1; }
+}
+
+.winnerTeam {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.winnerNames {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.5px;
+}
+
+.youResult {
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 4px;
+  padding: 5px 16px;
+  border-radius: 8px;
+}
+
+.youWon  { background: rgba(255, 213, 79, 0.18); color: var(--gold); }
+.youLost { background: rgba(255, 255, 255, 0.07); color: rgba(255,255,255,0.4); }
+
+/* ── Color tokens ── */
+.nsColor { color: #81d4fa; }
+.ewColor { color: #ffcc80; }
+
+/* ── Score bars ── */
+.scoreBars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.barRow {
+  display: grid;
+  grid-template-columns: 70px 1fr 60px;
+  align-items: center;
+  gap: 10px;
+}
+
+.barLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: right;
+}
+
+.barLabelWinner {
+  color: var(--text-light);
+  font-weight: 800;
+}
+
+.barTrack {
+  height: 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.barNS { background: linear-gradient(90deg, #29b6f6, #81d4fa); }
+.barEW { background: linear-gradient(90deg, #ffa726, #ffcc80); }
+
+.barScore {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: left;
+}
+
+.barScoreWinner {
+  color: var(--text-light);
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.checkMark {
+  color: #81e091;
+  font-size: 13px;
+}
+
+.targetLine {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 4px;
+}
+
+.targetLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+}
+
+/* ── Play Again button ── */
+.playAgainBtn {
+  padding: 14px 52px;
+  border-radius: 12px;
+  background: var(--gold);
+  color: #1a1000;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: background 0.13s, transform 0.1s, box-shadow 0.13s;
+  box-shadow: 0 4px 22px rgba(255, 213, 79, 0.38);
+  margin-top: 4px;
+}
+
+.playAgainBtn:hover {
+  background: #ffe082;
+  box-shadow: 0 6px 30px rgba(255, 213, 79, 0.55);
+}
+
+.playAgainBtn:active {
+  transform: scale(0.95);
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .panel { padding: 28px 24px; gap: 16px; min-width: 0; }
+  .winnerTeam { font-size: 22px; }
+  .trophy { font-size: 38px; }
+  .playAgainBtn { padding: 12px 36px; font-size: 12px; }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .panel { gap: 12px; padding: 18px 28px; }
+  .trophy { font-size: 30px; }
+  .winnerTeam { font-size: 18px; }
+  .playAgainBtn { padding: 10px 32px; }
+}

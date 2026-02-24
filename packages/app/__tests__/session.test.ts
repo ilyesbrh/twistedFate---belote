@@ -430,11 +430,11 @@ describe("GameSession — AI auto-play", () => {
       session.dispatch(createStartGameCommand(["AI-N", "AI-E", "AI-S", "AI-W"], 1000));
       session.dispatch(createStartRoundCommand());
       attempts++;
-    } while (session.state === "round_completed" && attempts < 20);
+    } while (events.some((e) => e.type === "round_cancelled") && attempts < 20);
 
-    if (session.state === "round_completed") {
+    if (events.some((e) => e.type === "round_cancelled")) {
       // All attempts resulted in all-pass — that's OK, just verify cancelled
-      expect(events.some((e) => e.type === "round_cancelled")).toBe(true);
+      expect(session.state).toBe("round_completed");
     } else {
       // AI played all cards automatically
       expect(session.state).toBe("round_completed");

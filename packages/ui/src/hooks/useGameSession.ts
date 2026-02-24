@@ -6,9 +6,9 @@ import {
   createPlaceBidCommand,
   createPlayCardCommand,
 } from '@belote/app';
-import type { GameCommand, TrickCompletedEvent } from '@belote/app';
+import type { GameCommand, TrickCompletedEvent, RoundCompletedEvent } from '@belote/app';
 import { BID_VALUES, getValidPlays } from '@belote/core';
-import type { BiddingRound, BidValue, Suit } from '@belote/core';
+import type { BiddingRound, BidValue, Contract, RoundScore, Suit } from '@belote/core';
 import type { CardData, PlayerData, Position, TrickCardData } from '../data/mockGame.js';
 
 // ── Constants ───────────────────────────────────────────────────────────────
@@ -39,6 +39,15 @@ const TRICK_OFFSETS: Record<Position, { rotation: number; offsetX: number; offse
   east:  { rotation:  9, offsetX:  14, offsetY:  -4 },
 };
 
+// ── Last Round Result ─────────────────────────────────────────────────────
+
+export interface LastRoundResult {
+  wasCancelled: boolean;
+  contract: Contract | null;
+  bidderName: string;
+  roundScore: RoundScore | null;
+}
+
 // ── Exported types ───────────────────────────────────────────────────────────
 
 export type GamePhase = 'idle' | 'bidding' | 'playing' | 'roundComplete' | 'gameComplete';
@@ -60,6 +69,10 @@ export interface GameSessionState {
   dealerName: string;
   isMyTurn: boolean;
   isDealing: boolean;
+  roundNumber: number;
+  lastRoundResult: LastRoundResult | null;
+  /** 0 = NS wins, 1 = EW wins, null = game in progress */
+  winnerTeamIndex: 0 | 1 | null;
   /** Indices (into playerHand[]) the human is allowed to play. Empty = no restriction. */
   legalCardIndices: ReadonlySet<number>;
   biddingRound: BiddingRound | null;
@@ -68,6 +81,7 @@ export interface GameSessionState {
   playCard: (cardIndex: number) => void;
   placeBid: (type: 'pass' | 'suit' | 'coinche', value?: BidValue, suit?: Suit) => void;
   startNextRound: () => void;
+  startGame: () => void;
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
@@ -82,6 +96,7 @@ export function useGameSession(): GameSessionState {
     cards: TrickCardData[];
     winnerPosition: Position | null;
   } | null>(null);
+  const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
 
   useEffect(() => {
     const session = sessionRef.current;
@@ -107,19 +122,28 @@ export function useGameSession(): GameSessionState {
         setTimeout(() => { setCompletedTrick(null); }, 1400);
       }
 
+      if (event.type === 'round_completed') {
+        const ev = event as RoundCompletedEvent;
+        const bidderPos = ev.round.contract?.bidderPosition ?? 0;
+        setLastRoundResult({
+          wasCancelled: false,
+          contract: ev.round.contract ?? null,
+          bidderName: PROFILES[bidderPos]!.name,
+          roundScore: ev.roundScore,
+        });
+      }
+
+      if (event.type === 'round_cancelled') {
+        setLastRoundResult({
+          wasCancelled: true,
+          contract: null,
+          bidderName: '',
+          roundScore: null,
+        });
+      }
+
       setRev((r) => r + 1);
     });
-
-    // Auto-start (guard against React StrictMode double-invoke)
-    if (session.state === 'idle') {
-      session.dispatch(
-        createStartGameCommand(
-          [PROFILES[0].name, PROFILES[1].name, PROFILES[2].name, PROFILES[3].name],
-          501,
-        ),
-      );
-      session.dispatch(createStartRoundCommand());
-    }
 
     return unsub;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -127,7 +151,7 @@ export function useGameSession(): GameSessionState {
   // suppress unused warning in dev
   void rev;
 
-  // ── Derive state ────────────────────────────────────────────────────────
+  // ── Derive state ────────────────────────────────────────────────────
 
   const session = sessionRef.current;
   const game    = session.game;
@@ -184,12 +208,15 @@ export function useGameSession(): GameSessionState {
   }
 
   // Scores
-  const targetScore   = game?.targetScore   ?? 501;
-  const usTotalScore  = game?.teamScores[0] ?? 0;
-  const themTotalScore = game?.teamScores[1] ?? 0;
-  const usScore       = 0; // mid-round scores not surfaced; update on round_completed
-  const themScore     = 0;
-  const dealerName    = round ? PROFILES[round.dealerPosition]!.name : '';
+  const targetScore    = game?.targetScore    ?? 501;
+  const usTotalScore   = game?.teamScores[0]  ?? 0;
+  const themTotalScore = game?.teamScores[1]  ?? 0;
+  const usScore        = 0; // mid-round scores not surfaced; update on round_completed
+  const themScore      = 0;
+  const dealerName     = round ? PROFILES[round.dealerPosition]!.name : '';
+
+  // Winner team index (0 = NS, 1 = EW, null = in progress)
+  const winnerTeamIndex = game?.winnerTeamIndex ?? null;
 
   // Is human's turn?
   let isMyTurn = false;
@@ -242,6 +269,16 @@ export function useGameSession(): GameSessionState {
     dispatch(createStartRoundCommand());
   };
 
+  const startGame = () => {
+    sessionRef.current.dispatch(
+      createStartGameCommand(
+        [PROFILES[0].name, PROFILES[1].name, PROFILES[2].name, PROFILES[3].name],
+        501,
+      ),
+    );
+    sessionRef.current.dispatch(createStartRoundCommand());
+  };
+
   return {
     phase,
     players,
@@ -258,6 +295,9 @@ export function useGameSession(): GameSessionState {
     dealerName,
     isMyTurn,
     isDealing,
+    roundNumber: session.roundNumber,
+    lastRoundResult,
+    winnerTeamIndex,
     legalCardIndices,
     biddingRound,
     validBidValues,
@@ -265,5 +305,6 @@ export function useGameSession(): GameSessionState {
     playCard,
     placeBid,
     startNextRound,
+    startGame,
   };
 }

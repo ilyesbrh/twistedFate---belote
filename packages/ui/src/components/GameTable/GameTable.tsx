@@ -3,14 +3,21 @@ import { useGameSession } from '../../hooks/useGameSession.js';
 import { BidPanel } from '../BidPanel/BidPanel.js';
 import { ChatButton } from '../ChatButton/ChatButton.js';
 import { ChatPanel } from '../ChatPanel/ChatPanel.js';
+import { GameOver } from '../GameOver/GameOver.js';
 import { HandDisplay } from '../HandDisplay/HandDisplay.js';
 import { OpponentHand } from '../OpponentHand/OpponentHand.js';
 import { PlayerAvatar } from '../PlayerAvatar/PlayerAvatar.js';
+import { RoundSummary } from '../RoundSummary/RoundSummary.js';
 import { ScorePanel } from '../ScorePanel/ScorePanel.js';
+import { StartScreen } from '../StartScreen/StartScreen.js';
 import { TrickArea } from '../TrickArea/TrickArea.js';
 import styles from './GameTable.module.css';
 
-export function GameTable() {
+interface GameTableProps {
+  onPlayAgain: () => void;
+}
+
+export function GameTable({ onPlayAgain }: GameTableProps) {
   const state = useGameSession();
   const [chatOpen, setChatOpen] = useState(false);
 
@@ -112,6 +119,39 @@ export function GameTable() {
 
       {/* ── Chat panel overlay ── */}
       <ChatPanel isOpen={chatOpen} onClose={() => setChatOpen(false)} />
+
+      {/* ── Start screen ── */}
+      {state.phase === 'idle' && (
+        <StartScreen
+          players={state.players}
+          targetScore={state.targetScore}
+          onPlay={state.startGame}
+        />
+      )}
+
+      {/* ── Round summary (inter-party) ── */}
+      {state.phase === 'roundComplete' && state.lastRoundResult !== null && (
+        <RoundSummary
+          roundNumber={state.roundNumber}
+          result={state.lastRoundResult}
+          nsTotal={state.usTotalScore}
+          ewTotal={state.themTotalScore}
+          targetScore={state.targetScore}
+          onNextRound={state.startNextRound}
+        />
+      )}
+
+      {/* ── Game over screen ── */}
+      {state.phase === 'gameComplete' && state.winnerTeamIndex !== null && (
+        <GameOver
+          winnerTeamIndex={state.winnerTeamIndex}
+          nsTotal={state.usTotalScore}
+          ewTotal={state.themTotalScore}
+          targetScore={state.targetScore}
+          onPlayAgain={onPlayAgain}
+        />
+      )}
+
     </div>
   );
 }

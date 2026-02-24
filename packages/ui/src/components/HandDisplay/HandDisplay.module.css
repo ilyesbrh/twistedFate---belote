@@ -48,13 +48,20 @@
   transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* Transition fires once .dealt is added */
-.container.dealt .fanSlot .cardHover {
+/* Transition fires once .dealt is added — staggered entrance */
+.container.dealt:not(.dealDone) .fanSlot .cardHover {
   opacity: 1;
   transform: none;
   transition:
     opacity  0.35s ease              calc(var(--card-i, 0) * 80ms),
     transform 0.45s cubic-bezier(0.2, 0, 0, 1) calc(var(--card-i, 0) * 80ms);
+}
+
+/* After deal entrance finishes: fast hover transition */
+.container.dealt.dealDone .fanSlot .cardHover {
+  opacity: 1;
+  transform: none;
+  transition: transform var(--anim-card-hover);
 }
 
 /* After deal: re-enable hover/select overrides */

@@ -18,6 +18,8 @@ export function HandDisplay({ cards, legalCardIndices, onPlayCard, isDealing = f
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   // 'dealt' class triggers the CSS transition animation
   const [dealt, setDealt] = useState(!isDealing);
+  // 'dealDone' switches from slow staggered entrance to fast hover transition
+  const [dealDone, setDealDone] = useState(!isDealing);
   const n = cards.length;
   // Fan angle scales with card count: tight (few cards) → wide (full hand of 8)
   const maxAngle = n > 1 ? Math.min(22, (n - 1) * 3.5) : 0;
@@ -26,11 +28,22 @@ export function HandDisplay({ cards, legalCardIndices, onPlayCard, isDealing = f
   useEffect(() => {
     if (isDealing) {
       setDealt(false);
+      setDealDone(false);
       const id = requestAnimationFrame(() => { setDealt(true); });
       return () => { cancelAnimationFrame(id); };
     }
     return undefined;
   }, [isDealing]);
+
+  // After deal animation completes, switch to fast hover transition
+  useEffect(() => {
+    if (dealt && !dealDone) {
+      const duration = 450 + Math.max(0, n - 1) * 80 + 50; // animation + stagger + buffer
+      const id = setTimeout(() => { setDealDone(true); }, duration);
+      return () => { clearTimeout(id); };
+    }
+    return undefined;
+  }, [dealt, dealDone, n]);
 
   // Clear selection when hand size changes (new round dealt)
   useEffect(() => {
@@ -47,7 +60,7 @@ export function HandDisplay({ cards, legalCardIndices, onPlayCard, isDealing = f
 
   return (
     <div
-      className={`${styles.container} ${dealt ? styles.dealt : ''}`}
+      className={`${styles.container} ${dealt ? styles.dealt : ''} ${dealDone ? styles.dealDone : ''}`}
       data-testid="hand-display"
     >
       {cards.map((card, i) => {
