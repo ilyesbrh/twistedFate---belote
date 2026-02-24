@@ -28,7 +28,7 @@ function getImageFilename(suit: Suit, rank: string): string {
     king: 'king',
   };
   const r = rankMap[rank] ?? rank;
-  return `/cards/${r}_of_${suit}.png`;
+  return `${import.meta.env.BASE_URL}cards/${r}_of_${suit}.png`;
 }
 
 export function CardFace({ suit, rank, isSelected, width, height, style }: CardFaceProps) {

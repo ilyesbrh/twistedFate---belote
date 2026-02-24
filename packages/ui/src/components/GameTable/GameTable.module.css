@@ -4,7 +4,7 @@
   height: 100vh;
   overflow: hidden;
   font-family: var(--font);
-  background: url('/table-bg.svg') center / cover no-repeat;
+  /* background set via inline style in GameTable.tsx to respect Vite base path */
 }
 
 /* All background layers now inside the SVG — these divs are unused */

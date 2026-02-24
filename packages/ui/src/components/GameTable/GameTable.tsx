@@ -22,8 +22,10 @@ export function GameTable() {
   const active  = state.activePosition;
   const showBid = state.phase === 'bidding' && state.isMyTurn && state.biddingRound !== null;
 
+  const tableBg = `url('${import.meta.env.BASE_URL}table-bg.svg') center / cover no-repeat`;
+
   return (
-    <div className={styles.table} data-testid="game-table">
+    <div className={styles.table} style={{ background: tableBg }} data-testid="game-table">
       {/* ── Felt layers ── */}
       <div className={styles.felt}       aria-hidden="true" />
       <div className={styles.feltWeave}  aria-hidden="true" />

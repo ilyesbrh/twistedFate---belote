@@ -3,7 +3,7 @@ import { GameTable } from './components/GameTable/GameTable.js';
 /* Preload all 32 Belote card images so they're cached before play */
 const SUITS = ['hearts', 'diamonds', 'clubs', 'spades'] as const;
 const RANKS = ['7', '8', '9', '10', 'jack', 'queen', 'king', 'ace'] as const;
-const CARD_SRCS = SUITS.flatMap((s) => RANKS.map((r) => `/cards/${r}_of_${s}.png`));
+const CARD_SRCS = SUITS.flatMap((s) => RANKS.map((r) => `${import.meta.env.BASE_URL}cards/${r}_of_${s}.png`));
 
 export default function App() {
   return (
