@@ -1,4 +1,32 @@
 /* ─────────────────────────────────────────
+   Deal animation wrapper
+   ───────────────────────────────────────── */
+.cardWrap { will-change: opacity, transform; }
+
+/* Pre-deal: hidden */
+.topFan:not(.dealt) .cardWrap,
+.sideFan:not(.dealt) .cardWrap {
+  opacity: 0;
+  transform: scale(0.6) translateY(20px);
+}
+
+/* Fan angle transition — fires when cards are played and the arc tightens */
+.topFan.dealt .topFanSlot,
+.sideFan.dealt .sideFanSlot {
+  transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Post-deal: animate in with stagger */
+.topFan.dealt .cardWrap,
+.sideFan.dealt .cardWrap {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity   0.3s ease                             calc(var(--card-i, 0) * 70ms),
+    transform 0.4s cubic-bezier(0.2, 0, 0, 1)      calc(var(--card-i, 0) * 70ms);
+}
+
+/* ─────────────────────────────────────────
    Top opponent: horizontal arc fan
    ───────────────────────────────────────── */
 .topFan {

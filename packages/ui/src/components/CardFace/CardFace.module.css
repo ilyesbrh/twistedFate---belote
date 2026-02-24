@@ -3,12 +3,16 @@
   height: var(--ch, var(--card-h-hand));
   background: var(--card-face-bg);
   border-radius: var(--card-radius);
-  border: 1px solid #d4c89a;
+  border: none;
   overflow: hidden;
   box-shadow: var(--card-shadow);
   position: relative;
   flex-shrink: 0;
   user-select: none;
+  padding: 3px;
+  /* Force GPU compositing layer — prevents sub-pixel blur inside CSS rotations */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .card img {
@@ -17,6 +21,8 @@
   object-fit: cover;
   object-position: center;
   display: block;
+  /* High-quality downscaling when card is smaller than source image */
+  image-rendering: -webkit-optimize-contrast;
 }
 
 .selected {

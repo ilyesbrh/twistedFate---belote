@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+
+    <!-- Wood grain lines -->
+    <pattern id="wood" patternUnits="userSpaceOnUse" width="420" height="1080" patternTransform="rotate(1.2)">
+      <rect width="420" height="1080" fill="#3d1a06"/>
+      <line x1="7"   y1="0" x2="5"   y2="1080" stroke="rgba(0,0,0,0.09)" stroke-width="2.5"/>
+      <line x1="22"  y1="0" x2="24"  y2="1080" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>
+      <line x1="50"  y1="0" x2="48"  y2="1080" stroke="rgba(0,0,0,0.08)" stroke-width="2"/>
+      <line x1="78"  y1="0" x2="80"  y2="1080" stroke="rgba(160,70,10,0.07)" stroke-width="4"/>
+      <line x1="110" y1="0" x2="108" y2="1080" stroke="rgba(0,0,0,0.07)" stroke-width="1.5"/>
+      <line x1="138" y1="0" x2="140" y2="1080" stroke="rgba(0,0,0,0.04)" stroke-width="1"/>
+      <line x1="162" y1="0" x2="160" y2="1080" stroke="rgba(0,0,0,0.09)" stroke-width="2.5"/>
+      <line x1="200" y1="0" x2="202" y2="1080" stroke="rgba(180,80,10,0.06)" stroke-width="3"/>
+      <line x1="238" y1="0" x2="236" y2="1080" stroke="rgba(0,0,0,0.06)" stroke-width="1.5"/>
+      <line x1="268" y1="0" x2="270" y2="1080" stroke="rgba(0,0,0,0.04)" stroke-width="1"/>
+      <line x1="298" y1="0" x2="296" y2="1080" stroke="rgba(0,0,0,0.08)" stroke-width="2"/>
+      <line x1="335" y1="0" x2="337" y2="1080" stroke="rgba(160,70,10,0.05)" stroke-width="3.5"/>
+      <line x1="370" y1="0" x2="368" y2="1080" stroke="rgba(0,0,0,0.06)" stroke-width="1.5"/>
+      <line x1="405" y1="0" x2="407" y2="1080" stroke="rgba(0,0,0,0.04)" stroke-width="1"/>
+    </pattern>
+
+    <!-- Felt woven texture -->
+    <pattern id="felt" patternUnits="userSpaceOnUse" width="8" height="8">
+      <rect width="8" height="8" fill="none"/>
+      <rect x="0" y="0" width="4" height="3" fill="rgba(0,0,0,0.06)" rx="0.5"/>
+      <rect x="4" y="4" width="4" height="3" fill="rgba(0,0,0,0.06)" rx="0.5"/>
+      <rect x="0" y="3" width="4" height="2" fill="rgba(255,255,255,0.03)" rx="0.5"/>
+      <rect x="1" y="1" width="1" height="1" fill="rgba(255,255,255,0.04)"/>
+      <rect x="5" y="5" width="1" height="1" fill="rgba(255,255,255,0.04)"/>
+    </pattern>
+
+    <!-- Felt shading -->
+    <radialGradient id="feltLight" cx="960" cy="510" r="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#4abf72" stop-opacity="0.30"/>
+      <stop offset="40%"  stop-color="#20843f" stop-opacity="0"/>
+      <stop offset="78%"  stop-color="#0b2e16" stop-opacity="0.48"/>
+      <stop offset="100%" stop-color="#061809" stop-opacity="0.82"/>
+    </radialGradient>
+
+    <!-- Wood depth -->
+    <radialGradient id="woodLight" cx="960" cy="540" r="1100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#7a3a18" stop-opacity="0.0"/>
+      <stop offset="55%"  stop-color="#5c2a0c" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#1c0903" stop-opacity="0.65"/>
+    </radialGradient>
+
+    <!-- Corner vignette -->
+    <radialGradient id="vignette" cx="960" cy="540" r="1020" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="rgba(0,0,0,0)"/>
+      <stop offset="58%"  stop-color="rgba(0,0,0,0)"/>
+      <stop offset="78%"  stop-color="rgba(0,0,0,0.18)"/>
+      <stop offset="93%"  stop-color="rgba(0,0,0,0.52)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.76)"/>
+    </radialGradient>
+
+    <!--
+      Felt octagon — chamfered rectangle with 260px corner cuts
+      Base rect: x=288, y=148, w=1344, h=784
+      Right edge: x=1632   Bottom: y=932
+      Corner cut: 260px
+
+      8 points (clockwise from top-left):
+        TL-right  (548, 148)
+        TR-left   (1372, 148)
+        TR-down   (1632, 408)
+        BR-up     (1632, 672)
+        BR-left   (1372, 932)
+        BL-right  (548, 932)
+        BL-up     (288, 672)
+        TL-down   (288, 408)
+    -->
+    <clipPath id="feltClip">
+      <polygon points="548,148 1372,148 1632,408 1632,672 1372,932 548,932 288,672 288,408"/>
+    </clipPath>
+  </defs>
+
+  <!-- 1. Wood base with grain -->
+  <rect width="1920" height="1080" fill="url(#wood)"/>
+
+  <!-- 2. Wood depth shading -->
+  <rect width="1920" height="1080" fill="url(#woodLight)"/>
+
+  <!-- 3. Felt drop-shadow -->
+  <polygon points="554,156 1378,156 1638,416 1638,680 1378,940 554,940 294,680 294,416"
+           fill="rgba(0,0,0,0.46)"/>
+
+  <!-- 4. Felt base -->
+  <polygon points="548,148 1372,148 1632,408 1632,672 1372,932 548,932 288,672 288,408"
+           fill="#1d7840"/>
+
+  <!-- 5. Felt woven texture -->
+  <polygon points="548,148 1372,148 1632,408 1632,672 1372,932 548,932 288,672 288,408"
+           fill="url(#felt)"/>
+
+  <!-- 6. Felt shading -->
+  <polygon points="548,148 1372,148 1632,408 1632,672 1372,932 548,932 288,672 288,408"
+           fill="url(#feltLight)"/>
+
+  <!-- 7. Bevel trim — gold stroke along the felt edge -->
+  <polygon points="548,148 1372,148 1632,408 1632,672 1372,932 548,932 288,672 288,408"
+           fill="none" stroke="#d4a030" stroke-width="2" opacity="0.72"/>
+  <polygon points="542,142 1378,142 1638,402 1638,678 1378,938 542,938 282,678 282,402"
+           fill="none" stroke="#8b5e18" stroke-width="2.5" opacity="0.45"/>
+  <polygon points="536,136 1384,136 1644,396 1644,684 1384,944 536,944 276,684 276,396"
+           fill="none" stroke="rgba(200,150,50,0.18)" stroke-width="3"/>
+
+  <!-- 8. Corner vignette -->
+  <rect width="1920" height="1080" fill="url(#vignette)"/>
+</svg>

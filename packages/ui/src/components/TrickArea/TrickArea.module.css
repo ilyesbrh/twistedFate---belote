@@ -16,3 +16,43 @@
   top: 50%;
   left: 50%;
 }
+
+/* ══════════════════════════════════════════
+   Fly-in animations — card appears from the
+   player's edge and lands at its trick offset
+   ══════════════════════════════════════════ */
+
+@keyframes flyFromSouth {
+  from { transform: translate(-50%, 180px) scale(0.4); opacity: 0; }
+}
+@keyframes flyFromNorth {
+  from { transform: translate(-50%, -180px) scale(0.4); opacity: 0; }
+}
+@keyframes flyFromWest {
+  from { transform: translate(-220px, -50%) scale(0.4); opacity: 0; }
+}
+@keyframes flyFromEast {
+  from { transform: translate(220px, -50%) scale(0.4); opacity: 0; }
+}
+
+/* Each card slot overrides the from-transform so the card lands at its own offset.
+   The animation drives opacity/scale; the cardSlot's inline `transform` is the landing position. */
+.fromSouth { animation: flyFromSouth 0.32s cubic-bezier(0.2, 0, 0.3, 1) both; }
+.fromNorth { animation: flyFromNorth 0.32s cubic-bezier(0.2, 0, 0.3, 1) both; }
+.fromWest  { animation: flyFromWest  0.32s cubic-bezier(0.2, 0, 0.3, 1) both; }
+.fromEast  { animation: flyFromEast  0.32s cubic-bezier(0.2, 0, 0.3, 1) both; }
+
+/* ══════════════════════════════════════════
+   Sweep-out — entire area slides toward the
+   winner's side when a trick is complete
+   ══════════════════════════════════════════ */
+
+@keyframes sweepToSouth { to { transform: translateY(260px) scale(0.2); opacity: 0; } }
+@keyframes sweepToNorth { to { transform: translateY(-260px) scale(0.2); opacity: 0; } }
+@keyframes sweepToWest  { to { transform: translateX(-340px) scale(0.2); opacity: 0; } }
+@keyframes sweepToEast  { to { transform: translateX(340px)  scale(0.2); opacity: 0; } }
+
+.sweepSouth { animation: sweepToSouth 0.55s cubic-bezier(0.4, 0, 1, 1) 0.1s both; }
+.sweepNorth { animation: sweepToNorth 0.55s cubic-bezier(0.4, 0, 1, 1) 0.1s both; }
+.sweepWest  { animation: sweepToWest  0.55s cubic-bezier(0.4, 0, 1, 1) 0.1s both; }
+.sweepEast  { animation: sweepToEast  0.55s cubic-bezier(0.4, 0, 1, 1) 0.1s both; }

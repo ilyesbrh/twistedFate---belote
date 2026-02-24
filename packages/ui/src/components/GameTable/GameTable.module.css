@@ -4,92 +4,11 @@
   height: 100vh;
   overflow: hidden;
   font-family: var(--font);
-  background: #1c0e05; /* dark wood base */
+  background: url('/table-bg.svg') center / cover no-repeat;
 }
 
-/* ── Green felt surface ── */
-.felt {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 100% 100% at 50% 50%,
-    #4aaa65 0%,
-    #3d9458 12%,
-    #2f7a47 28%,
-    #235e35 50%,
-    #194827 72%,
-    #103419 90%,
-    #0a2210 100%
-  );
-}
-
-/* ── SVG noise grain ── */
-.felt::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='felt'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23felt)' opacity='0.07'/%3E%3C/svg%3E");
-  background-size: 300px 300px;
-  pointer-events: none;
-}
-
-/* ── Crosshatch felt weave ── */
-.feltWeave {
-  position: absolute;
-  inset: 0;
-  background-image:
-    repeating-linear-gradient(0deg,   transparent, transparent 3px, rgba(0,0,0,.03) 3px, rgba(0,0,0,.03) 4px),
-    repeating-linear-gradient(90deg,  transparent, transparent 3px, rgba(0,0,0,.03) 3px, rgba(0,0,0,.03) 4px);
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* ── Oval inner glow ── */
-.feltCenter {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 60% 58% at 50% 50%,
-    rgba(90, 200, 120, 0.1) 0%,
-    rgba(60, 160, 85, 0.06) 45%,
-    transparent 70%
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* ── Concentric rings ── */
-.rings {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 86% 86% at 50% 50%,
-    transparent 8%,
-    rgba(255,255,255,.055) 9%,  transparent 13%,
-    rgba(255,255,255,.048) 14%, transparent 20%,
-    rgba(255,255,255,.04)  21%, transparent 29%,
-    rgba(255,255,255,.032) 30%, transparent 40%,
-    rgba(255,255,255,.024) 41%, transparent 54%,
-    rgba(255,255,255,.016) 55%, transparent 68%
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* ── Dark wood rim vignette ── */
-.woodRim {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 100% 100% at 50% 50%,
-    transparent 58%,
-    rgba(10, 5, 2, 0.3)  76%,
-    rgba(6, 3, 1, 0.65)  92%,
-    rgba(0, 0, 0, 0.85) 100%
-  );
-  pointer-events: none;
-  z-index: 2;
-}
+/* All background layers now inside the SVG — these divs are unused */
+.felt, .feltWeave, .feltCenter, .rings, .woodRim { display: none; }
 
 /* ═══════════════════════════════════════
    Element positions — Desktop default
@@ -169,6 +88,7 @@
   flex: 0 0 auto;
   padding: 0 0 8px 8px;
   pointer-events: all;
+  position: relative;
 }
 
 /* Hand pivot: centered in remaining space */
@@ -179,9 +99,19 @@
   pointer-events: all;
 }
 
+/* ── Chat button: anchored to top-right of south avatar ── */
 .chatBtn {
   position: absolute;
-  top: 12px; right: 12px;
+  top: 0;
+  right: -6px;
+  z-index: 21;
+}
+
+/* ── Bid panel: centered in the screen ── */
+.bidPanel {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 20;
 }
 
@@ -210,6 +140,7 @@
   .eastCards   { right: 2px; top: 46%; transform: translateY(-50%); }
 
   .trickArea   { top: 46%; }
+  .bidPanel    { bottom: 70px; }
 
   .southAvatar { padding-bottom: 6px; }
 }

@@ -8,6 +8,8 @@
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 /* Outer inner border frame */

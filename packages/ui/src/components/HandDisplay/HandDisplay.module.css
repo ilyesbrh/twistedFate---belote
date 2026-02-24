@@ -19,6 +19,49 @@
 .fanSlot:hover  .cardHover { transform: translateY(-20px); }
 .fanSlot.selected .cardHover { transform: translateY(-26px); }
 
+/* ── Illegal card (not playable this turn) ── */
+.fanSlot.illegal {
+  cursor: default;
+  pointer-events: none;
+}
+.fanSlot.illegal .cardHover {
+  filter: brightness(0.45) grayscale(30%);
+  transform: none !important;
+}
+
+/* ──────────────────────────────────────────
+   Deal animation
+   Pre-deal: cards hidden below (no transition).
+   Post-deal (.dealt on container): cards
+   transition to their final fan positions,
+   staggered via --card-i CSS variable.
+   ────────────────────────────────────────── */
+
+/* Initial (pre-deal) state */
+.container:not(.dealt) .fanSlot .cardHover {
+  opacity: 0;
+  transform: translateY(70px) scale(0.75) !important;
+}
+
+/* Fan angle transition — fires when cards are played and the arc tightens */
+.container.dealt .fanSlot {
+  transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Transition fires once .dealt is added */
+.container.dealt .fanSlot .cardHover {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity  0.35s ease              calc(var(--card-i, 0) * 80ms),
+    transform 0.45s cubic-bezier(0.2, 0, 0, 1) calc(var(--card-i, 0) * 80ms);
+}
+
+/* After deal: re-enable hover/select overrides */
+.container.dealt .fanSlot:hover   .cardHover { transform: translateY(-20px) !important; }
+.container.dealt .fanSlot.selected .cardHover { transform: translateY(-26px) !important; }
+.container.dealt .fanSlot.illegal  .cardHover { transform: none !important; filter: brightness(0.45) grayscale(30%); }
+
 /* ── Tablet ── */
 @media (max-width: 900px) {
   .fanSlot { transform-origin: 50% 380px; }
@@ -29,6 +72,8 @@
   .fanSlot { transform-origin: 50% 200px; }
   .fanSlot:hover  .cardHover { transform: translateY(-10px); }
   .fanSlot.selected .cardHover { transform: translateY(-14px); }
+  .container.dealt .fanSlot:hover   .cardHover { transform: translateY(-10px) !important; }
+  .container.dealt .fanSlot.selected .cardHover { transform: translateY(-14px) !important; }
 }
 
 /* ── Mobile ── */
@@ -36,4 +81,6 @@
   .fanSlot { transform-origin: 50% 260px; }
   .fanSlot:hover  .cardHover { transform: translateY(-14px); }
   .fanSlot.selected .cardHover { transform: translateY(-18px); }
+  .container.dealt .fanSlot:hover   .cardHover { transform: translateY(-14px) !important; }
+  .container.dealt .fanSlot.selected .cardHover { transform: translateY(-18px) !important; }
 }

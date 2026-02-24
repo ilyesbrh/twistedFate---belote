@@ -1,88 +1,81 @@
-/* ── Compact horizontal score bar ── */
+/* ── Compact horizontal score bar (dark-glass, BidPanel family) ── */
 .panel {
-  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 10px 5px 10px;
-  background: var(--score-panel-bg);
-  border: 1px solid var(--score-panel-border);
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 0 0 14px 0;
+  background: rgba(8, 16, 32, 0.90);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-top: none;
   border-left: none;
-  border-bottom-right-radius: 10px;
-  box-shadow: var(--score-panel-glow);
-  backdrop-filter: blur(12px) saturate(1.4);
-  -webkit-backdrop-filter: blur(12px) saturate(1.4);
-  color: var(--text-score);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  color: var(--text-light);
   font-family: var(--font);
   white-space: nowrap;
 }
 
-/* Top highlight */
-.panel::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(100, 160, 255, 0.5), transparent);
-  pointer-events: none;
-}
-
-.target {
-  font-size: var(--font-size-score-target, 28px);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -1px;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
-}
-
+/* ── Vertical separator ── */
 .sep {
-  display: block;
   width: 1px;
-  align-self: stretch;
-  background: rgba(255, 255, 255, 0.15);
-  margin: 0 2px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
 }
 
-/* Each team block: label + score + total stacked */
+/* ── Trump suit icon ── */
+.trump {
+  font-size: 22px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+}
+
+.trumpRed   { color: #e53935; }
+.trumpBlack { color: #ffffff; }
+
+/* ── Team block: label + round score + total ── */
 .team {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 0;
   line-height: 1;
-  gap: 1px;
 }
 
 .teamLabel {
-  font-size: var(--font-size-label, 10px);
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.5px;
-  color: var(--text-muted);
+  letter-spacing: 0.8px;
   text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
 }
 
 .teamScore {
-  font-size: var(--font-size-score-value, 22px);
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.5px;
 }
 
 .teamTotal {
-  font-size: var(--font-size-score-sm, 14px);
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.4);
 }
 
+/* ── Dot between teams ── */
 .dot {
-  font-size: 18px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.3);
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.22);
   line-height: 1;
-  align-self: center;
 }
 
-.trump {
-  font-size: 18px;
-  line-height: 1;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+/* ── Target ── */
+.target {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+  filter: drop-shadow(0 1px 4px rgba(255, 200, 50, 0.35));
 }

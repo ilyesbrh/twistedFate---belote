@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { MockGameState } from '../../data/mockGame.js';
+import { useGameSession } from '../../hooks/useGameSession.js';
+import { BidPanel } from '../BidPanel/BidPanel.js';
 import { ChatButton } from '../ChatButton/ChatButton.js';
 import { ChatPanel } from '../ChatPanel/ChatPanel.js';
 import { HandDisplay } from '../HandDisplay/HandDisplay.js';
@@ -9,18 +10,17 @@ import { ScorePanel } from '../ScorePanel/ScorePanel.js';
 import { TrickArea } from '../TrickArea/TrickArea.js';
 import styles from './GameTable.module.css';
 
-interface GameTableProps {
-  game: MockGameState;
-}
-
-export function GameTable({ game }: GameTableProps) {
-  const south = game.players.find((p) => p.position === 'south')!;
-  const north = game.players.find((p) => p.position === 'north')!;
-  const west  = game.players.find((p) => p.position === 'west')!;
-  const east  = game.players.find((p) => p.position === 'east')!;
-
-  const active = game.activePosition;
+export function GameTable() {
+  const state = useGameSession();
   const [chatOpen, setChatOpen] = useState(false);
+
+  const south = state.players.find((p) => p.position === 'south')!;
+  const north = state.players.find((p) => p.position === 'north')!;
+  const west  = state.players.find((p) => p.position === 'west')!;
+  const east  = state.players.find((p) => p.position === 'east')!;
+
+  const active  = state.activePosition;
+  const showBid = state.phase === 'bidding' && state.isMyTurn && state.biddingRound !== null;
 
   return (
     <div className={styles.table} data-testid="game-table">
@@ -34,19 +34,19 @@ export function GameTable({ game }: GameTableProps) {
       {/* ── Score panel — top left ── */}
       <div className={styles.scorePanel}>
         <ScorePanel
-          target={game.targetScore}
-          usScore={game.usScore}
-          themScore={game.themScore}
-          usTotalScore={game.usTotalScore}
-          themTotalScore={game.themTotalScore}
-          trumpSuit={game.trumpSuit}
-          dealerName={game.dealerName}
+          target={state.targetScore}
+          usScore={state.usScore}
+          themScore={state.themScore}
+          usTotalScore={state.usTotalScore}
+          themTotalScore={state.themTotalScore}
+          trumpSuit={state.trumpSuit ?? 'spades'}
+          dealerName={state.dealerName}
         />
       </div>
 
       {/* ── North hand — top center ── */}
       <div className={styles.northHand}>
-        <OpponentHand cardCount={north.cardCount} orientation="top" />
+        <OpponentHand cardCount={north.cardCount} orientation="top" isDealing={state.isDealing} />
       </div>
 
       {/* ── North avatar ── */}
@@ -61,7 +61,7 @@ export function GameTable({ game }: GameTableProps) {
 
       {/* ── West card stack ── */}
       <div className={styles.westCards}>
-        <OpponentHand cardCount={west.cardCount} orientation="left" />
+        <OpponentHand cardCount={west.cardCount} orientation="left" isDealing={state.isDealing} />
       </div>
 
       {/* ── East avatar ── */}
@@ -71,27 +71,41 @@ export function GameTable({ game }: GameTableProps) {
 
       {/* ── East card stack ── */}
       <div className={styles.eastCards}>
-        <OpponentHand cardCount={east.cardCount} orientation="right" />
+        <OpponentHand cardCount={east.cardCount} orientation="right" isDealing={state.isDealing} />
       </div>
 
       {/* ── Trick area — center ── */}
       <div className={styles.trickArea}>
-        <TrickArea cards={game.trickCards} />
+        <TrickArea cards={state.trickCards} winnerPosition={state.trickWinnerPosition} />
       </div>
 
-      {/* ── South row: hand (left) + avatar (right-of-DOM = paints on top, flex-order puts it left) ── */}
+      {/* ── Bid panel — above south hand, only when it's human's turn to bid ── */}
+      {showBid && (
+        <div className={styles.bidPanel}>
+          <BidPanel
+            biddingRound={state.biddingRound!}
+            validBidValues={state.validBidValues}
+            onBid={state.placeBid}
+          />
+        </div>
+      )}
+
+      {/* ── South row: hand + avatar (flex bar at bottom) ── */}
       <div className={styles.southRow}>
         <div className={styles.handDisplay}>
-          <HandDisplay cards={game.playerHand} />
+          <HandDisplay
+            cards={state.playerHand}
+            legalCardIndices={state.legalCardIndices}
+            onPlayCard={state.playCard}
+            isDealing={state.isDealing}
+          />
         </div>
         <div className={styles.southAvatar}>
           <PlayerAvatar player={south} size="lg" isActive={active === 'south'} />
+          <div className={styles.chatBtn}>
+            <ChatButton onClick={() => setChatOpen(true)} />
+          </div>
         </div>
-      </div>
-
-      {/* ── Chat button — top right ── */}
-      <div className={styles.chatBtn}>
-        <ChatButton onClick={() => setChatOpen(true)} />
       </div>
 
       {/* ── Chat panel overlay ── */}
