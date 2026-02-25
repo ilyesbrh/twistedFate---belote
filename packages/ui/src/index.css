@@ -13,6 +13,7 @@ body,
 #root {
   width: 100%;
   height: 100%;
+  height: 100dvh; /* Android Chrome: exclude browser chrome from height */
   overflow: hidden;
   font-family: var(--font);
   background: #1c0e05;

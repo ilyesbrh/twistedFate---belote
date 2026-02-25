@@ -2,6 +2,7 @@
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* Android Chrome: exclude browser chrome from height */
   overflow: hidden;
   font-family: var(--font);
   /* background set via inline style in GameTable.tsx to respect Vite base path */
@@ -22,8 +23,8 @@
 
 .scorePanel {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: env(safe-area-inset-top, 0px);
+  left: env(safe-area-inset-left, 0px);
   z-index: 20;
 }
 
@@ -96,6 +97,7 @@
   align-items: flex-end;
   pointer-events: none;
   z-index: 15;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Avatar: visually leftmost (order:-1), DOM-last so it paints above the card fan */
@@ -158,26 +160,26 @@
     transform: translateX(-50%);
   }
 
-  /* West avatar and cards share the same anchor */
+  /* West avatar and cards share the same anchor — respect notch inset */
   .westAvatar {
-    left: 2px;
+    left: calc(env(safe-area-inset-left, 0px) + 2px);
     top: 46%;
     transform: translateY(-50%);
   }
   .westCards {
-    left: 2px;
+    left: calc(env(safe-area-inset-left, 0px) + 2px);
     top: 46%;
     transform: translateY(-50%);
   }
 
-  /* East avatar and cards share the same anchor */
+  /* East avatar and cards share the same anchor — respect notch inset */
   .eastAvatar {
-    right: 2px;
+    right: calc(env(safe-area-inset-right, 0px) + 2px);
     top: 46%;
     transform: translateY(-50%);
   }
   .eastCards {
-    right: 2px;
+    right: calc(env(safe-area-inset-right, 0px) + 2px);
     top: 46%;
     transform: translateY(-50%);
   }
@@ -228,5 +230,40 @@
 
   .trickArea {
     top: 48%;
+  }
+}
+
+/* ═══════════════════════════════════════
+   Portrait phone — tall narrow viewport
+   Shift center of action up to give south
+   hand more room at the bottom.
+   ═══════════════════════════════════════ */
+@media (max-width: 600px) and (orientation: portrait) {
+  .northAvatar {
+    top: calc(env(safe-area-inset-top, 0px) + 6px);
+  }
+
+  .northHand {
+    top: calc(env(safe-area-inset-top, 0px) + 2px);
+  }
+
+  /* Move side players up to ~44% so center shifts upward */
+  .westAvatar {
+    top: 44%;
+  }
+  .westCards {
+    top: 44%;
+  }
+
+  .eastAvatar {
+    top: 44%;
+  }
+  .eastCards {
+    top: 44%;
+  }
+
+  .trickArea {
+    top: 40%;
+    transform: translate(-50%, -50%);
   }
 }
