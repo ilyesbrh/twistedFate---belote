@@ -58,63 +58,10 @@ function renderStartScreen(
 }
 
 describe("StartScreen", () => {
-  it("renders the BELOTE title", () => {
+  it("renders the hero image", () => {
     renderStartScreen();
-    expect(screen.getByText("BELOTE")).toBeInTheDocument();
-  });
-
-  it("renders all four suit symbols", () => {
-    renderStartScreen();
-    expect(screen.getByText("♠")).toBeInTheDocument();
-    expect(screen.getByText("♥")).toBeInTheDocument();
-    expect(screen.getByText("♦")).toBeInTheDocument();
-    expect(screen.getByText("♣")).toBeInTheDocument();
-  });
-
-  it("renders all four player names", () => {
-    renderStartScreen();
-    for (const p of PLAYERS) {
-      expect(screen.getByText(p.name)).toBeInTheDocument();
-    }
-  });
-
-  it("renders player avatars with correct alt text", () => {
-    renderStartScreen();
-    for (const p of PLAYERS) {
-      const img = screen.getByAltText(p.name);
-      expect(img).toBeInTheDocument();
-      expect(img).toHaveAttribute("src", p.avatarUrl);
-    }
-  });
-
-  it('marks south player as "(You)"', () => {
-    renderStartScreen();
-    expect(screen.getByText("(You)")).toBeInTheDocument();
-  });
-
-  it("shows team badges NS and EW", () => {
-    renderStartScreen();
-    const nsBadges = screen.getAllByText("NS");
-    const ewBadges = screen.getAllByText("EW");
-    // NS team: south + north = 2 badges
-    expect(nsBadges).toHaveLength(2);
-    // EW team: west + east = 2 badges
-    expect(ewBadges).toHaveLength(2);
-  });
-
-  it("shows VIP badge for VIP players only", () => {
-    renderStartScreen();
-    const vipBadges = screen.getAllByText("VIP");
-    // ElenaP, Villy, Vane_Bane are VIP (3 players)
-    expect(vipBadges).toHaveLength(3);
-  });
-
-  it("shows player levels", () => {
-    renderStartScreen();
-    expect(screen.getByText("Lv.14")).toBeInTheDocument();
-    expect(screen.getByText("Lv.17")).toBeInTheDocument();
-    expect(screen.getByText("Lv.18")).toBeInTheDocument();
-    expect(screen.getByText("Lv.10")).toBeInTheDocument();
+    const img = screen.getByAltText("Belote card game");
+    expect(img).toBeInTheDocument();
   });
 
   it("displays the target score", () => {
@@ -139,10 +86,5 @@ describe("StartScreen", () => {
 
     await user.click(screen.getByRole("button", { name: /play game/i }));
     expect(onPlay).toHaveBeenCalledTimes(1);
-  });
-
-  it("shows the VS separator between west and east", () => {
-    renderStartScreen();
-    expect(screen.getByText("VS")).toBeInTheDocument();
   });
 });

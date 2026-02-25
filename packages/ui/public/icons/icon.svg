@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2d1810"/>
+      <stop offset="100%" stop-color="#1a0e08"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd54f"/>
+      <stop offset="100%" stop-color="#ff8f00"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="80" fill="url(#bg)"/>
+  <!-- Card shape behind -->
+  <rect x="140" y="80" width="160" height="220" rx="12" fill="#fff9f0" opacity="0.15" transform="rotate(-12, 220, 190)"/>
+  <rect x="200" y="80" width="160" height="220" rx="12" fill="#fff9f0" opacity="0.15" transform="rotate(12, 280, 190)"/>
+  <!-- Main card -->
+  <rect x="170" y="70" width="170" height="240" rx="14" fill="#fff9f0" opacity="0.9"/>
+  <text x="200" y="140" font-family="Georgia, serif" font-size="48" font-weight="bold" fill="#c62828">B</text>
+  <text x="256" y="230" font-family="serif" font-size="80" text-anchor="middle" fill="#c62828">&#9829;</text>
+  <!-- BELOTE text -->
+  <text x="256" y="400" font-family="Georgia, 'Times New Roman', serif" font-size="56" font-weight="bold"
+        text-anchor="middle" fill="url(#gold)" letter-spacing="6">BELOTE</text>
+  <!-- Suit row -->
+  <text x="154" y="448" font-family="serif" font-size="28" fill="rgba(255,213,79,0.5)">&#9824;</text>
+  <text x="210" y="448" font-family="serif" font-size="28" fill="rgba(200,80,80,0.6)">&#9829;</text>
+  <text x="282" y="448" font-family="serif" font-size="28" fill="rgba(200,80,80,0.6)">&#9830;</text>
+  <text x="338" y="448" font-family="serif" font-size="28" fill="rgba(255,213,79,0.5)">&#9827;</text>
+</svg>

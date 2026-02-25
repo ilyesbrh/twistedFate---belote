@@ -53,131 +53,14 @@
   }
 }
 
-/* ── Title row ── */
-.title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  letter-spacing: 6px;
-  font-weight: 900;
-  font-family: var(--font);
-}
-
-.titleText {
-  font-size: 26px;
-  color: var(--text-light);
-  text-transform: uppercase;
-}
-
-.suitRed {
-  font-size: 22px;
-  color: var(--suit-red);
-}
-.suitBlack {
-  font-size: 22px;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-/* ── Players grid ── */
-.playersGrid {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
+/* ── Hero image ── */
+.heroImage {
   width: 100%;
-}
-
-.northSlot,
-.southSlot {
-  display: flex;
-  justify-content: center;
-}
-
-.midRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 8px;
-}
-
-.vsText {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  color: rgba(255, 255, 255, 0.2);
-  text-transform: uppercase;
-  flex-shrink: 0;
-}
-
-/* ── Player slot ── */
-.playerSlot {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-}
-
-.avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  object-fit: cover;
-}
-
-.playerName {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-light);
-  text-align: center;
-  letter-spacing: 0.2px;
-}
-
-.youLabel {
-  color: var(--gold);
-  font-size: 10px;
-  font-weight: 600;
-}
-
-.playerMeta {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.teamBadge {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-  padding: 1px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
-}
-
-.teamNS {
-  background: rgba(79, 195, 247, 0.18);
-  color: #81d4fa;
-}
-
-.teamEW {
-  background: rgba(255, 183, 77, 0.18);
-  color: #ffcc80;
-}
-
-.levelText {
-  font-size: 10px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.38);
-}
-
-.vipBadge {
-  font-size: 9px;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: rgba(255, 193, 7, 0.2);
-  color: var(--vip-gold);
+  max-width: 360px;
+  height: auto;
+  border-radius: 14px;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* ── Target score ── */
@@ -231,19 +114,8 @@
     max-height: calc(100dvh - 32px);
     overflow-y: auto;
   }
-  .avatar {
-    width: 40px;
-    height: 40px;
-  }
-  .titleText {
-    font-size: 18px;
-  }
-  .suitRed,
-  .suitBlack {
-    font-size: 18px;
-  }
-  .playerName {
-    font-size: 11px;
+  .heroImage {
+    max-width: 280px;
   }
   .playBtn {
     padding: 12px 32px;
@@ -261,12 +133,8 @@
     max-height: calc(100dvh - 24px);
     overflow-y: auto;
   }
-  .playersGrid {
-    gap: 6px;
-  }
-  .avatar {
-    width: 32px;
-    height: 32px;
+  .heroImage {
+    max-width: 220px;
   }
   .playBtn {
     padding: 8px 28px;
