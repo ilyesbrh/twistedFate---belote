@@ -248,34 +248,47 @@
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .panel {
-    padding: 28px 24px;
-    gap: 16px;
+    padding: 24px 20px;
+    gap: 14px;
     min-width: 0;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
   }
   .winnerTeam {
-    font-size: 22px;
+    font-size: 20px;
   }
   .trophy {
-    font-size: 38px;
+    font-size: 36px;
+  }
+  .youResult {
+    font-size: 13px;
+    padding: 4px 12px;
+  }
+  .barRow {
+    grid-template-columns: 60px 1fr 50px;
+    gap: 8px;
   }
   .playAgainBtn {
-    padding: 12px 36px;
+    padding: 12px 32px;
     font-size: 12px;
   }
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
   .panel {
-    gap: 12px;
-    padding: 18px 28px;
+    gap: 10px;
+    padding: 14px 24px;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
   }
   .trophy {
-    font-size: 30px;
+    font-size: 28px;
   }
   .winnerTeam {
-    font-size: 18px;
+    font-size: 16px;
   }
   .playAgainBtn {
-    padding: 10px 32px;
+    padding: 8px 28px;
+    font-size: 11px;
   }
 }

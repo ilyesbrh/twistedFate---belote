@@ -212,10 +212,16 @@ export class GameSession {
       dealerPosition: this._game.currentDealerPosition,
     });
 
-    // After round_started, schedule first bid step (delayed so UI shows deal)
-    this._scheduleNext(() => {
+    // After round_started, wait longer for the initial step so the deal animation
+    // finishes before the AI starts acting (deal animation is ~1s).
+    if (this._stepDelayMs <= 0) {
       this._processNextBid();
-    });
+    } else {
+      const initialDelay = Math.max(this._stepDelayMs, 1500);
+      setTimeout(() => {
+        this._processNextBid();
+      }, initialDelay);
+    }
   }
 
   // ── Private: Place Bid ──

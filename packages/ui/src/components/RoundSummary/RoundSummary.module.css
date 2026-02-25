@@ -322,24 +322,52 @@
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .panel {
-    padding: 22px 20px;
-    gap: 14px;
+    padding: 20px 16px;
+    gap: 12px;
     min-width: 0;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
   }
   .scoreRow {
-    grid-template-columns: 76px 1fr 1fr;
+    grid-template-columns: 66px 1fr 1fr;
   }
   .totalTeamScore {
-    font-size: 22px;
+    font-size: 20px;
+  }
+  .scoreVal {
+    font-size: 16px;
+  }
+  .scoreFinal {
+    font-size: 18px;
+  }
+  .resultBadge {
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+  .totals {
+    padding: 10px 0;
+  }
+  .nextBtn {
+    padding: 11px 0;
+    font-size: 12px;
   }
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
   .panel {
-    gap: 10px;
-    padding: 16px 22px;
+    gap: 8px;
+    padding: 12px 18px;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
   }
   .totals {
+    padding: 6px 0;
+  }
+  .totalTeamScore {
+    font-size: 18px;
+  }
+  .nextBtn {
     padding: 8px 0;
+    font-size: 11px;
   }
 }

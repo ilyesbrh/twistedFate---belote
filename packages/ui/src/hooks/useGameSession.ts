@@ -6,7 +6,7 @@ import {
   createPlaceBidCommand,
   createPlayCardCommand,
 } from "@belote/app";
-import type { GameCommand, TrickCompletedEvent, RoundCompletedEvent } from "@belote/app";
+import type { GameCommand, TrickCompletedEvent, RoundCompletedEvent, GameCompletedEvent } from "@belote/app";
 import { BID_VALUES, getValidPlays } from "@belote/core";
 import type { BiddingRound, BidValue, Contract, RoundScore, Suit } from "@belote/core";
 import type { CardData, PlayerData, Position, TrickCardData } from "../data/mockGame.js";
@@ -99,7 +99,7 @@ export interface GameSessionState {
   validBidValues: readonly BidValue[];
   /** All game action messages (chat log). */
   messages: GameMessage[];
-  /** Per-position thought bubble (auto-dismisses after ~2.5s). */
+  /** Per-position thought bubble (auto-dismisses after ~4s). */
   bubbles: Record<Position, GameMessage | null>;
   dispatch: (cmd: GameCommand) => void;
   playCard: (cardIndex: number) => void;
@@ -112,7 +112,7 @@ export interface GameSessionState {
 
 export function useGameSession(): GameSessionState {
   const sessionRef = useRef(
-    new GameSession({ playerTypes: ["human", "ai", "ai", "ai"], stepDelayMs: 800 }),
+    new GameSession({ playerTypes: ["human", "ai", "ai", "ai"], stepDelayMs: 3000 }),
   );
   const [rev, setRev] = useState(0);
   const [isDealing, setIsDealing] = useState(false);
@@ -121,6 +121,8 @@ export function useGameSession(): GameSessionState {
     winnerPosition: Position | null;
   } | null>(null);
   const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
+  /** Delayed winner — gives the player time to see the last actions before the popup. */
+  const [delayedWinnerTeamIndex, setDelayedWinnerTeamIndex] = useState<0 | 1 | null>(null);
   const [messages, setMessages] = useState<GameMessage[]>([]);
   const [bubbles, setBubbles] = useState<Record<Position, GameMessage | null>>({
     south: null,
@@ -145,7 +147,7 @@ export function useGameSession(): GameSessionState {
     bubbleTimers.current[pos] = setTimeout(() => {
       setBubbles((prev) => ({ ...prev, [pos]: null }));
       bubbleTimers.current[pos] = null;
-    }, 2500);
+    }, 4000);
   }, []);
 
   useEffect(() => {
@@ -186,21 +188,34 @@ export function useGameSession(): GameSessionState {
       if (event.type === "round_completed") {
         const ev = event as RoundCompletedEvent;
         const bidderPos = ev.round.contract?.bidderPosition ?? 0;
-        setLastRoundResult({
-          wasCancelled: false,
-          contract: ev.round.contract ?? null,
-          bidderName: PROFILES[bidderPos]!.name,
-          roundScore: ev.roundScore,
-        });
+        // Delay so the player sees the last trick sweep before the popup
+        setTimeout(() => {
+          setLastRoundResult({
+            wasCancelled: false,
+            contract: ev.round.contract ?? null,
+            bidderName: PROFILES[bidderPos]!.name,
+            roundScore: ev.roundScore,
+          });
+        }, 2000);
       }
 
       if (event.type === "round_cancelled") {
-        setLastRoundResult({
-          wasCancelled: true,
-          contract: null,
-          bidderName: "",
-          roundScore: null,
-        });
+        setTimeout(() => {
+          setLastRoundResult({
+            wasCancelled: true,
+            contract: null,
+            bidderName: "",
+            roundScore: null,
+          });
+        }, 2000);
+      }
+
+      if (event.type === "game_completed") {
+        // Delay so the player sees the final trick before the game over popup
+        const ev = event as GameCompletedEvent;
+        setTimeout(() => {
+          setDelayedWinnerTeamIndex(ev.winnerTeamIndex);
+        }, 2500);
       }
 
       // Generate game action message for chat + thought bubbles
@@ -283,8 +298,8 @@ export function useGameSession(): GameSessionState {
   const themScore = 0;
   const dealerName = round ? PROFILES[round.dealerPosition]!.name : "";
 
-  // Winner team index (0 = NS, 1 = EW, null = in progress)
-  const winnerTeamIndex = game?.winnerTeamIndex ?? null;
+  // Winner team index — use the delayed value so the popup doesn't appear instantly
+  const winnerTeamIndex = delayedWinnerTeamIndex;
 
   // Is human's turn?
   let isMyTurn = false;
