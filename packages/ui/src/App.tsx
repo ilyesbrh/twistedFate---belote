@@ -1,5 +1,6 @@
 import { type ReactElement, useState } from "react";
 import { GameTable } from "./components/GameTable/GameTable.js";
+import { InstallPrompt } from "./components/InstallPrompt/InstallPrompt.js";
 
 /* Preload all 32 Belote card images so they're cached before play */
 const SUITS = ["hearts", "diamonds", "clubs", "spades"] as const;
@@ -14,6 +15,7 @@ export default function App(): ReactElement {
 
   return (
     <>
+      <InstallPrompt />
       {/* Hidden preload: browser loads all 32 images before they appear in the trick area */}
       <div
         style={{

@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a0e08"/>
+      <stop offset="100%" stop-color="#2d1810"/>
+    </linearGradient>
+    <linearGradient id="cardFace" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff9f0"/>
+      <stop offset="100%" stop-color="#f5e6d0"/>
+    </linearGradient>
+    <linearGradient id="goldShine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd54f"/>
+      <stop offset="50%" stop-color="#ffb300"/>
+      <stop offset="100%" stop-color="#ff8f00"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <clipPath id="cardClip">
+      <rect width="80" height="112" rx="8" ry="8"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="300" fill="url(#bg)" rx="16"/>
+
+  <!-- Subtle felt texture circles -->
+  <circle cx="200" cy="150" r="120" fill="none" stroke="rgba(255,213,79,0.06)" stroke-width="1"/>
+  <circle cx="200" cy="150" r="90" fill="none" stroke="rgba(255,213,79,0.04)" stroke-width="1"/>
+  <circle cx="200" cy="150" r="60" fill="none" stroke="rgba(255,213,79,0.03)" stroke-width="1"/>
+
+  <!-- Card 1 - Back left (rotated) -->
+  <g transform="translate(90, 80) rotate(-25, 40, 56)" filter="url(#shadow)">
+    <rect width="80" height="112" rx="8" fill="url(#cardFace)" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+    <rect x="5" y="5" width="70" height="102" rx="5" fill="none" stroke="rgba(180,140,100,0.3)" stroke-width="0.5"/>
+    <!-- Spade suit -->
+    <text x="10" y="22" font-family="serif" font-size="14" font-weight="bold" fill="#1a1a2e">A</text>
+    <text x="40" y="68" font-family="serif" font-size="36" text-anchor="middle" fill="#1a1a2e">&#9824;</text>
+    <text x="70" y="106" font-family="serif" font-size="14" font-weight="bold" fill="#1a1a2e" text-anchor="end" transform="rotate(180,70,100)">A</text>
+  </g>
+
+  <!-- Card 2 - Back middle-left -->
+  <g transform="translate(130, 65) rotate(-12, 40, 56)" filter="url(#shadow)">
+    <rect width="80" height="112" rx="8" fill="url(#cardFace)" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+    <rect x="5" y="5" width="70" height="102" rx="5" fill="none" stroke="rgba(180,140,100,0.3)" stroke-width="0.5"/>
+    <!-- Heart suit -->
+    <text x="10" y="22" font-family="serif" font-size="14" font-weight="bold" fill="#c62828">K</text>
+    <text x="40" y="68" font-family="serif" font-size="36" text-anchor="middle" fill="#c62828">&#9829;</text>
+    <text x="70" y="106" font-family="serif" font-size="14" font-weight="bold" fill="#c62828" text-anchor="end" transform="rotate(180,70,100)">K</text>
+  </g>
+
+  <!-- Card 3 - Center (main, slightly up) -->
+  <g transform="translate(168, 55) rotate(0, 40, 56)" filter="url(#shadow)">
+    <rect width="80" height="112" rx="8" fill="url(#cardFace)" stroke="rgba(0,0,0,0.12)" stroke-width="1"/>
+    <rect x="5" y="5" width="70" height="102" rx="5" fill="none" stroke="rgba(180,140,100,0.3)" stroke-width="0.5"/>
+    <!-- Diamond suit -->
+    <text x="10" y="22" font-family="serif" font-size="14" font-weight="bold" fill="#c62828">J</text>
+    <text x="40" y="70" font-family="serif" font-size="40" text-anchor="middle" fill="#c62828">&#9830;</text>
+    <text x="70" y="106" font-family="serif" font-size="14" font-weight="bold" fill="#c62828" text-anchor="end" transform="rotate(180,70,100)">J</text>
+  </g>
+
+  <!-- Card 4 - Right-center -->
+  <g transform="translate(205, 65) rotate(12, 40, 56)" filter="url(#shadow)">
+    <rect width="80" height="112" rx="8" fill="url(#cardFace)" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+    <rect x="5" y="5" width="70" height="102" rx="5" fill="none" stroke="rgba(180,140,100,0.3)" stroke-width="0.5"/>
+    <!-- Club suit -->
+    <text x="10" y="22" font-family="serif" font-size="14" font-weight="bold" fill="#1a1a2e">Q</text>
+    <text x="40" y="68" font-family="serif" font-size="36" text-anchor="middle" fill="#1a1a2e">&#9827;</text>
+    <text x="70" y="106" font-family="serif" font-size="14" font-weight="bold" fill="#1a1a2e" text-anchor="end" transform="rotate(180,70,100)">Q</text>
+  </g>
+
+  <!-- Card 5 - Far right -->
+  <g transform="translate(240, 80) rotate(25, 40, 56)" filter="url(#shadow)">
+    <rect width="80" height="112" rx="8" fill="url(#cardFace)" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+    <rect x="5" y="5" width="70" height="102" rx="5" fill="none" stroke="rgba(180,140,100,0.3)" stroke-width="0.5"/>
+    <!-- Spade suit -->
+    <text x="10" y="22" font-family="serif" font-size="14" font-weight="bold" fill="#1a1a2e">10</text>
+    <text x="40" y="68" font-family="serif" font-size="36" text-anchor="middle" fill="#1a1a2e">&#9824;</text>
+    <text x="70" y="106" font-family="serif" font-size="14" font-weight="bold" fill="#1a1a2e" text-anchor="end" transform="rotate(180,70,100)">10</text>
+  </g>
+
+  <!-- Golden glow behind title area -->
+  <ellipse cx="200" cy="240" rx="100" ry="20" fill="rgba(255,213,79,0.08)" filter="url(#glow)"/>
+
+  <!-- Decorative golden line -->
+  <line x1="100" y1="210" x2="300" y2="210" stroke="url(#goldShine)" stroke-width="1" opacity="0.4"/>
+  <line x1="120" y1="260" x2="280" y2="260" stroke="url(#goldShine)" stroke-width="1" opacity="0.3"/>
+
+  <!-- "BELOTE" text -->
+  <text x="200" y="242" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="bold"
+        text-anchor="middle" fill="url(#goldShine)" letter-spacing="8" filter="url(#glow)">BELOTE</text>
+
+  <!-- Small decorative suits under title -->
+  <g transform="translate(155, 252)" fill="rgba(255,213,79,0.5)" font-size="14" font-family="serif">
+    <text x="0" y="0">&#9824;</text>
+    <text x="22" y="0" fill="rgba(200,80,80,0.6)">&#9829;</text>
+    <text x="44" y="0" fill="rgba(200,80,80,0.6)">&#9830;</text>
+    <text x="66" y="0">&#9827;</text>
+  </g>
+</svg>
