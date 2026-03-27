@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ignition (1997) - Browser Player</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      text-align: center;
+      padding: 20px 16px 10px;
+      width: 100%;
+      background: linear-gradient(180deg, #1a1a2e 0%, #0a0a0a 100%);
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ff6b35, #f7c948);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    header p {
+      color: #888;
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+
+    #game-wrapper {
+      width: 100%;
+      max-width: 960px;
+      margin: 10px 16px;
+      position: relative;
+    }
+
+    #game-container {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #000;
+      border: 2px solid #222;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #game-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    /* Upload overlay */
+    #upload-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 10;
+      gap: 16px;
+      padding: 24px;
+    }
+
+    #upload-overlay.hidden { display: none; }
+
+    .race-icon {
+      font-size: 3.5rem;
+      filter: grayscale(0.3);
+    }
+
+    #upload-overlay h2 {
+      font-size: 1.2rem;
+      color: #ddd;
+    }
+
+    .instructions {
+      color: #888;
+      font-size: 0.82rem;
+      text-align: center;
+      max-width: 440px;
+      line-height: 1.6;
+    }
+
+    .instructions strong { color: #f7c948; }
+
+    .upload-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .upload-btn {
+      background: linear-gradient(135deg, #ff6b35, #e85d26);
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .upload-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(255, 107, 53, 0.4);
+    }
+
+    .upload-btn.secondary {
+      background: #1a1a2e;
+      border: 1px solid #444;
+    }
+
+    .upload-btn.secondary:hover {
+      background: #2a2a4e;
+      box-shadow: 0 4px 16px rgba(100, 100, 200, 0.2);
+    }
+
+    #file-input, #zip-input { display: none; }
+
+    .drop-hint {
+      color: #555;
+      font-size: 0.75rem;
+      margin-top: 4px;
+    }
+
+    /* Loading state */
+    #loading-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.97);
+      z-index: 11;
+      gap: 16px;
+    }
+
+    #loading-overlay.hidden { display: none; }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid #222;
+      border-top-color: #ff6b35;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #loading-text {
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+
+    #progress-bar {
+      width: 200px;
+      height: 4px;
+      background: #222;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    #progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff6b35, #f7c948);
+      transition: width 0.3s;
+    }
+
+    /* Controls bar */
+    #controls {
+      display: flex;
+      gap: 6px;
+      padding: 8px 0;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .ctrl-btn {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      color: #999;
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .ctrl-btn:hover {
+      background: #1a1a2e;
+      border-color: #444;
+      color: #ddd;
+    }
+
+    .ctrl-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    /* Keyboard reference */
+    #keyboard-ref {
+      width: 100%;
+      max-width: 960px;
+      padding: 12px 16px 24px;
+    }
+
+    #keyboard-ref h3 {
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .keys-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 6px;
+    }
+
+    .key-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: #666;
+    }
+
+    .key-item kbd {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 3px;
+      padding: 2px 7px;
+      font-family: monospace;
+      font-size: 0.7rem;
+      color: #aaa;
+      min-width: 26px;
+      text-align: center;
+    }
+
+    /* Error toast */
+    #error-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #c62828;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      z-index: 100;
+      display: none;
+      max-width: 90%;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    /* Fullscreen */
+    :fullscreen #game-wrapper,
+    :-webkit-full-screen #game-wrapper {
+      max-width: 100%;
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+    }
+
+    :fullscreen #game-container,
+    :-webkit-full-screen #game-container {
+      width: 100%;
+      height: 100%;
+      border-radius: 0;
+      border: none;
+      aspect-ratio: auto;
+    }
+
+    /* Drag-over highlight */
+    #game-container.drag-over {
+      border-color: #ff6b35;
+      box-shadow: inset 0 0 30px rgba(255, 107, 53, 0.15);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Ignition</h1>
+    <p>1997 &middot; Unique Development Studios &middot; DOS Racing</p>
+  </header>
+
+  <div id="game-wrapper">
+    <div id="game-container">
+      <div id="upload-overlay">
+        <div class="race-icon">🏎️</div>
+        <h2>Load Ignition Game Files</h2>
+        <p class="instructions">
+          Upload a <strong>.jsdos</strong> bundle or a <strong>.zip</strong> containing the Ignition DOS game files.<br />
+          You need a legal copy of the game. Use the included <code>create-bundle.sh</code> script to create a .jsdos bundle from your game folder.
+        </p>
+        <div class="upload-actions">
+          <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+            Upload .jsdos Bundle
+          </button>
+          <button class="upload-btn secondary" onclick="document.getElementById('zip-input').click()">
+            Upload .zip
+          </button>
+        </div>
+        <p class="drop-hint">or drag &amp; drop a file anywhere here</p>
+        <input type="file" id="file-input" accept=".jsdos" />
+        <input type="file" id="zip-input" accept=".zip" />
+      </div>
+
+      <div id="loading-overlay" class="hidden">
+        <div class="spinner"></div>
+        <div id="loading-text">Initializing DOSBox...</div>
+        <div id="progress-bar"><div id="progress-fill"></div></div>
+      </div>
+    </div>
+
+    <div id="controls">
+      <button class="ctrl-btn" id="btn-fullscreen" disabled>⛶ Fullscreen</button>
+      <button class="ctrl-btn" id="btn-restart" disabled>↻ Restart</button>
+      <button class="ctrl-btn" id="btn-mute" disabled>🔇 Mute</button>
+    </div>
+  </div>
+
+  <div id="keyboard-ref">
+    <h3>Default Controls</h3>
+    <div class="keys-grid">
+      <div class="key-item"><kbd>↑</kbd> Accelerate</div>
+      <div class="key-item"><kbd>↓</kbd> Brake / Reverse</div>
+      <div class="key-item"><kbd>←</kbd> Steer Left</div>
+      <div class="key-item"><kbd>→</kbd> Steer Right</div>
+      <div class="key-item"><kbd>Space</kbd> Handbrake</div>
+      <div class="key-item"><kbd>Enter</kbd> Confirm / Select</div>
+      <div class="key-item"><kbd>Esc</kbd> Pause / Menu</div>
+      <div class="key-item"><kbd>Ctrl</kbd> Turbo Boost</div>
+    </div>
+  </div>
+
+  <div id="error-toast"></div>
+
+  <script type="module">
+    // ─── js-dos v8 (emulators-ui) ───────────────────────────────────
+    // We dynamically load js-dos from their CDN. v8 uses the "emulators-ui" package.
+
+    const JSDOS_CDN = 'https://v8.js-dos.com/latest/js-dos.js';
+    const JSDOS_CSS = 'https://v8.js-dos.com/latest/js-dos.css';
+
+    const gameContainer = document.getElementById('game-container');
+    const uploadOverlay = document.getElementById('upload-overlay');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingText = document.getElementById('loading-text');
+    const progressFill = document.getElementById('progress-fill');
+    const errorToast = document.getElementById('error-toast');
+
+    let ci = null; // command interface (running dos instance)
+    let muted = false;
+
+    // ─── Helpers ──────────────────────────────────────────────────────
+
+    function showError(msg) {
+      errorToast.textContent = msg;
+      errorToast.style.display = 'block';
+      setTimeout(() => { errorToast.style.display = 'none'; }, 6000);
+    }
+
+    function setProgress(pct) {
+      progressFill.style.width = Math.min(100, pct) + '%';
+    }
+
+    function enableControls() {
+      document.querySelectorAll('.ctrl-btn').forEach(b => b.disabled = false);
+    }
+
+    // ─── Load js-dos library ─────────────────────────────────────────
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('Failed to load ' + src));
+        document.head.appendChild(s);
+      });
+    }
+
+    function loadCSS(href) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      document.head.appendChild(link);
+    }
+
+    // ─── Start game with js-dos ──────────────────────────────────────
+
+    async function startGame(bundleUrl) {
+      uploadOverlay.classList.add('hidden');
+      loadingOverlay.classList.remove('hidden');
+      setProgress(10);
+
+      try {
+        loadingText.textContent = 'Loading js-dos emulator...';
+        loadCSS(JSDOS_CSS);
+        await loadScript(JSDOS_CDN);
+        setProgress(40);
+
+        loadingText.textContent = 'Starting DOSBox...';
+
+        // js-dos v8 API: Dos(element, options)
+        if (typeof Dos !== 'undefined') {
+          // v8 API
+          setProgress(60);
+          loadingText.textContent = 'Loading game files...';
+
+          const dos = Dos(gameContainer, {
+            url: bundleUrl,
+            autoStart: true,
+          });
+
+          // Wait a moment for initialization then hide overlay
+          setTimeout(() => {
+            loadingOverlay.classList.add('hidden');
+            enableControls();
+            setProgress(100);
+          }, 3000);
+
+          ci = dos;
+        } else {
+          throw new Error('js-dos library failed to initialize');
+        }
+
+      } catch (err) {
+        console.error('Startup error:', err);
+        loadingOverlay.classList.add('hidden');
+        uploadOverlay.classList.remove('hidden');
+        showError('Failed to start: ' + err.message);
+      }
+    }
+
+    // ─── Fallback: use emulators directly if v8 Dos isn't available ──
+
+    async function startGameFallback(bundleUrl) {
+      uploadOverlay.classList.add('hidden');
+      loadingOverlay.classList.remove('hidden');
+      setProgress(10);
+
+      try {
+        loadingText.textContent = 'Loading emulator (fallback)...';
+
+        // Try loading v7
+        const V7_JS = 'https://js-dos.com/v7/build/js-dos.js';
+        const V7_CSS = 'https://js-dos.com/v7/build/js-dos.css';
+        loadCSS(V7_CSS);
+        await loadScript(V7_JS);
+        setProgress(50);
+
+        loadingText.textContent = 'Starting game...';
+        ci = await Dos(gameContainer).run(bundleUrl);
+        setProgress(100);
+
+        loadingOverlay.classList.add('hidden');
+        enableControls();
+      } catch (err) {
+        loadingOverlay.classList.add('hidden');
+        uploadOverlay.classList.remove('hidden');
+        showError('Fallback failed: ' + err.message);
+        console.error(err);
+      }
+    }
+
+    // ─── File handling ───────────────────────────────────────────────
+
+    async function handleFile(file) {
+      const name = file.name.toLowerCase();
+      if (!name.endsWith('.jsdos') && !name.endsWith('.zip')) {
+        showError('Please upload a .jsdos or .zip file');
+        return;
+      }
+
+      const url = URL.createObjectURL(file);
+
+      try {
+        await startGame(url);
+      } catch (e) {
+        console.warn('v8 failed, trying v7 fallback...', e);
+        await startGameFallback(url);
+      }
+    }
+
+    // ─── Drag & drop ─────────────────────────────────────────────────
+
+    gameContainer.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      gameContainer.classList.add('drag-over');
+    });
+
+    gameContainer.addEventListener('dragleave', () => {
+      gameContainer.classList.remove('drag-over');
+    });
+
+    gameContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      gameContainer.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+
+    // ─── File inputs ─────────────────────────────────────────────────
+
+    document.getElementById('file-input').addEventListener('change', (e) => {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    document.getElementById('zip-input').addEventListener('change', (e) => {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    // ─── Control buttons ─────────────────────────────────────────────
+
+    document.getElementById('btn-fullscreen').addEventListener('click', () => {
+      const wrapper = document.getElementById('game-wrapper');
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        (wrapper.requestFullscreen || wrapper.webkitRequestFullscreen).call(wrapper);
+      }
+    });
+
+    document.getElementById('btn-restart').addEventListener('click', () => {
+      location.reload();
+    });
+
+    document.getElementById('btn-mute').addEventListener('click', () => {
+      muted = !muted;
+      document.getElementById('btn-mute').textContent = muted ? '🔊 Unmute' : '🔇 Mute';
+
+      // Try to mute via AudioContext
+      if (window._audioCtx) {
+        muted ? window._audioCtx.suspend() : window._audioCtx.resume();
+      } else {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        window._audioCtx = ctx;
+        if (muted) ctx.suspend();
+      }
+    });
+
+    // ─── Check for bundled file ──────────────────────────────────────
+
+    // If ignition.jsdos exists alongside this HTML, auto-load it
+    async function tryAutoLoad() {
+      try {
+        const resp = await fetch('ignition.jsdos', { method: 'HEAD' });
+        if (resp.ok) {
+          await startGame('ignition.jsdos');
+        }
+      } catch {
+        // No bundled file, user must upload
+      }
+    }
+
+    tryAutoLoad();
+  </script>
+</body>
+</html>
