@@ -341,12 +341,21 @@
     let gameLoaded = false;
     let loadTimeout = null;
 
+    // dos.zone sends X-Frame-Options: SAMEORIGIN, so it cannot be iframed.
+    // Open it in a new window/tab instead.
+    const GAME_URL = 'https://dos.zone/ignition/';
+
     function launchGame() {
-      playBtn.style.display = 'none';
+      const win = window.open(GAME_URL, '_blank', 'noopener');
+      if (!win) {
+        // Popup blocked — fall back to same-tab navigation
+        location.href = GAME_URL;
+        return;
+      }
       loadingBar.classList.add('active');
       loadingText.classList.add('active');
-
-      tryLoadSource(0);
+      loadingText.textContent = 'Game opened in a new window.';
+      playBtn.textContent = 'Open Again';
     }
 
     function tryLoadSource(index) {
