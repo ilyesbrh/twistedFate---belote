@@ -349,7 +349,7 @@ export function chooseBid(
   let minBidValue: BidValue | null = null;
 
   if (currentHighest === null) {
-    minBidValue = 80 as BidValue;
+    minBidValue = 90 as BidValue;
   } else {
     // Find next value above current highest
     for (const v of BID_VALUES) {

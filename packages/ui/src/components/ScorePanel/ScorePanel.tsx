@@ -9,6 +9,10 @@ interface ScorePanelProps {
   themTotalScore: number;
   trumpSuit: Suit;
   dealerName: string;
+  /** Current contract value (null when no contract yet, e.g. still bidding). */
+  contractValue?: number | null;
+  /** 1 = normal, 2 = contré, 4 = surcontré. */
+  contractCoincheLevel?: 1 | 2 | 4;
 }
 
 const SUIT_SYMBOLS: Record<Suit, string> = {
@@ -27,8 +31,12 @@ export function ScorePanel({
   usTotalScore,
   themTotalScore,
   trumpSuit,
+  contractValue = null,
+  contractCoincheLevel = 1,
 }: ScorePanelProps) {
   const isRedSuit = RED_SUITS.includes(trumpSuit);
+  const levelLabel =
+    contractCoincheLevel === 4 ? "SURCONTRE" : contractCoincheLevel === 2 ? "CONTRE" : null;
 
   return (
     <div className={styles.panel} data-testid="score-panel">
@@ -57,10 +65,24 @@ export function ScorePanel({
 
       <span className={styles.sep} aria-hidden="true" />
 
+      {/* Contract value */}
+      {contractValue !== null && <span className={styles.contractValue}>{contractValue}</span>}
+
       {/* Trump suit icon */}
       <span className={`${styles.trump} ${isRedSuit ? styles.trumpRed : styles.trumpBlack}`}>
         {SUIT_SYMBOLS[trumpSuit]}
       </span>
+
+      {/* Coinche level badge */}
+      {levelLabel !== null && (
+        <span
+          className={`${styles.contractLevel} ${
+            contractCoincheLevel === 4 ? styles.contractLevelSurcontre : styles.contractLevelContre
+          }`}
+        >
+          ×{contractCoincheLevel} {levelLabel}
+        </span>
+      )}
     </div>
   );
 }

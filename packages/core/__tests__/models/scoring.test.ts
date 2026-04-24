@@ -4,6 +4,8 @@ import {
   BELOTE_BONUS,
   TOTAL_CARD_POINTS,
   TOTAL_ROUND_POINTS,
+  FAILED_CONTRACT_POINTS,
+  roundToNearestTen,
   calculateTrickPoints,
   calculateTeamPoints,
   detectBeloteRebelote,
@@ -897,842 +899,307 @@ describe("detectBeloteRebelote", () => {
 });
 
 // ==============================================================
-// Contract Evaluation (via calculateRoundScore)
+// roundToNearestTen
 // ==============================================================
 
-describe("contract evaluation", () => {
-  // For these tests, build a full 32-card round where contracting team earns specific points.
-  // Use the split scenario: contracting wins first N tricks with high cards.
+describe("roundToNearestTen", () => {
+  it.each([
+    [0, 0],
+    [4, 0],
+    [5, 10],
+    [9, 10],
+    [10, 10],
+    [14, 10],
+    [15, 20],
+    [54, 50],
+    [55, 60],
+    [56, 60],
+    [57, 60],
+    [105, 110],
+    [106, 110],
+    [107, 110],
+    [108, 110],
+    [152, 150],
+    [162, 160],
+  ])("rounds %i to %i", (input, expected) => {
+    expect(roundToNearestTen(input)).toBe(expected);
+  });
+});
 
-  function makeRoundWithContractingPoints(
-    contractingCardPoints: number,
-    contractingWinsLastTrick: boolean,
-  ): Trick[] {
-    // Trump=hearts, bidder=0
-    // Build tricks so contracting team earns exactly contractingCardPoints
-    // Trick 1: trump high (55 pts) won by contracting
-    // Trick 2: trump low (7 pts) won by contracting (running total: 62)
-    // Trick 3: spades high (28 pts) won by contracting (running total: 90)
-    // Trick 4: spades low (2 pts) won by contracting (running total: 92)
-    // Trick 5-8: remaining 60 pts won by opponent
-    // Adjust winners based on contractingCardPoints target
+// ==============================================================
+// Round-building helper
+// ==============================================================
 
-    // For simplicity: always use the same card layout, just change winners
+/**
+ * Template round: trump=hearts. Per-trick raw point totals are
+ * [55, 7, 28, 2, 28, 2, 28, 2] (sum 152). Assign each trick to a winner
+ * position to craft scenarios precisely.
+ */
+function buildTemplatedRound(trumpSuit: Suit, trickWinners: readonly PlayerPosition[]): Trick[] {
+  if (trickWinners.length !== 8) {
+    throw new Error("buildTemplatedRound expects exactly 8 winner positions");
+  }
+  const template: Array<Array<{ suit: Suit; rank: Rank; position: PlayerPosition }>> = [
+    [
+      { suit: "hearts", rank: "jack", position: 0 },
+      { suit: "hearts", rank: "9", position: 1 },
+      { suit: "hearts", rank: "ace", position: 2 },
+      { suit: "hearts", rank: "10", position: 3 },
+    ],
+    [
+      { suit: "hearts", rank: "king", position: 0 },
+      { suit: "hearts", rank: "queen", position: 1 },
+      { suit: "hearts", rank: "8", position: 2 },
+      { suit: "hearts", rank: "7", position: 3 },
+    ],
+    [
+      { suit: "spades", rank: "ace", position: 0 },
+      { suit: "spades", rank: "10", position: 1 },
+      { suit: "spades", rank: "king", position: 2 },
+      { suit: "spades", rank: "queen", position: 3 },
+    ],
+    [
+      { suit: "spades", rank: "jack", position: 0 },
+      { suit: "spades", rank: "9", position: 1 },
+      { suit: "spades", rank: "8", position: 2 },
+      { suit: "spades", rank: "7", position: 3 },
+    ],
+    [
+      { suit: "diamonds", rank: "ace", position: 0 },
+      { suit: "diamonds", rank: "10", position: 1 },
+      { suit: "diamonds", rank: "king", position: 2 },
+      { suit: "diamonds", rank: "queen", position: 3 },
+    ],
+    [
+      { suit: "diamonds", rank: "jack", position: 0 },
+      { suit: "diamonds", rank: "9", position: 1 },
+      { suit: "diamonds", rank: "8", position: 2 },
+      { suit: "diamonds", rank: "7", position: 3 },
+    ],
+    [
+      { suit: "clubs", rank: "ace", position: 0 },
+      { suit: "clubs", rank: "10", position: 1 },
+      { suit: "clubs", rank: "king", position: 2 },
+      { suit: "clubs", rank: "queen", position: 3 },
+    ],
+    [
+      { suit: "clubs", rank: "jack", position: 0 },
+      { suit: "clubs", rank: "9", position: 1 },
+      { suit: "clubs", rank: "8", position: 2 },
+      { suit: "clubs", rank: "7", position: 3 },
+    ],
+  ];
+  return template.map((cards, i) => makeTrick(trumpSuit, cards, trickWinners[i]!));
+}
+
+// ==============================================================
+// calculateRoundScore — new scoring rules
+// ==============================================================
+
+describe("calculateRoundScore — contract met at level 1", () => {
+  it("awards each team its rounded card points", () => {
+    // Contracting wins tricks 1..4 (55+7+28+2 = 92). Opponent 3..8 → 60 + 10 last = 70.
+    const tricks = buildTemplatedRound("hearts", [0, 0, 0, 0, 1, 1, 1, 1]);
+    const contract = makeContract(90, "hearts", 0);
+    const result = calculateRoundScore(tricks, contract);
+    expect(result.contractingTeamPoints).toBe(92);
+    expect(result.opponentTeamPoints).toBe(70);
+    expect(result.contractingTeamRoundedPoints).toBe(90);
+    expect(result.opponentTeamRoundedPoints).toBe(70);
+    expect(result.contractMet).toBe(true);
+    expect(result.contractingTeamScore).toBe(90);
+    expect(result.opponentTeamScore).toBe(70);
+    expect(result.contractingTeamFinalScore).toBe(90);
+    expect(result.opponentTeamFinalScore).toBe(70);
+  });
+});
+
+// ==============================================================
+// Belote counted inside the contract check
+// ==============================================================
+
+describe("calculateRoundScore — belote inside contract", () => {
+  // Custom round where pos 0 (contracting) plays K of trump in trick 1 and
+  // pos 2 (contracting) plays Q of trump in trick 2.
+  function roundWithContractingBelote(trickWinners: readonly PlayerPosition[]): Trick[] {
+    if (trickWinners.length !== 8) throw new Error("expected 8 winners");
     const trumpSuit: Suit = "hearts";
-    const allTricks = [
-      // 55 pts
-      {
-        cards: [
-          { suit: "hearts" as Suit, rank: "jack" as Rank, position: 0 as PlayerPosition },
-          { suit: "hearts" as Suit, rank: "9" as Rank, position: 1 as PlayerPosition },
-          { suit: "hearts" as Suit, rank: "ace" as Rank, position: 2 as PlayerPosition },
-          { suit: "hearts" as Suit, rank: "10" as Rank, position: 3 as PlayerPosition },
-        ],
-        points: 55,
-      },
-      // 7 pts
-      {
-        cards: [
-          { suit: "hearts" as Suit, rank: "king" as Rank, position: 0 as PlayerPosition },
-          { suit: "hearts" as Suit, rank: "queen" as Rank, position: 1 as PlayerPosition },
-          { suit: "hearts" as Suit, rank: "8" as Rank, position: 2 as PlayerPosition },
-          { suit: "hearts" as Suit, rank: "7" as Rank, position: 3 as PlayerPosition },
-        ],
-        points: 7,
-      },
-      // 28 pts
-      {
-        cards: [
-          { suit: "spades" as Suit, rank: "ace" as Rank, position: 0 as PlayerPosition },
-          { suit: "spades" as Suit, rank: "10" as Rank, position: 1 as PlayerPosition },
-          { suit: "spades" as Suit, rank: "king" as Rank, position: 2 as PlayerPosition },
-          { suit: "spades" as Suit, rank: "queen" as Rank, position: 3 as PlayerPosition },
-        ],
-        points: 28,
-      },
-      // 2 pts
-      {
-        cards: [
-          { suit: "spades" as Suit, rank: "jack" as Rank, position: 0 as PlayerPosition },
-          { suit: "spades" as Suit, rank: "9" as Rank, position: 1 as PlayerPosition },
-          { suit: "spades" as Suit, rank: "8" as Rank, position: 2 as PlayerPosition },
-          { suit: "spades" as Suit, rank: "7" as Rank, position: 3 as PlayerPosition },
-        ],
-        points: 2,
-      },
-      // 28 pts
-      {
-        cards: [
-          { suit: "diamonds" as Suit, rank: "ace" as Rank, position: 0 as PlayerPosition },
-          { suit: "diamonds" as Suit, rank: "10" as Rank, position: 1 as PlayerPosition },
-          { suit: "diamonds" as Suit, rank: "king" as Rank, position: 2 as PlayerPosition },
-          { suit: "diamonds" as Suit, rank: "queen" as Rank, position: 3 as PlayerPosition },
-        ],
-        points: 28,
-      },
-      // 2 pts
-      {
-        cards: [
-          { suit: "diamonds" as Suit, rank: "jack" as Rank, position: 0 as PlayerPosition },
-          { suit: "diamonds" as Suit, rank: "9" as Rank, position: 1 as PlayerPosition },
-          { suit: "diamonds" as Suit, rank: "8" as Rank, position: 2 as PlayerPosition },
-          { suit: "diamonds" as Suit, rank: "7" as Rank, position: 3 as PlayerPosition },
-        ],
-        points: 2,
-      },
-      // 28 pts
-      {
-        cards: [
-          { suit: "clubs" as Suit, rank: "ace" as Rank, position: 0 as PlayerPosition },
-          { suit: "clubs" as Suit, rank: "10" as Rank, position: 1 as PlayerPosition },
-          { suit: "clubs" as Suit, rank: "king" as Rank, position: 2 as PlayerPosition },
-          { suit: "clubs" as Suit, rank: "queen" as Rank, position: 3 as PlayerPosition },
-        ],
-        points: 28,
-      },
-      // 2 pts
-      {
-        cards: [
-          { suit: "clubs" as Suit, rank: "jack" as Rank, position: 0 as PlayerPosition },
-          { suit: "clubs" as Suit, rank: "9" as Rank, position: 1 as PlayerPosition },
-          { suit: "clubs" as Suit, rank: "8" as Rank, position: 2 as PlayerPosition },
-          { suit: "clubs" as Suit, rank: "7" as Rank, position: 3 as PlayerPosition },
-        ],
-        points: 2,
-      },
+    const custom: Array<Array<{ suit: Suit; rank: Rank; position: PlayerPosition }>> = [
+      // Trick 1 — 55 pts. K of trump played by pos 0.
+      [
+        { suit: "hearts", rank: "jack", position: 1 },
+        { suit: "hearts", rank: "9", position: 3 },
+        { suit: "hearts", rank: "ace", position: 2 },
+        { suit: "hearts", rank: "king", position: 0 },
+      ],
+      // Trick 2 — 7 pts (queen=3, 10=10? No: 10 of trump=10 which would be 13). Use queen+8+7+king? No K already played.
+      // To keep pts=7 in trick 2 only queen + three zeros: queen(3) + 8(0) + 7(0) + 8(0). Need a 4th zero trump.
+      // Trump has only one 8 and one 7. Use non-trump zero cards instead.
+      [
+        { suit: "hearts", rank: "queen", position: 2 },
+        { suit: "spades", rank: "8", position: 3 },
+        { suit: "clubs", rank: "8", position: 0 },
+        { suit: "clubs", rank: "7", position: 1 },
+      ],
+      // Trick 3 — 28 pts (spades high). Note: spades 8 already in trick 2 so swap ranks.
+      [
+        { suit: "spades", rank: "ace", position: 0 },
+        { suit: "spades", rank: "10", position: 1 },
+        { suit: "spades", rank: "king", position: 2 },
+        { suit: "spades", rank: "queen", position: 3 },
+      ],
+      // Trick 4 — 2 pts (spades low sans 8).
+      [
+        { suit: "spades", rank: "jack", position: 0 },
+        { suit: "spades", rank: "9", position: 1 },
+        { suit: "spades", rank: "7", position: 2 },
+        { suit: "hearts", rank: "10", position: 3 },
+      ],
+      // Trick 5 — 28 pts (diamonds high).
+      [
+        { suit: "diamonds", rank: "ace", position: 0 },
+        { suit: "diamonds", rank: "10", position: 1 },
+        { suit: "diamonds", rank: "king", position: 2 },
+        { suit: "diamonds", rank: "queen", position: 3 },
+      ],
+      // Trick 6 — 2 pts (diamonds low).
+      [
+        { suit: "diamonds", rank: "jack", position: 0 },
+        { suit: "diamonds", rank: "9", position: 1 },
+        { suit: "diamonds", rank: "8", position: 2 },
+        { suit: "diamonds", rank: "7", position: 3 },
+      ],
+      // Trick 7 — 28 pts (clubs high minus 8/7 already used). Use ace+10+king+queen of clubs. Clubs 8+7 already gone but ace/10/king/queen still here.
+      [
+        { suit: "clubs", rank: "ace", position: 0 },
+        { suit: "clubs", rank: "10", position: 1 },
+        { suit: "clubs", rank: "king", position: 2 },
+        { suit: "clubs", rank: "queen", position: 3 },
+      ],
+      // Trick 8 — 2 pts (clubs jack + trumps low remaining hearts 8+7 + a filler). Keep total=2.
+      [
+        { suit: "clubs", rank: "jack", position: 0 },
+        { suit: "clubs", rank: "9", position: 1 },
+        { suit: "hearts", rank: "8", position: 2 },
+        { suit: "hearts", rank: "7", position: 3 },
+      ],
     ];
-
-    // Assign winners greedily to reach target contractingCardPoints
-    let accumulated = 0;
-    const tricks: Trick[] = [];
-    for (let i = 0; i < 8; i++) {
-      const entry = allTricks[i]!;
-      const isLast = i === 7;
-      let winner: PlayerPosition;
-      if (accumulated + entry.points <= contractingCardPoints) {
-        winner = 0; // contracting wins
-        accumulated += entry.points;
-      } else {
-        winner = 1; // opponent wins
-      }
-      // Override last trick winner if needed
-      if (isLast && contractingWinsLastTrick) {
-        if (winner !== 0) {
-          // Recalculate: we need contracting to win last trick
-          winner = 0;
-        }
-      } else if (isLast && !contractingWinsLastTrick) {
-        winner = 1;
-      }
-      tricks.push(makeTrick(trumpSuit, entry.cards, winner));
-    }
-    return tricks;
+    return custom.map((cards, i) => makeTrick(trumpSuit, cards, trickWinners[i]!));
   }
 
-  it("should report contractMet=true when contracting team points > contract value", () => {
-    // Contracting earns 92 card pts, wins last trick → 92+10=102. Contract=80.
-    const tricks = makeRoundWithContractingPoints(92, true);
-    const contract = makeContract(80, "hearts", 0);
-    const result = calculateRoundScore(tricks, contract);
-    expect(result.contractMet).toBe(true);
-  });
+  // Trick raw point totals for the belote round:
+  // T1 = trump jack(20)+9(14)+ace(11)+king(4)   = 49
+  // T2 = queen trump(3)+three zeros              = 3
+  // T3 = 28, T4 = 2+10(trump ten? no, 10 is non-trump here since trump=hearts, spades 10=10) = 12? wait spades 10=10.
+  // Recompute: T4 cards = spades jack(2) + spades 9(0) + spades 7(0) + hearts 10 (trump 10=10) = 12.
+  // T5 = 28, T6 = 2
+  // T7 = 28, T8 = clubs jack(2) + clubs 9(0) + hearts 8(0 trump) + hearts 7(0 trump) = 2
+  // Total = 49+3+28+12+28+2+28+2 = 152 ✓
 
-  it("should report contractMet=true when points exactly equal contract value", () => {
-    // Contracting earns 90 card pts, wins last trick → 100. Contract=100.
-    const tricks = makeRoundWithContractingPoints(90, true);
+  it("belote pushes contracting over the contract threshold", () => {
+    // Winners: contracting wins T1 (49) + T3 (28) = 77. Opponent wins the rest → 75 + 10 last = 85.
+    // Rounded: 80 / 80 (actually 75 rounds to 80, 85 to 90). Let's compute: roundToNearestTen(77)=80, roundToNearestTen(85)=90.
+    const tricks = roundWithContractingBelote([0, 1, 0, 1, 1, 1, 1, 1]);
     const contract = makeContract(100, "hearts", 0);
     const result = calculateRoundScore(tricks, contract);
-    expect(result.contractMet).toBe(true);
-  });
-
-  it("should report contractMet=false when contracting team points < contract value", () => {
-    // Contracting earns 62 card pts, loses last trick → 62. Contract=80.
-    const tricks = makeRoundWithContractingPoints(62, false);
-    const contract = makeContract(80, "hearts", 0);
-    const result = calculateRoundScore(tricks, contract);
-    expect(result.contractMet).toBe(false);
-  });
-
-  it("should report contractMet=false at high contract value", () => {
-    // Contracting earns 150 but contract is 160.
-    const tricks = makeRoundWithContractingPoints(150, true);
-    const contract = makeContract(160, "hearts", 0);
-    const result = calculateRoundScore(tricks, contract);
-    // 150+10=160, should meet exactly
-    expect(result.contractMet).toBe(true);
-  });
-
-  it("should report contractMet=false when below minimum contract value (80)", () => {
-    const tricks = makeRoundWithContractingPoints(62, true);
-    const contract = makeContract(80, "hearts", 0);
-    const result = calculateRoundScore(tricks, contract);
-    // 62 + 10 = 72 < 80 → fails
-    expect(result.contractMet).toBe(false);
-  });
-});
-
-// ==============================================================
-// Coinche Multipliers
-// ==============================================================
-
-describe("coinche multipliers", () => {
-  // Reuse the makeRoundWithContractingPoints helper from above
-  // but re-declare inline since it's defined inside a describe block
-  function quickRound(contractingWins: boolean): Trick[] {
-    // Trump=hearts, bidder=0
-    // If contractingWins: contracting gets 92 card pts + last trick = 102
-    // If !contractingWins: contracting gets 62 card pts, no last trick = 62
-    const trumpSuit: Suit = "hearts";
-    if (contractingWins) {
-      // Contracting wins first 4 tricks (55+7+28+2=92) + last trick
-      return [
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "hearts", rank: "jack", position: 0 },
-            { suit: "hearts", rank: "9", position: 1 },
-            { suit: "hearts", rank: "ace", position: 2 },
-            { suit: "hearts", rank: "10", position: 3 },
-          ],
-          0,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "hearts", rank: "king", position: 0 },
-            { suit: "hearts", rank: "queen", position: 1 },
-            { suit: "hearts", rank: "8", position: 2 },
-            { suit: "hearts", rank: "7", position: 3 },
-          ],
-          0,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "spades", rank: "ace", position: 0 },
-            { suit: "spades", rank: "10", position: 1 },
-            { suit: "spades", rank: "king", position: 2 },
-            { suit: "spades", rank: "queen", position: 3 },
-          ],
-          0,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "spades", rank: "jack", position: 0 },
-            { suit: "spades", rank: "9", position: 1 },
-            { suit: "spades", rank: "8", position: 2 },
-            { suit: "spades", rank: "7", position: 3 },
-          ],
-          0,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "diamonds", rank: "ace", position: 0 },
-            { suit: "diamonds", rank: "10", position: 1 },
-            { suit: "diamonds", rank: "king", position: 2 },
-            { suit: "diamonds", rank: "queen", position: 3 },
-          ],
-          1,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "diamonds", rank: "jack", position: 0 },
-            { suit: "diamonds", rank: "9", position: 1 },
-            { suit: "diamonds", rank: "8", position: 2 },
-            { suit: "diamonds", rank: "7", position: 3 },
-          ],
-          1,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "clubs", rank: "ace", position: 0 },
-            { suit: "clubs", rank: "10", position: 1 },
-            { suit: "clubs", rank: "king", position: 2 },
-            { suit: "clubs", rank: "queen", position: 3 },
-          ],
-          1,
-        ),
-        // Last trick won by contracting
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "clubs", rank: "jack", position: 0 },
-            { suit: "clubs", rank: "9", position: 1 },
-            { suit: "clubs", rank: "8", position: 2 },
-            { suit: "clubs", rank: "7", position: 3 },
-          ],
-          0,
-        ),
-      ];
-    } else {
-      // Contracting wins only first 2 tricks (55+7=62), opponent wins rest + last trick
-      return [
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "hearts", rank: "jack", position: 0 },
-            { suit: "hearts", rank: "9", position: 1 },
-            { suit: "hearts", rank: "ace", position: 2 },
-            { suit: "hearts", rank: "10", position: 3 },
-          ],
-          0,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "hearts", rank: "king", position: 0 },
-            { suit: "hearts", rank: "queen", position: 1 },
-            { suit: "hearts", rank: "8", position: 2 },
-            { suit: "hearts", rank: "7", position: 3 },
-          ],
-          0,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "spades", rank: "ace", position: 0 },
-            { suit: "spades", rank: "10", position: 1 },
-            { suit: "spades", rank: "king", position: 2 },
-            { suit: "spades", rank: "queen", position: 3 },
-          ],
-          1,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "spades", rank: "jack", position: 0 },
-            { suit: "spades", rank: "9", position: 1 },
-            { suit: "spades", rank: "8", position: 2 },
-            { suit: "spades", rank: "7", position: 3 },
-          ],
-          1,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "diamonds", rank: "ace", position: 0 },
-            { suit: "diamonds", rank: "10", position: 1 },
-            { suit: "diamonds", rank: "king", position: 2 },
-            { suit: "diamonds", rank: "queen", position: 3 },
-          ],
-          1,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "diamonds", rank: "jack", position: 0 },
-            { suit: "diamonds", rank: "9", position: 1 },
-            { suit: "diamonds", rank: "8", position: 2 },
-            { suit: "diamonds", rank: "7", position: 3 },
-          ],
-          1,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "clubs", rank: "ace", position: 0 },
-            { suit: "clubs", rank: "10", position: 1 },
-            { suit: "clubs", rank: "king", position: 2 },
-            { suit: "clubs", rank: "queen", position: 3 },
-          ],
-          1,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "clubs", rank: "jack", position: 0 },
-            { suit: "clubs", rank: "9", position: 1 },
-            { suit: "clubs", rank: "8", position: 2 },
-            { suit: "clubs", rank: "7", position: 3 },
-          ],
-          1,
-        ),
-      ];
-    }
-  }
-
-  it("should not multiply scores at coincheLevel 1", () => {
-    const tricks = quickRound(true);
-    // Contracting wins tricks 1-4 (92 pts) + trick 8 (2 pts) = 94 card + 10 bonus = 104
-    // Opponent wins tricks 5-7 (58 pts). Contract=80.
-    const contract = makeContract(80, "hearts", 0, 1);
-    const result = calculateRoundScore(tricks, contract);
-    expect(result.contractingTeamScore).toBe(104);
-    expect(result.opponentTeamScore).toBe(58);
-  });
-
-  it("should multiply both teams' scores by 2 at coincheLevel 2 on success", () => {
-    const tricks = quickRound(true);
-    const contract = makeContract(80, "hearts", 0, 2);
-    const result = calculateRoundScore(tricks, contract);
-    expect(result.contractingTeamScore).toBe(208); // 104 * 2
-    expect(result.opponentTeamScore).toBe(116); // 58 * 2
-  });
-
-  it("should multiply both teams' scores by 4 at coincheLevel 4 on success", () => {
-    const tricks = quickRound(true);
-    const contract = makeContract(80, "hearts", 0, 4);
-    const result = calculateRoundScore(tricks, contract);
-    expect(result.contractingTeamScore).toBe(416); // 104 * 4
-    expect(result.opponentTeamScore).toBe(232); // 58 * 4
-  });
-
-  it("should give opponent 162 on contract failure at level 1", () => {
-    const tricks = quickRound(false);
-    // Contracting: 62, no last trick. Contract=80 → fails.
-    const contract = makeContract(80, "hearts", 0, 1);
-    const result = calculateRoundScore(tricks, contract);
-    expect(result.contractingTeamScore).toBe(0);
-    expect(result.opponentTeamScore).toBe(162);
-  });
-
-  it("should give opponent 324 on contract failure at level 2", () => {
-    const tricks = quickRound(false);
-    const contract = makeContract(80, "hearts", 0, 2);
-    const result = calculateRoundScore(tricks, contract);
-    expect(result.contractingTeamScore).toBe(0);
-    expect(result.opponentTeamScore).toBe(324); // 162 * 2
-  });
-
-  it("should give opponent 648 on contract failure at level 4", () => {
-    const tricks = quickRound(false);
-    const contract = makeContract(80, "hearts", 0, 4);
-    const result = calculateRoundScore(tricks, contract);
-    expect(result.contractingTeamScore).toBe(0);
-    expect(result.opponentTeamScore).toBe(648); // 162 * 4
-  });
-});
-
-// ==============================================================
-// Belote Bonus
-// ==============================================================
-
-describe("belote bonus", () => {
-  // Build a round where contracting has belote (K+Q of trump played by pos 0 and 2)
-  function roundWithBelote(
-    beloteTeam: "contracting" | "opponent",
-    contractingWinsLastTrick: boolean,
-  ): Trick[] {
-    const trumpSuit: Suit = "hearts";
-    // Always: contracting wins first 4 tricks (92 pts), opponent wins rest
-    // Belote: K+Q of trump. Trump cards are in trick 1 and 2.
-    // If beloteTeam=contracting: K by pos 0, Q by pos 2 (both in contracting team)
-    // If beloteTeam=opponent: K by pos 1, Q by pos 3
-
-    if (beloteTeam === "contracting") {
-      return [
-        // Trick 1: trump jack(20)+9(14)=34 by pos 0,1 + king(4) by pos 0 + 10(10) by pos 3
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "hearts", rank: "jack", position: 0 },
-            { suit: "hearts", rank: "9", position: 1 },
-            { suit: "hearts", rank: "king", position: 0 },
-            { suit: "hearts", rank: "10", position: 3 },
-          ],
-          0,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "hearts", rank: "queen", position: 2 },
-            { suit: "hearts", rank: "ace", position: 1 },
-            { suit: "hearts", rank: "8", position: 2 },
-            { suit: "hearts", rank: "7", position: 3 },
-          ],
-          2,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "spades", rank: "ace", position: 0 },
-            { suit: "spades", rank: "10", position: 1 },
-            { suit: "spades", rank: "king", position: 2 },
-            { suit: "spades", rank: "queen", position: 3 },
-          ],
-          0,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "spades", rank: "jack", position: 0 },
-            { suit: "spades", rank: "9", position: 1 },
-            { suit: "spades", rank: "8", position: 2 },
-            { suit: "spades", rank: "7", position: 3 },
-          ],
-          0,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "diamonds", rank: "ace", position: 0 },
-            { suit: "diamonds", rank: "10", position: 1 },
-            { suit: "diamonds", rank: "king", position: 2 },
-            { suit: "diamonds", rank: "queen", position: 3 },
-          ],
-          1,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "diamonds", rank: "jack", position: 0 },
-            { suit: "diamonds", rank: "9", position: 1 },
-            { suit: "diamonds", rank: "8", position: 2 },
-            { suit: "diamonds", rank: "7", position: 3 },
-          ],
-          1,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "clubs", rank: "ace", position: 0 },
-            { suit: "clubs", rank: "10", position: 1 },
-            { suit: "clubs", rank: "king", position: 2 },
-            { suit: "clubs", rank: "queen", position: 3 },
-          ],
-          1,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "clubs", rank: "jack", position: 0 },
-            { suit: "clubs", rank: "9", position: 1 },
-            { suit: "clubs", rank: "8", position: 2 },
-            { suit: "clubs", rank: "7", position: 3 },
-          ],
-          contractingWinsLastTrick ? 0 : 1,
-        ),
-      ];
-    } else {
-      // Opponent has belote: K by pos 1, Q by pos 3
-      return [
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "hearts", rank: "jack", position: 0 },
-            { suit: "hearts", rank: "king", position: 1 },
-            { suit: "hearts", rank: "ace", position: 2 },
-            { suit: "hearts", rank: "10", position: 3 },
-          ],
-          0,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "hearts", rank: "9", position: 0 },
-            { suit: "hearts", rank: "8", position: 1 },
-            { suit: "hearts", rank: "queen", position: 3 },
-            { suit: "hearts", rank: "7", position: 2 },
-          ],
-          0,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "spades", rank: "ace", position: 0 },
-            { suit: "spades", rank: "10", position: 1 },
-            { suit: "spades", rank: "king", position: 2 },
-            { suit: "spades", rank: "queen", position: 3 },
-          ],
-          0,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "spades", rank: "jack", position: 0 },
-            { suit: "spades", rank: "9", position: 1 },
-            { suit: "spades", rank: "8", position: 2 },
-            { suit: "spades", rank: "7", position: 3 },
-          ],
-          0,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "diamonds", rank: "ace", position: 0 },
-            { suit: "diamonds", rank: "10", position: 1 },
-            { suit: "diamonds", rank: "king", position: 2 },
-            { suit: "diamonds", rank: "queen", position: 3 },
-          ],
-          1,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "diamonds", rank: "jack", position: 0 },
-            { suit: "diamonds", rank: "9", position: 1 },
-            { suit: "diamonds", rank: "8", position: 2 },
-            { suit: "diamonds", rank: "7", position: 3 },
-          ],
-          1,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "clubs", rank: "ace", position: 0 },
-            { suit: "clubs", rank: "10", position: 1 },
-            { suit: "clubs", rank: "king", position: 2 },
-            { suit: "clubs", rank: "queen", position: 3 },
-          ],
-          1,
-        ),
-        makeTrick(
-          trumpSuit,
-          [
-            { suit: "clubs", rank: "jack", position: 0 },
-            { suit: "clubs", rank: "9", position: 1 },
-            { suit: "clubs", rank: "8", position: 2 },
-            { suit: "clubs", rank: "7", position: 3 },
-          ],
-          contractingWinsLastTrick ? 0 : 1,
-        ),
-      ];
-    }
-  }
-
-  it("should add +20 to contracting team when they have belote on success", () => {
-    const tricks = roundWithBelote("contracting", true);
-    const contract = makeContract(80, "hearts", 0);
-    const result = calculateRoundScore(tricks, contract);
+    expect(result.contractingTeamPoints).toBe(77);
+    expect(result.opponentTeamPoints).toBe(85);
+    expect(result.contractingTeamRoundedPoints).toBe(80);
+    expect(result.opponentTeamRoundedPoints).toBe(90);
     expect(result.beloteBonusTeam).toBe("contracting");
-    expect(result.contractingTeamFinalScore).toBe(result.contractingTeamScore + 20);
-    expect(result.opponentTeamFinalScore).toBe(result.opponentTeamScore);
+    // 80 + belote 20 = 100 ≥ 100 → met.
+    expect(result.contractMet).toBe(true);
+    expect(result.contractingTeamScore).toBe(80);
+    expect(result.opponentTeamScore).toBe(90);
+    expect(result.contractingTeamFinalScore).toBe(100);
+    expect(result.opponentTeamFinalScore).toBe(90);
   });
 
-  it("should add +20 to opponent team when they have belote on success", () => {
-    const tricks = roundWithBelote("opponent", true);
-    const contract = makeContract(80, "hearts", 0);
+  it("without belote the same rounded points would fail the contract", () => {
+    // Use the templated round with raw contracting 90 (winners [0,0,0,0,1,1,1,1] with certain trick selection).
+    // Winners [0,1,0,0,1,1,1,1]: T1(55)+T3(28)+T4(2)=85. Rounded 90. No belote (K=pos0, Q=pos1 = different teams).
+    const tricks = buildTemplatedRound("hearts", [0, 1, 0, 0, 1, 1, 1, 1]);
+    const contract = makeContract(100, "hearts", 0);
     const result = calculateRoundScore(tricks, contract);
-    expect(result.beloteBonusTeam).toBe("opponent");
-    expect(result.opponentTeamFinalScore).toBe(result.opponentTeamScore + 20);
-    expect(result.contractingTeamFinalScore).toBe(result.contractingTeamScore);
-  });
-
-  it("should add +20 to contracting team even on contract failure", () => {
-    const tricks = roundWithBelote("contracting", false);
-    // Contract=160, contracting won't reach it → failure
-    const contract = makeContract(160, "hearts", 0);
-    const result = calculateRoundScore(tricks, contract);
-    expect(result.contractMet).toBe(false);
-    expect(result.contractingTeamScore).toBe(0);
-    expect(result.contractingTeamFinalScore).toBe(20); // 0 + 20 belote
-  });
-
-  it("should add +20 to opponent on contract failure when opponent has belote", () => {
-    const tricks = roundWithBelote("opponent", false);
-    const contract = makeContract(160, "hearts", 0);
-    const result = calculateRoundScore(tricks, contract);
-    expect(result.contractMet).toBe(false);
-    expect(result.opponentTeamFinalScore).toBe(result.opponentTeamScore + 20);
-    expect(result.contractingTeamFinalScore).toBe(0);
-  });
-
-  it("should not add any bonus when neither team has belote", () => {
-    // Build round where K and Q of trump are on different teams → no belote
-    const trumpSuit: Suit = "hearts";
-    const tricks = [
-      // K of trump by pos 0 (contracting)
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "hearts", rank: "king", position: 0 },
-          { suit: "hearts", rank: "9", position: 1 },
-          { suit: "hearts", rank: "ace", position: 2 },
-          { suit: "hearts", rank: "10", position: 3 },
-        ],
-        0,
-      ),
-      // Q of trump by pos 1 (opponent) → different teams
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "hearts", rank: "jack", position: 0 },
-          { suit: "hearts", rank: "queen", position: 1 },
-          { suit: "hearts", rank: "8", position: 2 },
-          { suit: "hearts", rank: "7", position: 3 },
-        ],
-        0,
-      ),
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "spades", rank: "ace", position: 0 },
-          { suit: "spades", rank: "10", position: 1 },
-          { suit: "spades", rank: "king", position: 2 },
-          { suit: "spades", rank: "queen", position: 3 },
-        ],
-        0,
-      ),
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "spades", rank: "jack", position: 0 },
-          { suit: "spades", rank: "9", position: 1 },
-          { suit: "spades", rank: "8", position: 2 },
-          { suit: "spades", rank: "7", position: 3 },
-        ],
-        0,
-      ),
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "diamonds", rank: "ace", position: 0 },
-          { suit: "diamonds", rank: "10", position: 1 },
-          { suit: "diamonds", rank: "king", position: 2 },
-          { suit: "diamonds", rank: "queen", position: 3 },
-        ],
-        1,
-      ),
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "diamonds", rank: "jack", position: 0 },
-          { suit: "diamonds", rank: "9", position: 1 },
-          { suit: "diamonds", rank: "8", position: 2 },
-          { suit: "diamonds", rank: "7", position: 3 },
-        ],
-        1,
-      ),
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "clubs", rank: "ace", position: 0 },
-          { suit: "clubs", rank: "10", position: 1 },
-          { suit: "clubs", rank: "king", position: 2 },
-          { suit: "clubs", rank: "queen", position: 3 },
-        ],
-        1,
-      ),
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "clubs", rank: "jack", position: 0 },
-          { suit: "clubs", rank: "9", position: 1 },
-          { suit: "clubs", rank: "8", position: 2 },
-          { suit: "clubs", rank: "7", position: 3 },
-        ],
-        0,
-      ),
-    ];
-    const contract = makeContract(80, "hearts", 0);
-    const result = calculateRoundScore(tricks, contract);
+    expect(result.contractingTeamPoints).toBe(85);
+    expect(result.contractingTeamRoundedPoints).toBe(90);
     expect(result.beloteBonusTeam).toBeNull();
-    expect(result.contractingTeamFinalScore).toBe(result.contractingTeamScore);
-    expect(result.opponentTeamFinalScore).toBe(result.opponentTeamScore);
-  });
-
-  it("should add belote bonus AFTER multiplier, not before", () => {
-    const tricks = roundWithBelote("contracting", true);
-    const contract = makeContract(80, "hearts", 0, 2); // coinche
-    const result = calculateRoundScore(tricks, contract);
-    // Score = points * 2, THEN + 20
-    expect(result.contractingTeamFinalScore).toBe(result.contractingTeamScore + 20);
-    expect(result.contractingTeamScore).toBe(result.contractingTeamPoints * 2);
+    expect(result.contractMet).toBe(false);
   });
 });
 
 // ==============================================================
-// Integration
+// Failure awards FAILED_CONTRACT_POINTS × coincheLevel
 // ==============================================================
 
-describe("calculateRoundScore integration", () => {
-  it("should return a frozen RoundScore object", () => {
-    const trumpSuit: Suit = "hearts";
-    const tricks = [
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "hearts", rank: "jack", position: 0 },
-          { suit: "hearts", rank: "9", position: 1 },
-          { suit: "hearts", rank: "ace", position: 2 },
-          { suit: "hearts", rank: "10", position: 3 },
-        ],
-        0,
-      ),
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "hearts", rank: "king", position: 0 },
-          { suit: "hearts", rank: "queen", position: 1 },
-          { suit: "hearts", rank: "8", position: 2 },
-          { suit: "hearts", rank: "7", position: 3 },
-        ],
-        0,
-      ),
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "spades", rank: "ace", position: 0 },
-          { suit: "spades", rank: "10", position: 1 },
-          { suit: "spades", rank: "king", position: 2 },
-          { suit: "spades", rank: "queen", position: 3 },
-        ],
-        0,
-      ),
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "spades", rank: "jack", position: 0 },
-          { suit: "spades", rank: "9", position: 1 },
-          { suit: "spades", rank: "8", position: 2 },
-          { suit: "spades", rank: "7", position: 3 },
-        ],
-        0,
-      ),
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "diamonds", rank: "ace", position: 0 },
-          { suit: "diamonds", rank: "10", position: 1 },
-          { suit: "diamonds", rank: "king", position: 2 },
-          { suit: "diamonds", rank: "queen", position: 3 },
-        ],
-        1,
-      ),
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "diamonds", rank: "jack", position: 0 },
-          { suit: "diamonds", rank: "9", position: 1 },
-          { suit: "diamonds", rank: "8", position: 2 },
-          { suit: "diamonds", rank: "7", position: 3 },
-        ],
-        1,
-      ),
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "clubs", rank: "ace", position: 0 },
-          { suit: "clubs", rank: "10", position: 1 },
-          { suit: "clubs", rank: "king", position: 2 },
-          { suit: "clubs", rank: "queen", position: 3 },
-        ],
-        1,
-      ),
-      makeTrick(
-        trumpSuit,
-        [
-          { suit: "clubs", rank: "jack", position: 0 },
-          { suit: "clubs", rank: "9", position: 1 },
-          { suit: "clubs", rank: "8", position: 2 },
-          { suit: "clubs", rank: "7", position: 3 },
-        ],
-        0,
-      ),
-    ];
-    const contract = makeContract(80, "hearts", 0);
+describe("calculateRoundScore — failure awards", () => {
+  it("level 1: opponent gets 160, contracting 0", () => {
+    const tricks = buildTemplatedRound("hearts", [1, 1, 1, 1, 1, 1, 1, 1]);
+    const contract = makeContract(100, "hearts", 0);
     const result = calculateRoundScore(tricks, contract);
-    expect(Object.isFrozen(result)).toBe(true);
+    expect(result.contractMet).toBe(false);
+    expect(result.contractingTeamScore).toBe(0);
+    expect(result.opponentTeamScore).toBe(160);
+    expect(result.contractingTeamFinalScore).toBe(0);
+    expect(result.opponentTeamFinalScore).toBe(160);
   });
 
-  it("should export scoring constants", () => {
+  it("level 2 (contré): opponent gets 320", () => {
+    const tricks = buildTemplatedRound("hearts", [1, 1, 1, 1, 1, 1, 1, 1]);
+    const contract = makeContract(100, "hearts", 0, 2);
+    const result = calculateRoundScore(tricks, contract);
+    expect(result.opponentTeamScore).toBe(320);
+    expect(result.contractingTeamScore).toBe(0);
+  });
+
+  it("level 4 (surcontré): opponent gets 640", () => {
+    const tricks = buildTemplatedRound("hearts", [1, 1, 1, 1, 1, 1, 1, 1]);
+    const contract = makeContract(100, "hearts", 0, 4);
+    const result = calculateRoundScore(tricks, contract);
+    expect(result.opponentTeamScore).toBe(640);
+    expect(result.contractingTeamScore).toBe(0);
+  });
+});
+
+// ==============================================================
+// Contré / surcontré success: flat 160 × level, loser 0
+// ==============================================================
+
+describe("calculateRoundScore — contré/surcontré success", () => {
+  it("level 2 met: contracting gets 320, opponent 0", () => {
+    const tricks = buildTemplatedRound("hearts", [0, 0, 0, 0, 0, 0, 0, 0]);
+    const contract = makeContract(100, "hearts", 0, 2);
+    const result = calculateRoundScore(tricks, contract);
+    expect(result.contractMet).toBe(true);
+    expect(result.contractingTeamScore).toBe(320);
+    expect(result.opponentTeamScore).toBe(0);
+  });
+
+  it("level 4 met: contracting gets 640, opponent 0", () => {
+    const tricks = buildTemplatedRound("hearts", [0, 0, 0, 0, 0, 0, 0, 0]);
+    const contract = makeContract(100, "hearts", 0, 4);
+    const result = calculateRoundScore(tricks, contract);
+    expect(result.contractingTeamScore).toBe(640);
+    expect(result.opponentTeamScore).toBe(0);
+  });
+});
+
+// ==============================================================
+// Frozen result + constants
+// ==============================================================
+
+describe("calculateRoundScore — frozen result + constants", () => {
+  it("returns a frozen object", () => {
+    const tricks = buildTemplatedRound("hearts", [0, 0, 0, 0, 1, 1, 1, 1]);
+    const contract = makeContract(90, "hearts", 0);
+    expect(Object.isFrozen(calculateRoundScore(tricks, contract))).toBe(true);
+  });
+
+  it("exports the expected constants", () => {
     expect(LAST_TRICK_BONUS).toBe(10);
     expect(BELOTE_BONUS).toBe(20);
     expect(TOTAL_CARD_POINTS).toBe(152);
     expect(TOTAL_ROUND_POINTS).toBe(162);
+    expect(FAILED_CONTRACT_POINTS).toBe(160);
   });
 });

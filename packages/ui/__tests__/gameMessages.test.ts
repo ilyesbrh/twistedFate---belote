@@ -69,11 +69,11 @@ describe("eventToMessage", () => {
     it("returns suit symbol + value for a spades bid", () => {
       const event: BidPlacedEvent = {
         type: "bid_placed",
-        bid: makeBid("suit", 0, 80, "spades"),
+        bid: makeBid("suit", 0, 90, "spades"),
         playerPosition: 0,
       };
       const msg = eventToMessage(event, PROFILES);
-      expect(msg!.text).toBe(`${SUIT_SYMBOLS.spades} 80`);
+      expect(msg!.text).toBe(`${SUIT_SYMBOLS.spades} 90`);
       expect(msg!.position).toBe("south");
     });
 
@@ -107,25 +107,25 @@ describe("eventToMessage", () => {
       expect(msg!.text).toBe(`${SUIT_SYMBOLS.clubs} 110`);
     });
 
-    it("returns 'Coinche!' for a coinche bid", () => {
+    it("returns 'Contre !' for a coinche bid", () => {
       const event: BidPlacedEvent = {
         type: "bid_placed",
         bid: makeBid("coinche", 3),
         playerPosition: 3,
       };
       const msg = eventToMessage(event, PROFILES);
-      expect(msg!.text).toBe("Coinche!");
+      expect(msg!.text).toBe("Contre !");
       expect(msg!.type).toBe("bid");
     });
 
-    it("returns 'Surcoinche!' for a surcoinche bid", () => {
+    it("returns 'Surcontre !' for a surcoinche bid", () => {
       const event: BidPlacedEvent = {
         type: "bid_placed",
         bid: makeBid("surcoinche", 0),
         playerPosition: 0,
       };
       const msg = eventToMessage(event, PROFILES);
-      expect(msg!.text).toBe("Surcoinche!");
+      expect(msg!.text).toBe("Surcontre !");
     });
   });
 
@@ -177,7 +177,7 @@ describe("eventToMessage", () => {
     it("returns contract announcement with suit and value", () => {
       const contract: Contract = {
         suit: "hearts",
-        value: 80,
+        value: 90,
         bidderPosition: 2,
         coincheLevel: 1,
       } as Contract;
@@ -188,7 +188,7 @@ describe("eventToMessage", () => {
       const msg = eventToMessage(event, PROFILES);
       expect(msg).not.toBeNull();
       expect(msg!.type).toBe("contract");
-      expect(msg!.text).toBe(`${SUIT_SYMBOLS.hearts} 80`);
+      expect(msg!.text).toBe(`${SUIT_SYMBOLS.hearts} 90`);
       expect(msg!.position).toBe("north");
       expect(msg!.playerName).toBe("DilyanaBl");
     });

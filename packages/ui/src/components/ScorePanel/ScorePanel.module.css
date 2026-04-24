@@ -75,6 +75,36 @@
   line-height: 1;
 }
 
+/* ── Contract value & level badge ── */
+.contractValue {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: -0.3px;
+}
+
+.contractLevel {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  padding: 3px 7px;
+  border-radius: 10px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.contractLevelContre {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.contractLevelSurcontre {
+  background: rgba(168, 85, 247, 0.22);
+  color: #e9d5ff;
+  border: 1px solid rgba(168, 85, 247, 0.55);
+}
+
 /* ── Target ── */
 .target {
   font-size: 14px;

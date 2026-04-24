@@ -64,11 +64,11 @@ describe("createPlaceBidCommand", () => {
   });
 
   it("should create a suit bid command with value and suit", () => {
-    const cmd = createPlaceBidCommand(1 as PlayerPosition, "suit", 80, "hearts");
+    const cmd = createPlaceBidCommand(1 as PlayerPosition, "suit", 90, "hearts");
     expect(cmd.type).toBe("place_bid");
     expect(cmd.playerPosition).toBe(1);
     expect(cmd.bidType).toBe("suit");
-    expect(cmd.value).toBe(80);
+    expect(cmd.value).toBe(90);
     expect(cmd.suit).toBe("hearts");
   });
 

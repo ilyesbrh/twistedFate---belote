@@ -65,7 +65,7 @@ function makeCompletedRound(
   const contract: Contract = Object.freeze({
     id: idGen.generateId("contract"),
     suit: "hearts" as const,
-    value: 80 as const,
+    value: 90 as const,
     bidderPosition,
     coincheLevel: 1 as const,
   });

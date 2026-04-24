@@ -148,18 +148,18 @@ describe("RoundSummary", () => {
 
     it("shows coinche label when coincheLevel is 2", () => {
       renderRoundSummary({ result: makeNormalResult({ coincheLevel: 2 }) });
-      expect(screen.getByText(/×2 COINCHE/)).toBeInTheDocument();
+      expect(screen.getByText(/×2 CONTRE/)).toBeInTheDocument();
     });
 
     it("shows surcoinche label when coincheLevel is 4", () => {
       renderRoundSummary({ result: makeNormalResult({ coincheLevel: 4 }) });
-      expect(screen.getByText(/×4 SURCOINCHE/)).toBeInTheDocument();
+      expect(screen.getByText(/×4 SURCONTRE/)).toBeInTheDocument();
     });
 
     it("does not show coinche label when coincheLevel is 1", () => {
       renderRoundSummary({ result: makeNormalResult({ coincheLevel: 1 }) });
-      expect(screen.queryByText(/COINCHE/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/SURCOINCHE/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/CONTRE/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/SURCONTRE/)).not.toBeInTheDocument();
     });
   });
 

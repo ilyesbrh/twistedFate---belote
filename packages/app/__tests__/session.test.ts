@@ -246,7 +246,7 @@ describe("GameSession — place_bid (all human)", () => {
     const events = collectEvents(session);
     startGame(session);
     startRound(session);
-    session.dispatch(createPlaceBidCommand(1 as PlayerPosition, "suit", 80, "hearts"));
+    session.dispatch(createPlaceBidCommand(1 as PlayerPosition, "suit", 90, "hearts"));
     const bidEvents = events.filter((e) => e.type === "bid_placed");
     expect(bidEvents).toHaveLength(1);
   });
@@ -256,7 +256,7 @@ describe("GameSession — place_bid (all human)", () => {
     startGame(session);
     startRound(session);
     // Bid 80 hearts from pos 1, then 3 passes
-    session.dispatch(createPlaceBidCommand(1 as PlayerPosition, "suit", 80, "hearts"));
+    session.dispatch(createPlaceBidCommand(1 as PlayerPosition, "suit", 90, "hearts"));
     session.dispatch(createPlaceBidCommand(2 as PlayerPosition, "pass"));
     session.dispatch(createPlaceBidCommand(3 as PlayerPosition, "pass"));
     session.dispatch(createPlaceBidCommand(0 as PlayerPosition, "pass"));
@@ -268,7 +268,7 @@ describe("GameSession — place_bid (all human)", () => {
     const events = collectEvents(session);
     startGame(session);
     startRound(session);
-    session.dispatch(createPlaceBidCommand(1 as PlayerPosition, "suit", 80, "hearts"));
+    session.dispatch(createPlaceBidCommand(1 as PlayerPosition, "suit", 90, "hearts"));
     session.dispatch(createPlaceBidCommand(2 as PlayerPosition, "pass"));
     session.dispatch(createPlaceBidCommand(3 as PlayerPosition, "pass"));
     session.dispatch(createPlaceBidCommand(0 as PlayerPosition, "pass"));
@@ -325,7 +325,7 @@ describe("GameSession — play_card (all human)", () => {
     startGame(session);
     startRound(session);
     // Bid and complete bidding
-    session.dispatch(createPlaceBidCommand(1 as PlayerPosition, "suit", 80, "hearts"));
+    session.dispatch(createPlaceBidCommand(1 as PlayerPosition, "suit", 90, "hearts"));
     session.dispatch(createPlaceBidCommand(2 as PlayerPosition, "pass"));
     session.dispatch(createPlaceBidCommand(3 as PlayerPosition, "pass"));
     session.dispatch(createPlaceBidCommand(0 as PlayerPosition, "pass"));

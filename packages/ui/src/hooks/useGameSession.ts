@@ -6,11 +6,24 @@ import {
   createPlaceBidCommand,
   createPlayCardCommand,
 } from "@belote/app";
-import type { GameCommand, TrickCompletedEvent, RoundCompletedEvent, GameCompletedEvent } from "@belote/app";
-import { BID_VALUES, getValidPlays } from "@belote/core";
+import type {
+  GameCommand,
+  TrickCompletedEvent,
+  RoundCompletedEvent,
+  GameCompletedEvent,
+  CardPlayedEvent,
+  BiddingCompletedEvent,
+} from "@belote/app";
+import {
+  BID_VALUES,
+  getValidPlays,
+  calculateRunningPoints,
+  getCardRankOrder,
+} from "@belote/core";
+import type { Card } from "@belote/core";
 import type { BiddingRound, BidValue, Contract, RoundScore, Suit } from "@belote/core";
 import type { CardData, PlayerData, Position, TrickCardData } from "../data/mockGame.js";
-import { eventToMessage } from "../messages/gameMessages.js";
+import { eventToMessage, createBeloteMessage } from "../messages/gameMessages.js";
 import type { GameMessage } from "../messages/gameMessages.js";
 
 // ── Constants ───────────────────────────────────────────────────────────────
@@ -97,6 +110,10 @@ export interface GameSessionState {
   legalCardIndices: ReadonlySet<number>;
   biddingRound: BiddingRound | null;
   validBidValues: readonly BidValue[];
+  /** Active contract for the current round (null during bidding or idle). */
+  contract: Contract | null;
+  /** Seat of the contract holder, or null if no contract yet. */
+  contractHolderPosition: Position | null;
   /** All game action messages (chat log). */
   messages: GameMessage[];
   /** Per-position thought bubble (auto-dismisses after ~4s). */
@@ -130,6 +147,11 @@ export function useGameSession(): GameSessionState {
     west: null,
     east: null,
   });
+  // Belote tracker: on bidding_completed we find the player (if any) who holds
+  // BOTH queen and king of trump in their initial hand, then on card_played we
+  // announce "Belote !" / "Rebelote !" the first two times they play trump Q or K.
+  const beloteHolder = useRef<number | null>(null);
+  const beloteStage = useRef<0 | 1 | 2>(0);
   const bubbleTimers = useRef<Record<Position, ReturnType<typeof setTimeout> | null>>({
     south: null,
     north: null,
@@ -155,10 +177,48 @@ export function useGameSession(): GameSessionState {
 
     const unsub = session.on((event) => {
       if (event.type === "round_started") {
+        // Reset belote tracker at the start of each round.
+        beloteHolder.current = null;
+        beloteStage.current = 0;
         setIsDealing(true);
         setTimeout(() => {
           setIsDealing(false);
         }, 900);
+      }
+
+      if (event.type === "bidding_completed") {
+        const ev = event as BiddingCompletedEvent;
+        const trump = ev.contract.suit;
+        const r = sessionRef.current.currentRound;
+        if (r) {
+          for (const p of r.players) {
+            const hasQueen = p.hand.some((c) => c.suit === trump && c.rank === "queen");
+            const hasKing = p.hand.some((c) => c.suit === trump && c.rank === "king");
+            if (hasQueen && hasKing) {
+              beloteHolder.current = p.position;
+              beloteStage.current = 0;
+              break;
+            }
+          }
+        }
+      }
+
+      if (event.type === "card_played") {
+        const ev = event as CardPlayedEvent;
+        const trump = sessionRef.current.currentRound?.contract?.suit ?? null;
+        if (
+          trump !== null &&
+          beloteHolder.current === ev.playerPosition &&
+          ev.card.suit === trump &&
+          (ev.card.rank === "queen" || ev.card.rank === "king") &&
+          beloteStage.current < 2
+        ) {
+          const kind: "belote" | "rebelote" = beloteStage.current === 0 ? "belote" : "rebelote";
+          beloteStage.current = (beloteStage.current + 1) as 0 | 1 | 2;
+          const msg = createBeloteMessage(ev.playerPosition, kind, PROFILES);
+          setMessages((prev) => [...prev, msg]);
+          showBubble(msg);
+        }
       }
 
       if (event.type === "trick_completed") {
@@ -263,8 +323,20 @@ export function useGameSession(): GameSessionState {
     };
   });
 
-  // Player hand (south = position 0)
-  const coreHand = round?.players[HUMAN]?.hand ?? [];
+  // Player hand (south = position 0). Sort by suit then rank so the display groups suits together.
+  // Trump (when known) comes first; otherwise a fixed order ♥ ♠ ♦ ♣ alternates red/black.
+  const rawHand = round?.players[HUMAN]?.hand ?? [];
+  const trumpForSort = (round?.contract?.suit ?? null) as Suit | null;
+  const DEFAULT_SUIT_ORDER: readonly Suit[] = ["hearts", "spades", "diamonds", "clubs"];
+  const suitRank = (suit: Suit): number => {
+    if (trumpForSort !== null && suit === trumpForSort) return -1;
+    return DEFAULT_SUIT_ORDER.indexOf(suit);
+  };
+  const coreHand: readonly Card[] = [...rawHand].sort((a, b) => {
+    const s = suitRank(a.suit) - suitRank(b.suit);
+    if (s !== 0) return s;
+    return getCardRankOrder(a, trumpForSort) - getCardRankOrder(b, trumpForSort);
+  });
   const playerHand: CardData[] = coreHand.map((c) => ({ suit: c.suit as Suit, rank: c.rank }));
 
   // Trick cards — prefer completedTrick while sweep animation plays
@@ -294,8 +366,24 @@ export function useGameSession(): GameSessionState {
   const targetScore = game?.targetScore ?? 501;
   const usTotalScore = game?.teamScores[0] ?? 0;
   const themTotalScore = game?.teamScores[1] ?? 0;
-  const usScore = 0; // mid-round scores not surfaced; update on round_completed
-  const themScore = 0;
+  // Live round points: sum completed tricks in current round. NS = positions 0,2; EW = 1,3.
+  let usScore = 0;
+  let themScore = 0;
+  const contract = round?.contract ?? null;
+  if (round && contract) {
+    const running = calculateRunningPoints(round.tricks, contract.suit, contract.bidderPosition);
+    const contractingIsNS = contract.bidderPosition === 0 || contract.bidderPosition === 2;
+    if (contractingIsNS) {
+      usScore = running.contractingTeamPoints;
+      themScore = running.opponentTeamPoints;
+    } else {
+      themScore = running.contractingTeamPoints;
+      usScore = running.opponentTeamPoints;
+    }
+  }
+  const contractHolderPosition: Position | null = contract
+    ? POS_TO_SEAT[contract.bidderPosition]!
+    : null;
   const dealerName = round ? PROFILES[round.dealerPosition]!.name : "";
 
   // Winner team index — use the delayed value so the popup doesn't appear instantly
@@ -387,6 +475,8 @@ export function useGameSession(): GameSessionState {
     legalCardIndices,
     biddingRound,
     validBidValues,
+    contract,
+    contractHolderPosition,
     messages,
     bubbles,
     dispatch,

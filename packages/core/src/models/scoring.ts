@@ -11,6 +11,7 @@ export const LAST_TRICK_BONUS = 10;
 export const BELOTE_BONUS = 20;
 export const TOTAL_CARD_POINTS = 152;
 export const TOTAL_ROUND_POINTS = 162;
+export const FAILED_CONTRACT_POINTS = 160;
 
 // ── Types ──
 
@@ -22,12 +23,20 @@ export interface TeamPoints {
 export interface RoundScore {
   readonly contractingTeamPoints: number;
   readonly opponentTeamPoints: number;
+  readonly contractingTeamRoundedPoints: number;
+  readonly opponentTeamRoundedPoints: number;
   readonly contractMet: boolean;
   readonly contractingTeamScore: number;
   readonly opponentTeamScore: number;
   readonly beloteBonusTeam: "contracting" | "opponent" | null;
   readonly contractingTeamFinalScore: number;
   readonly opponentTeamFinalScore: number;
+}
+
+// ── Rounding helper ──
+
+export function roundToNearestTen(points: number): number {
+  return Math.floor(points / 10 + 0.5) * 10;
 }
 
 // ── calculateTrickPoints ──
@@ -44,6 +53,27 @@ export function calculateTrickPoints(trick: Trick, trumpSuit: Suit): number {
     total += getCardPoints(pc.card, trumpSuit);
   }
   return total;
+}
+
+// ── calculateRunningPoints ──
+
+export function calculateRunningPoints(
+  completedTricks: readonly Trick[],
+  trumpSuit: Suit,
+  bidderPosition: PlayerPosition,
+): TeamPoints {
+  let contractingTeamPoints = 0;
+  let opponentTeamPoints = 0;
+  for (const trick of completedTricks) {
+    if (trick.state !== "completed") continue;
+    const pts = calculateTrickPoints(trick, trumpSuit);
+    if (trick.winnerPosition !== null && isOnSameTeam(trick.winnerPosition, bidderPosition)) {
+      contractingTeamPoints += pts;
+    } else {
+      opponentTeamPoints += pts;
+    }
+  }
+  return Object.freeze({ contractingTeamPoints, opponentTeamPoints });
 }
 
 // ── calculateTeamPoints ──
@@ -136,20 +166,33 @@ export function calculateRoundScore(tricks: readonly Trick[], contract: Contract
     contract.bidderPosition,
   );
 
-  const contractMet = contractingTeamPoints >= contract.value;
+  const contractingTeamRoundedPoints = roundToNearestTen(contractingTeamPoints);
+  const opponentTeamRoundedPoints = roundToNearestTen(opponentTeamPoints);
+
+  const beloteBonusTeam = detectBeloteRebelote(tricks, contract.suit, contract.bidderPosition);
+
+  // Belote bonus counts toward meeting the contract.
+  const contractingTotalWithBelote =
+    contractingTeamRoundedPoints + (beloteBonusTeam === "contracting" ? BELOTE_BONUS : 0);
+
+  const contractMet = contractingTotalWithBelote >= contract.value;
 
   let contractingTeamScore: number;
   let opponentTeamScore: number;
 
   if (contractMet) {
-    contractingTeamScore = contractingTeamPoints * contract.coincheLevel;
-    opponentTeamScore = opponentTeamPoints * contract.coincheLevel;
+    if (contract.coincheLevel === 1) {
+      contractingTeamScore = contractingTeamRoundedPoints;
+      opponentTeamScore = opponentTeamRoundedPoints;
+    } else {
+      // Contré/surcontré success: winner takes a flat 160 × level, loser 0.
+      contractingTeamScore = FAILED_CONTRACT_POINTS * contract.coincheLevel;
+      opponentTeamScore = 0;
+    }
   } else {
     contractingTeamScore = 0;
-    opponentTeamScore = TOTAL_ROUND_POINTS * contract.coincheLevel;
+    opponentTeamScore = FAILED_CONTRACT_POINTS * contract.coincheLevel;
   }
-
-  const beloteBonusTeam = detectBeloteRebelote(tricks, contract.suit, contract.bidderPosition);
 
   let contractingTeamFinalScore = contractingTeamScore;
   let opponentTeamFinalScore = opponentTeamScore;
@@ -163,6 +206,8 @@ export function calculateRoundScore(tricks: readonly Trick[], contract: Contract
   return Object.freeze({
     contractingTeamPoints,
     opponentTeamPoints,
+    contractingTeamRoundedPoints,
+    opponentTeamRoundedPoints,
     contractMet,
     contractingTeamScore,
     opponentTeamScore,

@@ -460,7 +460,7 @@ describe("chooseCardForRound", () => {
       contract: Object.freeze({
         id: idGen.generateId("contract"),
         suit: "hearts" as const,
-        value: 80 as const,
+        value: 90 as const,
         bidderPosition: 1 as PlayerPosition,
         coincheLevel: 1 as const,
       }),
@@ -514,7 +514,7 @@ describe("chooseCardForRound", () => {
       contract: Object.freeze({
         id: idGen.generateId("contract"),
         suit: "hearts" as const,
-        value: 80 as const,
+        value: 90 as const,
         bidderPosition: 1 as PlayerPosition,
         coincheLevel: 1 as const,
       }),
@@ -567,7 +567,7 @@ describe("chooseCardForRound", () => {
       contract: Object.freeze({
         id: idGen.generateId("contract"),
         suit: "hearts" as const,
-        value: 80 as const,
+        value: 90 as const,
         bidderPosition: 1 as PlayerPosition,
         coincheLevel: 1 as const,
       }),
@@ -629,7 +629,7 @@ describe("chooseBid — Hand evaluation", () => {
     const bid = chooseBid(hand, round, 1 as PlayerPosition, gen);
     expect(bid.type).toBe("suit");
     expect(bid.suit).toBe("hearts");
-    expect(bid.value).toBe(80);
+    expect(bid.value).toBe(90);
   });
 
   it("should choose the strongest suit as trump", () => {
@@ -726,7 +726,7 @@ describe("chooseBid — Hand evaluation", () => {
     const gen = createIdGenerator({ seed: 206 });
     let round = createBiddingRound(0, gen);
     // Position 1 bids 80 clubs
-    round = placeBid(round, createSuitBid(1, 80, "clubs", gen));
+    round = placeBid(round, createSuitBid(1, 90, "clubs", gen));
 
     // Position 2 has very strong spades (strength ~106)
     const hand = [
@@ -743,14 +743,14 @@ describe("chooseBid — Hand evaluation", () => {
     const bid = chooseBid(hand, round, 2 as PlayerPosition, gen);
     expect(bid.type).toBe("suit");
     // Must be > 80
-    expect(bid.value).toBeGreaterThan(80);
+    expect(bid.value).toBeGreaterThan(90);
   });
 
   it("should always pass when coinched (simple AI)", () => {
     const gen = createIdGenerator({ seed: 207 });
     let round = createBiddingRound(0, gen);
     // Position 1 bids 80 hearts
-    round = placeBid(round, createSuitBid(1, 80, "hearts", gen));
+    round = placeBid(round, createSuitBid(1, 90, "hearts", gen));
     // Position 2 coinches
     round = placeBid(round, createCoincheBid(2, gen));
 
@@ -821,7 +821,7 @@ describe("chooseBid — Integration", () => {
     const gen = createIdGenerator({ seed: 302 });
     let round = createBiddingRound(0, gen);
     // Position 1 bids 80 hearts
-    round = placeBid(round, createSuitBid(1, 80, "hearts", gen));
+    round = placeBid(round, createSuitBid(1, 90, "hearts", gen));
 
     const hand = [
       card("spades", "7"),

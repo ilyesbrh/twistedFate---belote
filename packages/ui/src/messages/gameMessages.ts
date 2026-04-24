@@ -84,10 +84,10 @@ function bidPlacedToMessage(event: BidPlacedEvent, profiles: ProfileLookup): Gam
       text = "Pass";
       break;
     case "coinche":
-      text = "Coinche!";
+      text = "Contre !";
       break;
     case "surcoinche":
-      text = "Surcoinche!";
+      text = "Surcontre !";
       break;
     case "suit": {
       const symbol = bid.suit ? SUIT_SYMBOLS[bid.suit] : "?";
@@ -126,6 +126,23 @@ function biddingCompletedToMessage(
   const text = `${SUIT_SYMBOLS[contract.suit]} ${String(contract.value)}`;
 
   return { id: nextId(), position, playerName, text, type: "contract", timestamp: Date.now() };
+}
+
+export function createBeloteMessage(
+  playerPosition: number,
+  kind: "belote" | "rebelote",
+  profiles: ProfileLookup,
+): GameMessage {
+  const position = seatFor(playerPosition);
+  const playerName = profiles[playerPosition]?.name ?? "Unknown";
+  return {
+    id: nextId(),
+    position,
+    playerName,
+    text: kind === "belote" ? "Belote !" : "Rebelote !",
+    type: "contract",
+    timestamp: Date.now(),
+  };
 }
 
 function roundCancelledToMessage(event: RoundCancelledEvent): GameMessage {

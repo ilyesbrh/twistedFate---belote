@@ -64,7 +64,7 @@ function completeBidding(round: Round): Round {
   const thirdBidder = ((firstBidder + 2) % 4) as PlayerPosition;
   const fourthBidder = ((firstBidder + 3) % 4) as PlayerPosition;
 
-  let r = placeBidInRound(round, createSuitBid(firstBidder, 80, "hearts", idGen), idGen);
+  let r = placeBidInRound(round, createSuitBid(firstBidder, 90, "hearts", idGen), idGen);
   r = placeBidInRound(r, createPassBid(secondBidder, idGen), idGen);
   r = placeBidInRound(r, createPassBid(thirdBidder, idGen), idGen);
   r = placeBidInRound(r, createPassBid(fourthBidder, idGen), idGen);
@@ -228,16 +228,16 @@ describe("placeBidInRound", () => {
   it("should forward a bid to the inner BiddingRound", () => {
     const round = makeRoundInBidding();
     const firstBidder = round.biddingRound.currentPlayerPosition;
-    const bid = createSuitBid(firstBidder, 80, "hearts", idGen);
+    const bid = createSuitBid(firstBidder, 90, "hearts", idGen);
     const updated = placeBidInRound(round, bid, idGen);
     expect(updated.biddingRound.bids).toHaveLength(1);
-    expect(updated.biddingRound.highestBid?.value).toBe(80);
+    expect(updated.biddingRound.highestBid?.value).toBe(90);
   });
 
   it("should keep phase as 'bidding' while bidding is in progress", () => {
     const round = makeRoundInBidding();
     const firstBidder = round.biddingRound.currentPlayerPosition;
-    const bid = createSuitBid(firstBidder, 80, "hearts", idGen);
+    const bid = createSuitBid(firstBidder, 90, "hearts", idGen);
     const updated = placeBidInRound(round, bid, idGen);
     expect(updated.phase).toBe("bidding");
     expect(updated.biddingRound.state).toBe("in_progress");
@@ -254,7 +254,7 @@ describe("placeBidInRound", () => {
     const playing = completeBidding(round);
     expect(playing.contract).not.toBeNull();
     expect(playing.contract!.suit).toBe("hearts");
-    expect(playing.contract!.value).toBe(80);
+    expect(playing.contract!.value).toBe(90);
   });
 
   it("should create the first trick with dealer+1 as leader", () => {
@@ -288,7 +288,7 @@ describe("placeBidInRound", () => {
   it("should handle coinche flow correctly", () => {
     const round = makeRoundInBidding(0);
     // Player 1 bids 80 hearts
-    let r = placeBidInRound(round, createSuitBid(1, 80, "hearts", idGen), idGen);
+    let r = placeBidInRound(round, createSuitBid(1, 90, "hearts", idGen), idGen);
     // Player 2 coinches (opponent of bidder)
     r = placeBidInRound(r, createCoincheBid(2, idGen), idGen);
     // Player 3 (bidder's team) passes → bidding completes
@@ -299,7 +299,7 @@ describe("placeBidInRound", () => {
 
   it("should handle surcoinche flow correctly", () => {
     const round = makeRoundInBidding(0);
-    let r = placeBidInRound(round, createSuitBid(1, 80, "hearts", idGen), idGen);
+    let r = placeBidInRound(round, createSuitBid(1, 90, "hearts", idGen), idGen);
     r = placeBidInRound(r, createCoincheBid(2, idGen), idGen);
     // Player 3 (bidder's team) surcoinches → bidding completes immediately
     r = placeBidInRound(r, createSurcoincheBid(3, idGen), idGen);
@@ -310,7 +310,7 @@ describe("placeBidInRound", () => {
   it("should return a frozen Round", () => {
     const round = makeRoundInBidding();
     const firstBidder = round.biddingRound.currentPlayerPosition;
-    const bid = createSuitBid(firstBidder, 80, "hearts", idGen);
+    const bid = createSuitBid(firstBidder, 90, "hearts", idGen);
     const updated = placeBidInRound(round, bid, idGen);
     expect(Object.isFrozen(updated)).toBe(true);
     expect(Object.isFrozen(updated.biddingRound)).toBe(true);

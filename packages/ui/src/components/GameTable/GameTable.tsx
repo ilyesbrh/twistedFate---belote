@@ -50,6 +50,8 @@ export function GameTable({ onPlayAgain }: GameTableProps) {
           themTotalScore={state.themTotalScore}
           trumpSuit={state.trumpSuit ?? "spades"}
           dealerName={state.dealerName}
+          contractValue={state.contract?.value ?? null}
+          contractCoincheLevel={state.contract?.coincheLevel ?? 1}
         />
       </div>
 
@@ -64,6 +66,7 @@ export function GameTable({ onPlayAgain }: GameTableProps) {
           player={north}
           size="md"
           isActive={active === "north"}
+          isContractHolder={state.contractHolderPosition === "north"}
           bubbleMessage={state.bubbles.north}
         />
       </div>
@@ -74,6 +77,7 @@ export function GameTable({ onPlayAgain }: GameTableProps) {
           player={west}
           size="sm"
           isActive={active === "west"}
+          isContractHolder={state.contractHolderPosition === "west"}
           bubbleMessage={state.bubbles.west}
         />
       </div>
@@ -89,6 +93,7 @@ export function GameTable({ onPlayAgain }: GameTableProps) {
           player={east}
           size="sm"
           isActive={active === "east"}
+          isContractHolder={state.contractHolderPosition === "east"}
           bubbleMessage={state.bubbles.east}
         />
       </div>
@@ -129,6 +134,7 @@ export function GameTable({ onPlayAgain }: GameTableProps) {
             player={south}
             size="lg"
             isActive={active === "south"}
+            isContractHolder={state.contractHolderPosition === "south"}
             bubbleMessage={state.bubbles.south}
           />
           <div className={styles.chatBtn}>

@@ -10,6 +10,7 @@ interface PlayerAvatarProps {
   player: PlayerData;
   size?: AvatarSize;
   isActive?: boolean;
+  isContractHolder?: boolean;
   bubbleMessage?: GameMessage | null;
 }
 
@@ -31,6 +32,7 @@ export function PlayerAvatar({
   player,
   size = "md",
   isActive = false,
+  isContractHolder = false,
   bubbleMessage,
 }: PlayerAvatarProps) {
   return (
@@ -58,6 +60,16 @@ export function PlayerAvatar({
             {player.level}
           </Badge>
         </div>
+
+        {isContractHolder && (
+          <div
+            className={styles.contractHolderBadge}
+            aria-label="Contract holder"
+            title="Contract holder"
+          >
+            ★
+          </div>
+        )}
 
         {player.isDealer && (
           <div className={styles.dealerBadge}>

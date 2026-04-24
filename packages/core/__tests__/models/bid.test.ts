@@ -37,10 +37,10 @@ describe("Bidding System", () => {
     });
 
     it("should create a suit bid with correct type, value, and suit", () => {
-      const bid = createSuitBid(1, 80, "hearts", idGenerator);
+      const bid = createSuitBid(1, 90, "hearts", idGenerator);
       expect(bid.type).toBe("suit");
       expect(bid.playerPosition).toBe(1);
-      expect(bid.value).toBe(80);
+      expect(bid.value).toBe(90);
       expect(bid.suit).toBe("hearts");
     });
 
@@ -62,7 +62,7 @@ describe("Bidding System", () => {
 
     it("should assign unique IDs with bid_ prefix", () => {
       const b1 = createPassBid(0, idGenerator);
-      const b2 = createSuitBid(1, 80, "hearts", idGenerator);
+      const b2 = createSuitBid(1, 90, "hearts", idGenerator);
       const b3 = createCoincheBid(2, idGenerator);
       expect(b1.id).toMatch(/^bid_[a-z0-9]+$/);
       expect(b2.id).toMatch(/^bid_[a-z0-9]+$/);
@@ -73,14 +73,14 @@ describe("Bidding System", () => {
     it("should produce deterministic IDs with seeded generator", () => {
       const gen1 = createIdGenerator({ seed: 99 });
       const gen2 = createIdGenerator({ seed: 99 });
-      const b1 = createSuitBid(0, 80, "hearts", gen1);
-      const b2 = createSuitBid(0, 80, "hearts", gen2);
+      const b1 = createSuitBid(0, 90, "hearts", gen1);
+      const b2 = createSuitBid(0, 90, "hearts", gen2);
       expect(b1.id).toBe(b2.id);
     });
 
     it("should return frozen bids", () => {
       const pass = createPassBid(0, idGenerator);
-      const suit = createSuitBid(1, 80, "hearts", idGenerator);
+      const suit = createSuitBid(1, 90, "hearts", idGenerator);
       const coinche = createCoincheBid(2, idGenerator);
       const surcoinche = createSurcoincheBid(3, idGenerator);
       expect(Object.isFrozen(pass)).toBe(true);
@@ -90,7 +90,7 @@ describe("Bidding System", () => {
     });
 
     it("should export valid BID_VALUES constant", () => {
-      expect(BID_VALUES).toEqual([80, 90, 100, 110, 120, 130, 140, 150, 160]);
+      expect(BID_VALUES).toEqual([90, 100, 110, 120, 130, 140, 150, 160]);
       expect(Object.isFrozen(BID_VALUES)).toBe(true);
     });
   });
@@ -170,7 +170,7 @@ describe("Bidding System", () => {
   describe("isValidBid", () => {
     it("should accept a valid first suit bid", () => {
       const round = createBiddingRound(0, idGenerator);
-      const bid = createSuitBid(1, 80, "hearts", idGenerator);
+      const bid = createSuitBid(1, 90, "hearts", idGenerator);
       expect(isValidBid(round, bid)).toBe(true);
     });
 
@@ -183,14 +183,14 @@ describe("Bidding System", () => {
     it("should reject a bid from the wrong player position", () => {
       const round = createBiddingRound(0, idGenerator);
       // Current player is position 1 (dealer+1), bid from position 2 is invalid
-      const bid = createSuitBid(2, 80, "hearts", idGenerator);
+      const bid = createSuitBid(2, 90, "hearts", idGenerator);
       expect(isValidBid(round, bid)).toBe(false);
     });
 
     it("should reject a bid when bidding is already complete", () => {
       let round = createBiddingRound(0, idGenerator);
       // Play a full round: bid then 3 passes
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       round = placeBid(round, createPassBid(2, idGenerator));
       round = placeBid(round, createPassBid(3, idGenerator));
       round = placeBid(round, createPassBid(0, idGenerator));
@@ -202,15 +202,15 @@ describe("Bidding System", () => {
 
     it("should accept a suit bid with higher value than current highest", () => {
       let round = createBiddingRound(0, idGenerator);
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
-      const higherBid = createSuitBid(2, 90, "spades", idGenerator);
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
+      const higherBid = createSuitBid(2, 100, "spades", idGenerator);
       expect(isValidBid(round, higherBid)).toBe(true);
     });
 
     it("should reject a suit bid with equal value to current highest", () => {
       let round = createBiddingRound(0, idGenerator);
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
-      const equalBid = createSuitBid(2, 80, "spades", idGenerator);
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
+      const equalBid = createSuitBid(2, 90, "spades", idGenerator);
       expect(isValidBid(round, equalBid)).toBe(false);
     });
 
@@ -231,7 +231,7 @@ describe("Bidding System", () => {
     it("should accept a coinche from an opponent after a suit bid", () => {
       let round = createBiddingRound(0, idGenerator);
       // Position 1 bids (team 1,3)
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       // Position 2 is opponent of position 1 (team 0,2) → can coinche
       const coinche = createCoincheBid(2, idGenerator);
       expect(isValidBid(round, coinche)).toBe(true);
@@ -240,7 +240,7 @@ describe("Bidding System", () => {
     it("should reject a coinche from the same team as highest bidder", () => {
       let round = createBiddingRound(0, idGenerator);
       // Position 1 bids (team 1,3)
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       round = placeBid(round, createPassBid(2, idGenerator));
       // Position 3 is same team as position 1 → cannot coinche
       const coinche = createCoincheBid(3, idGenerator);
@@ -255,7 +255,7 @@ describe("Bidding System", () => {
 
     it("should reject a coinche when already coinched", () => {
       let round = createBiddingRound(0, idGenerator);
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       round = placeBid(round, createCoincheBid(2, idGenerator));
       // Now it's position 3's turn — cannot coinche again
       const doubleCoinche = createCoincheBid(3, idGenerator);
@@ -264,7 +264,7 @@ describe("Bidding System", () => {
 
     it("should reject a surcoinche when not coinched", () => {
       let round = createBiddingRound(0, idGenerator);
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       const surcoinche = createSurcoincheBid(2, idGenerator);
       expect(isValidBid(round, surcoinche)).toBe(false);
     });
@@ -272,7 +272,7 @@ describe("Bidding System", () => {
     it("should accept a surcoinche from bidding team member after coinche", () => {
       let round = createBiddingRound(0, idGenerator);
       // Position 1 bids (team 1,3)
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       // Position 2 coinches (opponent, team 0,2)
       round = placeBid(round, createCoincheBid(2, idGenerator));
       // Position 3 is same team as bidder (1,3) → can surcoinche
@@ -283,7 +283,7 @@ describe("Bidding System", () => {
     it("should reject a surcoinche from opponent after coinche", () => {
       let round = createBiddingRound(0, idGenerator);
       // Position 1 bids (team 1,3)
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       // Position 2 coinches (team 0,2)
       round = placeBid(round, createCoincheBid(2, idGenerator));
       // Position 3 is team 1,3 (bidding team) — skip to test opponent
@@ -292,7 +292,7 @@ describe("Bidding System", () => {
       const gen2 = createIdGenerator({ seed: 50 });
       let round2 = createBiddingRound(3, gen2);
       // Position 0 bids (team 0,2)
-      round2 = placeBid(round2, createSuitBid(0, 80, "hearts", gen2));
+      round2 = placeBid(round2, createSuitBid(0, 90, "hearts", gen2));
       // Position 1 coinches (team 1,3, opponent)
       round2 = placeBid(round2, createCoincheBid(1, gen2));
       // Position 2 is on bidding team (0,2) → this should be valid
@@ -304,7 +304,7 @@ describe("Bidding System", () => {
       const gen3 = createIdGenerator({ seed: 60 });
       let round3 = createBiddingRound(1, gen3);
       // Position 2 bids (team 0,2)
-      round3 = placeBid(round3, createSuitBid(2, 80, "hearts", gen3));
+      round3 = placeBid(round3, createSuitBid(2, 90, "hearts", gen3));
       // Position 3 coinches (team 1,3, opponent)
       round3 = placeBid(round3, createCoincheBid(3, gen3));
       // Position 0 is next, on bidding team (0,2) — skip via pass to get opponent
@@ -316,7 +316,7 @@ describe("Bidding System", () => {
 
     it("should reject suit bid after coinche", () => {
       let round = createBiddingRound(0, idGenerator);
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       round = placeBid(round, createCoincheBid(2, idGenerator));
       // Position 3 cannot make a new suit bid after coinche
       const suitBid = createSuitBid(3, 90, "spades", idGenerator);
@@ -330,7 +330,7 @@ describe("Bidding System", () => {
   describe("placeBid", () => {
     it("should add the bid to the round's bid array", () => {
       const round = createBiddingRound(0, idGenerator);
-      const bid = createSuitBid(1, 80, "hearts", idGenerator);
+      const bid = createSuitBid(1, 90, "hearts", idGenerator);
       const updated = placeBid(round, bid);
       expect(updated.bids).toHaveLength(1);
       expect(updated.bids[0]!.id).toBe(bid.id);
@@ -338,7 +338,7 @@ describe("Bidding System", () => {
 
     it("should advance the current player position", () => {
       const round = createBiddingRound(0, idGenerator);
-      const bid = createSuitBid(1, 80, "hearts", idGenerator);
+      const bid = createSuitBid(1, 90, "hearts", idGenerator);
       const updated = placeBid(round, bid);
       expect(updated.currentPlayerPosition).toBe(2);
     });
@@ -355,10 +355,10 @@ describe("Bidding System", () => {
 
     it("should update highestBid when a suit bid is placed", () => {
       const round = createBiddingRound(0, idGenerator);
-      const bid = createSuitBid(1, 80, "hearts", idGenerator);
+      const bid = createSuitBid(1, 90, "hearts", idGenerator);
       const updated = placeBid(round, bid);
       expect(updated.highestBid).not.toBeNull();
-      expect(updated.highestBid!.value).toBe(80);
+      expect(updated.highestBid!.value).toBe(90);
       expect(updated.highestBid!.suit).toBe("hearts");
     });
 
@@ -368,13 +368,13 @@ describe("Bidding System", () => {
       expect(round.consecutivePasses).toBe(1);
       round = placeBid(round, createPassBid(2, idGenerator));
       expect(round.consecutivePasses).toBe(2);
-      round = placeBid(round, createSuitBid(3, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(3, 90, "hearts", idGenerator));
       expect(round.consecutivePasses).toBe(0);
     });
 
     it("should set state to 'completed' after 3 consecutive passes following a suit bid", () => {
       let round = createBiddingRound(0, idGenerator);
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       expect(round.state).toBe("in_progress");
       round = placeBid(round, createPassBid(2, idGenerator));
       round = placeBid(round, createPassBid(3, idGenerator));
@@ -395,7 +395,7 @@ describe("Bidding System", () => {
 
     it("should set coinched flag when coinche is placed", () => {
       let round = createBiddingRound(0, idGenerator);
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       expect(round.coinched).toBe(false);
       round = placeBid(round, createCoincheBid(2, idGenerator));
       expect(round.coinched).toBe(true);
@@ -403,7 +403,7 @@ describe("Bidding System", () => {
 
     it("should complete with surcoinche and set surcoinched flag", () => {
       let round = createBiddingRound(0, idGenerator);
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       round = placeBid(round, createCoincheBid(2, idGenerator));
       // Position 3 is on bidding team (1,3) → surcoinche
       round = placeBid(round, createSurcoincheBid(3, idGenerator));
@@ -414,7 +414,7 @@ describe("Bidding System", () => {
     it("should complete when bidding team member passes after coinche", () => {
       let round = createBiddingRound(0, idGenerator);
       // Position 1 bids (team 1,3)
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       // Position 2 coinches (team 0,2)
       round = placeBid(round, createCoincheBid(2, idGenerator));
       // Position 3 is on bidding team (1,3) → pass declines surcoinche
@@ -427,7 +427,7 @@ describe("Bidding System", () => {
     it("should throw on invalid bid", () => {
       const round = createBiddingRound(0, idGenerator);
       // Wrong player position (current is 1, bid from 2)
-      const invalidBid = createSuitBid(2, 80, "hearts", idGenerator);
+      const invalidBid = createSuitBid(2, 90, "hearts", idGenerator);
       expect(() => placeBid(round, invalidBid)).toThrow();
     });
   });
@@ -451,8 +451,8 @@ describe("Bidding System", () => {
 
     it("should extract the correct bidder position", () => {
       let round = createBiddingRound(0, idGenerator);
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
-      round = placeBid(round, createSuitBid(2, 90, "diamonds", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(2, 100, "diamonds", idGenerator));
       round = placeBid(round, createPassBid(3, idGenerator));
       round = placeBid(round, createPassBid(0, idGenerator));
       round = placeBid(round, createPassBid(1, idGenerator));
@@ -461,12 +461,12 @@ describe("Bidding System", () => {
       const contract = getContract(round, contractGen);
       expect(contract.bidderPosition).toBe(2);
       expect(contract.suit).toBe("diamonds");
-      expect(contract.value).toBe(90);
+      expect(contract.value).toBe(100);
     });
 
     it("should return coincheLevel 1 for normal contract", () => {
       let round = createBiddingRound(0, idGenerator);
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       round = placeBid(round, createPassBid(2, idGenerator));
       round = placeBid(round, createPassBid(3, idGenerator));
       round = placeBid(round, createPassBid(0, idGenerator));
@@ -477,7 +477,7 @@ describe("Bidding System", () => {
 
     it("should return coincheLevel 2 for coinched contract", () => {
       let round = createBiddingRound(0, idGenerator);
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       round = placeBid(round, createCoincheBid(2, idGenerator));
       // Position 3 (bidding team) passes → coinche stands
       round = placeBid(round, createPassBid(3, idGenerator));
@@ -488,7 +488,7 @@ describe("Bidding System", () => {
 
     it("should return coincheLevel 4 for surcoinched contract", () => {
       let round = createBiddingRound(0, idGenerator);
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       round = placeBid(round, createCoincheBid(2, idGenerator));
       round = placeBid(round, createSurcoincheBid(3, idGenerator));
 
@@ -498,7 +498,7 @@ describe("Bidding System", () => {
 
     it("should assign a unique ID with contract_ prefix", () => {
       let round = createBiddingRound(0, idGenerator);
-      round = placeBid(round, createSuitBid(1, 80, "hearts", idGenerator));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", idGenerator));
       round = placeBid(round, createPassBid(2, idGenerator));
       round = placeBid(round, createPassBid(3, idGenerator));
       round = placeBid(round, createPassBid(0, idGenerator));
@@ -534,14 +534,14 @@ describe("Bidding System", () => {
       let round = createBiddingRound(0, gen);
 
       // Position 1: bids 80 hearts
-      round = placeBid(round, createSuitBid(1, 80, "hearts", gen));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", gen));
       expect(round.state).toBe("in_progress");
 
-      // Position 2: outbids 90 spades
-      round = placeBid(round, createSuitBid(2, 90, "spades", gen));
+      // Position 2: outbids 100 spades
+      round = placeBid(round, createSuitBid(2, 100, "spades", gen));
 
-      // Position 3: outbids 100 diamonds
-      round = placeBid(round, createSuitBid(3, 100, "diamonds", gen));
+      // Position 3: outbids 110 diamonds
+      round = placeBid(round, createSuitBid(3, 110, "diamonds", gen));
 
       // Position 0: passes
       round = placeBid(round, createPassBid(0, gen));
@@ -557,7 +557,7 @@ describe("Bidding System", () => {
 
       const contract = getContract(round, gen);
       expect(contract.suit).toBe("diamonds");
-      expect(contract.value).toBe(100);
+      expect(contract.value).toBe(110);
       expect(contract.bidderPosition).toBe(3);
       expect(contract.coincheLevel).toBe(1);
     });
@@ -582,7 +582,7 @@ describe("Bidding System", () => {
       let round = createBiddingRound(0, gen);
 
       // Position 1 bids 80 hearts (team 1,3)
-      round = placeBid(round, createSuitBid(1, 80, "hearts", gen));
+      round = placeBid(round, createSuitBid(1, 90, "hearts", gen));
       // Position 2 coinches (team 0,2 — opponent)
       round = placeBid(round, createCoincheBid(2, gen));
       // Position 3 surcoinches (team 1,3 — bidding team)
@@ -595,7 +595,7 @@ describe("Bidding System", () => {
       const contract = getContract(round, gen);
       expect(contract.coincheLevel).toBe(4);
       expect(contract.suit).toBe("hearts");
-      expect(contract.value).toBe(80);
+      expect(contract.value).toBe(90);
     });
 
     it("should handle coinche without surcoinche (team declines)", () => {
@@ -635,14 +635,14 @@ describe("getValidBids", () => {
     expect(passBids).toHaveLength(1);
   });
 
-  it("should include all suit×value combos when no bid placed (36 suit bids + 1 pass = 37)", () => {
+  it("should include all suit×value combos when no bid placed (32 suit bids + 1 pass = 33)", () => {
     const gen = createIdGenerator({ seed: 101 });
     const round = createBiddingRound(0, gen);
-    // Current player is position 1, no bids yet → all 9 values × 4 suits + 1 pass
+    // Current player is position 1, no bids yet → all 8 values × 4 suits + 1 pass
     const validBids = getValidBids(round, 1, gen);
     const suitBids = validBids.filter((b) => b.type === "suit");
-    expect(suitBids).toHaveLength(36);
-    expect(validBids).toHaveLength(37); // 36 suit + 1 pass
+    expect(suitBids).toHaveLength(32);
+    expect(validBids).toHaveLength(33); // 32 suit + 1 pass
   });
 
   it("should only include suit bids strictly above current highest value", () => {
@@ -664,7 +664,7 @@ describe("getValidBids", () => {
     const gen = createIdGenerator({ seed: 103 });
     let round = createBiddingRound(0, gen);
     // Position 1 bids 80 hearts (team 1,3)
-    round = placeBid(round, createSuitBid(1, 80, "hearts", gen));
+    round = placeBid(round, createSuitBid(1, 90, "hearts", gen));
 
     // Position 2 (team 0,2 — opponent) should have coinche available
     const validBids = getValidBids(round, 2, gen);
@@ -676,7 +676,7 @@ describe("getValidBids", () => {
     const gen = createIdGenerator({ seed: 104 });
     let round = createBiddingRound(0, gen);
     // Position 1 bids 80 hearts (team 1,3)
-    round = placeBid(round, createSuitBid(1, 80, "hearts", gen));
+    round = placeBid(round, createSuitBid(1, 90, "hearts", gen));
     // Position 2 passes
     round = placeBid(round, createPassBid(2, gen));
 
@@ -690,7 +690,7 @@ describe("getValidBids", () => {
     const gen = createIdGenerator({ seed: 105 });
     let round = createBiddingRound(0, gen);
     // Position 1 bids 80 hearts (team 1,3)
-    round = placeBid(round, createSuitBid(1, 80, "hearts", gen));
+    round = placeBid(round, createSuitBid(1, 90, "hearts", gen));
     // Position 2 coinches (team 0,2)
     round = placeBid(round, createCoincheBid(2, gen));
 
@@ -704,7 +704,7 @@ describe("getValidBids", () => {
     const gen = createIdGenerator({ seed: 106 });
     let round = createBiddingRound(0, gen);
     // Position 1 bids 80 hearts (team 1,3)
-    round = placeBid(round, createSuitBid(1, 80, "hearts", gen));
+    round = placeBid(round, createSuitBid(1, 90, "hearts", gen));
     // Position 2 coinches (team 0,2)
     round = placeBid(round, createCoincheBid(2, gen));
 

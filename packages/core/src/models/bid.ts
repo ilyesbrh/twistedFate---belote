@@ -8,7 +8,7 @@ export type BidType = "pass" | "suit" | "coinche" | "surcoinche";
 
 export type BiddingState = "in_progress" | "completed" | "all_passed";
 
-export const BID_VALUES = Object.freeze([80, 90, 100, 110, 120, 130, 140, 150, 160] as const);
+export const BID_VALUES = Object.freeze([90, 100, 110, 120, 130, 140, 150, 160] as const);
 export type BidValue = (typeof BID_VALUES)[number];
 
 export interface Bid {

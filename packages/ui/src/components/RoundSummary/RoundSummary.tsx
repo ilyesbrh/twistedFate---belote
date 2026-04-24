@@ -119,7 +119,7 @@ function NormalRoundBody({ contract, bidderName, roundScore }: NormalRoundBodyPr
 
   // Coinche label
   const coincheLabel =
-    coincheLevel === 4 ? " ×4 SURCOINCHE" : coincheLevel === 2 ? " ×2 COINCHE" : "";
+    coincheLevel === 4 ? " ×4 SURCONTRE" : coincheLevel === 2 ? " ×2 CONTRE" : "";
 
   const isRed = RED_SUITS.has(suit);
 

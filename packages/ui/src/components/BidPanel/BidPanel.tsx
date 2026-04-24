@@ -82,7 +82,7 @@ export function BidPanel({ biddingRound, validBidValues, onBid }: BidPanelProps)
             className={`${styles.btn} ${styles.coincheBtn} ${styles.fullWidth}`}
             onClick={() => onBid("coinche")}
           >
-            Coinche
+            Contrer
           </button>
         )}
       </div>
