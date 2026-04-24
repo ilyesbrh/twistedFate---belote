@@ -1,0 +1,225 @@
+.root {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  background: radial-gradient(circle at 50% 30%, #1a2d5a 0%, #0b1329 70%, #05080f 100%);
+  color: var(--text-light, #e5e7eb);
+  font-family: var(--font, "Inter", system-ui, sans-serif);
+  z-index: 50;
+  overflow: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+.leaveBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.headerInfo {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+.code {
+  color: var(--gold, #fbbf24);
+  font-weight: 800;
+}
+.phase {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.scoreRow {
+  display: flex;
+  gap: 16px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.contract {
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  color: var(--gold, #fbbf24);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  width: fit-content;
+}
+
+.players {
+  display: flex;
+  gap: 8px;
+}
+.playerSlot {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 84px;
+  font-size: 12px;
+}
+.playerMe {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.45);
+}
+.playerSeat {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.playerName {
+  font-weight: 700;
+}
+
+.trick,
+.trickEmpty {
+  min-height: 48px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.bidPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(8, 16, 32, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 12px;
+}
+.bidRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bidValueGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+.bidValueLabel {
+  font-weight: 800;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-right: 4px;
+}
+.bidBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+}
+.bidBtn:hover {
+  background: rgba(251, 191, 36, 0.2);
+}
+.bidActions {
+  display: flex;
+  gap: 10px;
+}
+.passBtn,
+.contreBtn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.passBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.contreBtn {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.note {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-style: italic;
+}
+
+.hand {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.handCard {
+  width: 56px;
+  height: 78px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  background: #fff;
+  color: #1f2937;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 4px;
+  gap: 4px;
+}
+.handCardEnabled:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.45);
+  border-color: var(--gold, #fbbf24);
+}
+.handCardDisabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+}
