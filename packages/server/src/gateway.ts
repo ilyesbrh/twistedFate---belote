@@ -84,7 +84,8 @@ export class Gateway {
 
     ws.on("close", () => {
       if (ctx.room) {
-        ctx.room.leave(ctx.clientId);
+        // Reserve the seat for reconnection — do NOT call leave() here.
+        ctx.room.markDisconnected(ctx.clientId);
         const members = this._roomMembers.get(ctx.room.code);
         if (members && ctx.seat !== null) members.delete(ctx.seat);
       }
@@ -105,6 +106,9 @@ export class Gateway {
         return;
       case "join_room":
         this._handleJoinRoom(ctx, msg.code);
+        return;
+      case "rejoin_room":
+        this._handleRejoinRoom(ctx, msg.code, msg.playerToken);
         return;
       case "start_game":
         if (!ctx.room) return sendErr(ctx.ws, "NOT_IN_ROOM", "create or join first");
@@ -141,7 +145,7 @@ export class Gateway {
     this._roomMembers.set(room.code, members);
     // Pre-register at seat 0 so the player_joined broadcast reaches the creator.
     members.set(0, ctx);
-    const seat = room.join(ctx.clientId, ctx.nickname);
+    const { seat, playerToken } = room.join(ctx.clientId, ctx.nickname);
     if (seat !== 0) {
       // Should never happen: creator is always the first joiner.
       members.delete(0);
@@ -149,7 +153,7 @@ export class Gateway {
     }
     ctx.room = room;
     ctx.seat = seat;
-    send(ctx.ws, { type: "room_created", code: room.code, seat });
+    send(ctx.ws, { type: "room_created", code: room.code, seat, playerToken });
   }
 
   private _handleJoinRoom(ctx: ClientContext, code: string): void {
@@ -162,7 +166,7 @@ export class Gateway {
     const prospective = room.players.findIndex((p) => p === null);
     if (prospective >= 0) members.set(prospective as Seat, ctx);
     try {
-      const seat = room.join(ctx.clientId, ctx.nickname);
+      const { seat, playerToken } = room.join(ctx.clientId, ctx.nickname);
       if (seat !== prospective && prospective >= 0) members.delete(prospective as Seat);
       members.set(seat, ctx);
       ctx.room = room;
@@ -170,9 +174,36 @@ export class Gateway {
       const players = room.players
         .map((p, s) => (p ? { seat: s as Seat, nickname: p.nickname } : null))
         .filter((p): p is { seat: Seat; nickname: string } => p !== null);
-      send(ctx.ws, { type: "room_joined", code, seat, players });
+      send(ctx.ws, { type: "room_joined", code, seat, playerToken, players });
     } catch (e) {
       sendErr(ctx.ws, "JOIN_FAILED", e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  private _handleRejoinRoom(ctx: ClientContext, code: string, playerToken: string): void {
+    const room = this._registry.lookup(code);
+    if (!room) return sendErr(ctx.ws, "NO_SUCH_ROOM", `room ${code} not found`);
+    const members = this._roomMembers.get(code);
+    if (!members) return sendErr(ctx.ws, "NO_SUCH_ROOM", `room ${code} members missing`);
+    // Pre-find the seat that owns this token so we can bind the ws to the
+    // members map BEFORE rejoin() broadcasts state — otherwise the recovered
+    // client wouldn't receive it.
+    const targetSeat = room.players.findIndex((p) => p?.playerToken === playerToken);
+    if (targetSeat < 0) {
+      return sendErr(ctx.ws, "REJOIN_FAILED", "unknown token");
+    }
+    members.set(targetSeat as Seat, ctx);
+    try {
+      const seat = room.rejoin(ctx.clientId, playerToken);
+      ctx.room = room;
+      ctx.seat = seat;
+      ctx.nickname = room.players[seat]?.nickname ?? "";
+      const players = room.players
+        .map((p, s) => (p ? { seat: s as Seat, nickname: p.nickname } : null))
+        .filter((p): p is { seat: Seat; nickname: string } => p !== null);
+      send(ctx.ws, { type: "room_joined", code, seat, playerToken, players });
+    } catch (e) {
+      sendErr(ctx.ws, "REJOIN_FAILED", e instanceof Error ? e.message : String(e));
     }
   }
 }

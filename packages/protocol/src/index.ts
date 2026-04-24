@@ -36,6 +36,7 @@ export type ClientMessage =
   | { readonly type: "hello"; readonly nickname: string }
   | { readonly type: "create_room" }
   | { readonly type: "join_room"; readonly code: string }
+  | { readonly type: "rejoin_room"; readonly code: string; readonly playerToken: string }
   | { readonly type: "start_game"; readonly targetScore: number }
   | { readonly type: "place_bid"; readonly bid: WireBid }
   | { readonly type: "play_card"; readonly cardId: string }
@@ -45,15 +46,23 @@ export type ClientMessage =
 
 export type ServerMessage =
   | { readonly type: "hello_ack"; readonly clientId: string }
-  | { readonly type: "room_created"; readonly code: string; readonly seat: Seat }
+  | {
+      readonly type: "room_created";
+      readonly code: string;
+      readonly seat: Seat;
+      readonly playerToken: string;
+    }
   | {
       readonly type: "room_joined";
       readonly code: string;
       readonly seat: Seat;
+      readonly playerToken: string;
       readonly players: readonly PlayerSummary[];
     }
   | { readonly type: "player_joined"; readonly seat: Seat; readonly nickname: string }
   | { readonly type: "player_left"; readonly seat: Seat }
+  | { readonly type: "player_disconnected"; readonly seat: Seat }
+  | { readonly type: "player_reconnected"; readonly seat: Seat }
   | { readonly type: "public_state"; readonly state: Record<string, unknown> }
   | {
       readonly type: "private_state";
@@ -117,6 +126,16 @@ export function isClientMessage(v: unknown): v is ClientMessage {
       const code = v["code"];
       return typeof code === "string" && ROOM_CODE_REGEX.test(code);
     }
+    case "rejoin_room": {
+      const code = v["code"];
+      const token = v["playerToken"];
+      return (
+        typeof code === "string" &&
+        ROOM_CODE_REGEX.test(code) &&
+        typeof token === "string" &&
+        token.length > 0
+      );
+    }
     case "start_game": {
       const targetScore = v["targetScore"];
       return typeof targetScore === "number" && targetScore > 0;
@@ -142,7 +161,12 @@ export function isServerMessage(v: unknown): v is ServerMessage {
       return typeof v["clientId"] === "string";
     case "room_created": {
       const code = v["code"];
-      return typeof code === "string" && ROOM_CODE_REGEX.test(code) && isSeat(v["seat"]);
+      return (
+        typeof code === "string" &&
+        ROOM_CODE_REGEX.test(code) &&
+        isSeat(v["seat"]) &&
+        typeof v["playerToken"] === "string"
+      );
     }
     case "room_joined": {
       const code = v["code"];
@@ -150,12 +174,16 @@ export function isServerMessage(v: unknown): v is ServerMessage {
         typeof code === "string" &&
         ROOM_CODE_REGEX.test(code) &&
         isSeat(v["seat"]) &&
+        typeof v["playerToken"] === "string" &&
         Array.isArray(v["players"])
       );
     }
     case "player_joined":
       return isSeat(v["seat"]) && typeof v["nickname"] === "string";
     case "player_left":
+      return isSeat(v["seat"]);
+    case "player_disconnected":
+    case "player_reconnected":
       return isSeat(v["seat"]);
     case "public_state":
       return isObject(v["state"]);

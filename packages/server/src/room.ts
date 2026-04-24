@@ -11,8 +11,12 @@ import { getValidPlays } from "@belote/core";
 import type { Card, PlayerPosition } from "@belote/core";
 
 export interface RoomPlayer {
-  readonly clientId: string;
+  /** Stable per-(room,seat) token. Survives socket reconnects. */
+  readonly playerToken: string;
+  /** Current ws clientId. Changes on reconnect. */
+  clientId: string;
   readonly nickname: string;
+  connected: boolean;
 }
 
 export interface Broadcaster {
@@ -110,18 +114,56 @@ export class Room {
     return r.players[seat]?.hand ?? [];
   }
 
-  join(clientId: string, nickname: string): Seat {
+  join(clientId: string, nickname: string): { seat: Seat; playerToken: string } {
     if (this.seatOf(clientId) !== null) {
       throw new Error("ALREADY_JOINED");
     }
     const freeSeat = this._seats.findIndex((s) => s === null);
     if (freeSeat < 0) throw new Error("ROOM_FULL");
     const seat = freeSeat as Seat;
-    this._seats[seat] = { clientId, nickname };
+    const playerToken = `tok_${Math.random().toString(36).slice(2, 12)}`;
+    this._seats[seat] = { playerToken, clientId, nickname, connected: true };
     this._broadcaster.broadcastAll({ type: "player_joined", seat, nickname });
-    return seat;
+    return { seat, playerToken };
   }
 
+  /**
+   * Reattach a player to their original seat using the token issued at join
+   * time. Used when the websocket reconnects (page reload, network blip).
+   * Returns the seat on success; throws otherwise.
+   */
+  rejoin(clientId: string, playerToken: string): Seat {
+    for (let i = 0; i < 4; i++) {
+      const p = this._seats[i];
+      if (p && p.playerToken === playerToken) {
+        p.clientId = clientId;
+        p.connected = true;
+        this._broadcaster.broadcastAll({ type: "player_reconnected", seat: i as Seat });
+        // Push fresh state so the reconnected client catches up immediately.
+        this._broadcastPublicState();
+        this._broadcastPrivateStates();
+        return i as Seat;
+      }
+    }
+    throw new Error("UNKNOWN_TOKEN");
+  }
+
+  /**
+   * Mark a player as disconnected without freeing the seat. The seat stays
+   * reserved so the same player can rejoin via their token.
+   */
+  markDisconnected(clientId: string): void {
+    const seat = this.seatOf(clientId);
+    if (seat === null) return;
+    const p = this._seats[seat];
+    if (!p) return;
+    p.connected = false;
+    this._broadcaster.broadcastAll({ type: "player_disconnected", seat });
+  }
+
+  /**
+   * Permanent leave (e.g. user clicks Leave) — frees the seat.
+   */
   leave(clientId: string): void {
     const seat = this.seatOf(clientId);
     if (seat === null) return;

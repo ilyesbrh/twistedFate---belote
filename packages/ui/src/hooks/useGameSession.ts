@@ -14,12 +14,7 @@ import type {
   CardPlayedEvent,
   BiddingCompletedEvent,
 } from "@belote/app";
-import {
-  BID_VALUES,
-  getValidPlays,
-  calculateRunningPoints,
-  getCardRankOrder,
-} from "@belote/core";
+import { BID_VALUES, getValidPlays, calculateRunningPoints, getCardRankOrder } from "@belote/core";
 import type { Card } from "@belote/core";
 import type { BiddingRound, BidValue, Contract, RoundScore, Suit } from "@belote/core";
 import type { CardData, PlayerData, Position, TrickCardData } from "../data/mockGame.js";
@@ -120,7 +115,11 @@ export interface GameSessionState {
   bubbles: Record<Position, GameMessage | null>;
   dispatch: (cmd: GameCommand) => void;
   playCard: (cardIndex: number) => void;
-  placeBid: (type: "pass" | "suit" | "coinche", value?: BidValue, suit?: Suit) => void;
+  placeBid: (
+    type: "pass" | "suit" | "coinche" | "surcoinche",
+    value?: BidValue,
+    suit?: Suit,
+  ) => void;
   startNextRound: () => void;
   startGame: () => void;
 }
@@ -435,7 +434,11 @@ export function useGameSession(): GameSessionState {
     if (card) dispatch(createPlayCardCommand(HUMAN, card));
   };
 
-  const placeBid = (type: "pass" | "suit" | "coinche", value?: BidValue, suit?: Suit) => {
+  const placeBid = (
+    type: "pass" | "suit" | "coinche" | "surcoinche",
+    value?: BidValue,
+    suit?: Suit,
+  ) => {
     dispatch(createPlaceBidCommand(HUMAN, type, value, suit));
   };
 

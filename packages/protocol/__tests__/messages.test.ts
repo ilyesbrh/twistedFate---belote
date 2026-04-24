@@ -13,6 +13,7 @@ describe("client message validation", () => {
     { type: "hello", nickname: "Alice" },
     { type: "create_room" },
     { type: "join_room", code: "ABCD" },
+    { type: "rejoin_room", code: "ABCD", playerToken: "tok_xxx" },
     { type: "start_game", targetScore: 501 },
     { type: "place_bid", bid: { type: "pass" } },
     { type: "place_bid", bid: { type: "suit", value: 90, suit: "hearts" } },
@@ -72,10 +73,18 @@ describe("client message validation", () => {
 describe("server message validation", () => {
   const validExamples: ServerMessage[] = [
     { type: "hello_ack", clientId: "c1" },
-    { type: "room_created", code: "ABCD", seat: 0 },
-    { type: "room_joined", code: "ABCD", seat: 2, players: [{ seat: 0, nickname: "A" }] },
+    { type: "room_created", code: "ABCD", seat: 0, playerToken: "tok_a" },
+    {
+      type: "room_joined",
+      code: "ABCD",
+      seat: 2,
+      playerToken: "tok_c",
+      players: [{ seat: 0, nickname: "A" }],
+    },
     { type: "player_joined", seat: 1, nickname: "B" },
     { type: "player_left", seat: 1 },
+    { type: "player_disconnected", seat: 2 },
+    { type: "player_reconnected", seat: 2 },
     { type: "public_state", state: { phase: "bidding" } as unknown as Record<string, unknown> },
     { type: "private_state", seat: 0, hand: [], legalCardIds: [] },
     { type: "event", event: { type: "trick_completed" } as unknown as Record<string, unknown> },
@@ -94,8 +103,13 @@ describe("server message validation", () => {
     expect(isServerMessage({ type: "wat" })).toBe(false);
   });
 
-  it("rejects room_created with bad seat", () => {
-    expect(isServerMessage({ type: "room_created", code: "ABCD", seat: 4 })).toBe(false);
-    expect(isServerMessage({ type: "room_created", code: "abcd", seat: 0 })).toBe(false);
+  it("rejects room_created with bad seat or missing token", () => {
+    expect(isServerMessage({ type: "room_created", code: "ABCD", seat: 4, playerToken: "x" })).toBe(
+      false,
+    );
+    expect(isServerMessage({ type: "room_created", code: "abcd", seat: 0, playerToken: "x" })).toBe(
+      false,
+    );
+    expect(isServerMessage({ type: "room_created", code: "ABCD", seat: 0 })).toBe(false);
   });
 });

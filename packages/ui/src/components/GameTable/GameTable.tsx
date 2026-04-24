@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useGameSession } from "../../hooks/useGameSession.js";
+import type { GameSessionState } from "../../hooks/useGameSession.js";
 import { BidPanel } from "../BidPanel/BidPanel.js";
 import { ChatButton } from "../ChatButton/ChatButton.js";
 import { ChatPanel } from "../ChatPanel/ChatPanel.js";
@@ -17,8 +18,19 @@ interface GameTableProps {
   onPlayAgain: () => void;
 }
 
+/** Container: wires the local AI session and renders the table. */
 export function GameTable({ onPlayAgain }: GameTableProps) {
   const state = useGameSession();
+  return <GameTableView state={state} onPlayAgain={onPlayAgain} />;
+}
+
+interface GameTableViewProps {
+  state: GameSessionState;
+  onPlayAgain: () => void;
+}
+
+/** Pure-presentation game table — accepts any GameSessionState (AI or online). */
+export function GameTableView({ state, onPlayAgain }: GameTableViewProps) {
   const [chatOpen, setChatOpen] = useState(false);
 
   const south = state.players.find((p) => p.position === "south")!;

@@ -41,17 +41,20 @@ describe("Room — join / leave", () => {
   });
 
   it("assigns seat 0 to the first joiner", () => {
-    const seat = room.join("c1", "Alice");
+    const { seat, playerToken } = room.join("c1", "Alice");
     expect(seat).toBe(0);
+    expect(playerToken).toMatch(/^tok_/);
     expect(room.seatOf("c1")).toBe(0);
-    expect(room.players[0]).toEqual({ clientId: "c1", nickname: "Alice" });
+    expect(room.players[0]?.nickname).toBe("Alice");
+    expect(room.players[0]?.clientId).toBe("c1");
+    expect(room.players[0]?.connected).toBe(true);
   });
 
   it("assigns seats 0..3 sequentially", () => {
-    expect(room.join("c1", "A")).toBe(0);
-    expect(room.join("c2", "B")).toBe(1);
-    expect(room.join("c3", "C")).toBe(2);
-    expect(room.join("c4", "D")).toBe(3);
+    expect(room.join("c1", "A").seat).toBe(0);
+    expect(room.join("c2", "B").seat).toBe(1);
+    expect(room.join("c3", "C").seat).toBe(2);
+    expect(room.join("c4", "D").seat).toBe(3);
     expect(room.isFull).toBe(true);
   });
 
@@ -82,6 +85,56 @@ describe("Room — join / leave", () => {
     room.leave("c1");
     expect(room.players[0]).toBeNull();
     expect(broadcaster.lastBroadcast("player_left")).toEqual({ type: "player_left", seat: 0 });
+  });
+});
+
+describe("Room — reconnection", () => {
+  let broadcaster: MockBroadcaster;
+  let room: Room;
+  beforeEach(() => {
+    broadcaster = new MockBroadcaster();
+    room = new Room("ABCD", broadcaster);
+  });
+
+  it("markDisconnected keeps the seat reserved and broadcasts disconnect", () => {
+    const { seat } = room.join("c1", "Alice");
+    broadcaster.reset();
+    room.markDisconnected("c1");
+    expect(room.players[seat]?.connected).toBe(false);
+    expect(room.players[seat]?.nickname).toBe("Alice");
+    expect(broadcaster.lastBroadcast("player_disconnected")).toEqual({
+      type: "player_disconnected",
+      seat,
+    });
+  });
+
+  it("rejoin restores the seat with a new clientId and broadcasts reconnect", () => {
+    const { seat, playerToken } = room.join("c1", "Alice");
+    room.markDisconnected("c1");
+    broadcaster.reset();
+    const restored = room.rejoin("c1-new", playerToken);
+    expect(restored).toBe(seat);
+    expect(room.players[seat]?.clientId).toBe("c1-new");
+    expect(room.players[seat]?.connected).toBe(true);
+    expect(broadcaster.lastBroadcast("player_reconnected")).toEqual({
+      type: "player_reconnected",
+      seat,
+    });
+  });
+
+  it("rejoin with unknown token throws", () => {
+    room.join("c1", "Alice");
+    expect(() => room.rejoin("c1-new", "tok_nonsense")).toThrowError(/UNKNOWN_TOKEN/);
+  });
+
+  it("disconnected seat does NOT count as free for new joins", () => {
+    room.join("c1", "A");
+    room.join("c2", "B");
+    room.join("c3", "C");
+    room.join("c4", "D");
+    room.markDisconnected("c2");
+    // Seat is still occupied → ROOM_FULL.
+    expect(() => room.join("c5", "E")).toThrowError(/ROOM_FULL/);
   });
 });
 
