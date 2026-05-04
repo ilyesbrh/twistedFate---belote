@@ -17,7 +17,7 @@ interface ModeButton {
 const MODES: ModeButton[] = [
   { id: "ai", label: "Play vs AI", subtitle: "Solo — 3 bots", disabled: false },
   { id: "friends", label: "Play with Friends", subtitle: "Room code", disabled: false },
-  { id: "random", label: "Random", subtitle: "Coming soon", disabled: true },
+  { id: "random", label: "Random", subtitle: "Auto-match 4 players", disabled: false },
   { id: "ranked", label: "Ranked", subtitle: "Coming soon", disabled: true },
 ];
 

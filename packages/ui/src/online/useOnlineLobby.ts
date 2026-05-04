@@ -2,7 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { PlayerSummary, Seat, ServerMessage } from "@belote/protocol";
 import { OnlineClient, type OnlineStatus } from "./OnlineClient.js";
 
-export type LobbyPhase = "idle" | "creating" | "joining" | "rejoining" | "in_room" | "error";
+export type LobbyPhase =
+  | "idle"
+  | "creating"
+  | "joining"
+  | "rejoining"
+  | "queued"
+  | "in_room"
+  | "error";
 
 export interface OnlineLobbyState {
   readonly status: OnlineStatus;
@@ -12,8 +19,16 @@ export interface OnlineLobbyState {
   readonly playerToken: string | null;
   readonly players: readonly PlayerSummary[];
   readonly error: string | null;
+  /** Position in the matchmaking queue (1-based) when phase === "queued". */
+  readonly queuePosition: number | null;
+  /** Total clients currently in the matchmaking queue. */
+  readonly queueSize: number;
   createRoom(nickname: string): void;
   joinRoom(nickname: string, code: string): void;
+  /** Enter the random-matchmaking queue. */
+  findRandom(nickname: string): void;
+  /** Leave the matchmaking queue. */
+  cancelRandom(): void;
   startGame(targetScore: number): void;
   disconnect(): void;
   /** Forget the saved (room, token) for this browser. Call when user
@@ -101,6 +116,8 @@ export function useOnlineLobby(): OnlineLobbyState {
   const [playerToken, setPlayerToken] = useState<string | null>(null);
   const [players, setPlayers] = useState<readonly PlayerSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [queuePosition, setQueuePosition] = useState<number | null>(null);
+  const [queueSize, setQueueSize] = useState<number>(0);
   const rejoinAttemptedRef = useRef(false);
 
   useEffect(() => {
@@ -125,6 +142,8 @@ export function useOnlineLobby(): OnlineLobbyState {
           setPlayerToken(msg.playerToken);
           setPlayers([{ seat: msg.seat, nickname: "" /* set by player_joined */ }]);
           setPhase("in_room");
+          setQueuePosition(null);
+          setQueueSize(0);
           writeSavedSession({ code: msg.code, playerToken: msg.playerToken });
           return;
         case "room_joined":
@@ -133,7 +152,29 @@ export function useOnlineLobby(): OnlineLobbyState {
           setPlayerToken(msg.playerToken);
           setPlayers(msg.players);
           setPhase("in_room");
+          setQueuePosition(null);
+          setQueueSize(0);
           writeSavedSession({ code: msg.code, playerToken: msg.playerToken });
+          return;
+        case "match_found":
+          setCode(msg.code);
+          setSeat(msg.seat);
+          setPlayerToken(msg.playerToken);
+          setPlayers(msg.players);
+          setPhase("in_room");
+          setQueuePosition(null);
+          setQueueSize(0);
+          writeSavedSession({ code: msg.code, playerToken: msg.playerToken });
+          return;
+        case "queued":
+          setQueuePosition(msg.position);
+          setQueueSize(msg.size);
+          setPhase("queued");
+          return;
+        case "match_cancelled":
+          setQueuePosition(null);
+          setQueueSize(0);
+          setPhase("idle");
           return;
         case "player_joined":
           setPlayers((prev) => {
@@ -174,6 +215,8 @@ export function useOnlineLobby(): OnlineLobbyState {
       playerToken,
       players,
       error,
+      queuePosition,
+      queueSize,
       client,
       createRoom(nickname: string) {
         setError(null);
@@ -187,6 +230,13 @@ export function useOnlineLobby(): OnlineLobbyState {
         client.send({ type: "hello", nickname });
         client.send({ type: "join_room", code: roomCode });
       },
+      findRandom(nickname: string) {
+        setError(null);
+        client.send({ type: "find_random", nickname });
+      },
+      cancelRandom() {
+        client.send({ type: "cancel_random" });
+      },
       startGame(targetScore: number) {
         client.send({ type: "start_game", targetScore });
       },
@@ -197,7 +247,7 @@ export function useOnlineLobby(): OnlineLobbyState {
         clearSavedSessionStorage();
       },
     }),
-    [status, phase, code, seat, playerToken, players, error, client],
+    [status, phase, code, seat, playerToken, players, error, queuePosition, queueSize, client],
   );
 
   return api;

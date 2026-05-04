@@ -192,6 +192,95 @@ describe("Gateway — 4 real ws clients", () => {
     for (const c of clients) c.close();
   });
 
+  it("matchmaking: 4 find_random clients are paired into one room", async () => {
+    // Use a fresh harness with a deterministic code so we can assert on it.
+    await stopServer(h);
+    h = await startServer(makeCodeGenerator(["MMMM"]));
+
+    const clients = [
+      new TestClient(h.port),
+      new TestClient(h.port),
+      new TestClient(h.port),
+      new TestClient(h.port),
+    ];
+    await Promise.all(clients.map((c) => c.open()));
+    for (const c of clients) await c.waitFor("hello_ack");
+
+    // First three enqueue and remain queued.
+    for (let i = 0; i < 3; i++) {
+      clients[i]!.send({ type: "find_random", nickname: `P${String(i)}` });
+      const q = await clients[i]!.waitFor("queued");
+      expect(q.position).toBe(i + 1);
+      expect(q.size).toBe(i + 1);
+    }
+
+    // Fourth completes the match. Every queued client receives match_found.
+    clients[3]!.send({ type: "find_random", nickname: "P3" });
+    const matches = await Promise.all(
+      clients.map((c) => c.waitFor("match_found", undefined, 4000)),
+    );
+    for (let i = 0; i < 4; i++) {
+      expect(matches[i]!.code).toBe("MMMM");
+      expect(matches[i]!.seat).toBe(i);
+      expect(matches[i]!.players.length).toBe(4);
+      expect(matches[i]!.playerToken.length).toBeGreaterThan(0);
+    }
+    // All four nicknames are present in every match_found's players list.
+    for (const m of matches) {
+      const names = m.players.map((p) => p.nickname).sort();
+      expect(names).toEqual(["P0", "P1", "P2", "P3"]);
+    }
+
+    for (const c of clients) c.close();
+  });
+
+  it("matchmaking: cancel_random removes the client from the queue", async () => {
+    const c1 = new TestClient(h.port);
+    const c2 = new TestClient(h.port);
+    await Promise.all([c1.open(), c2.open()]);
+    for (const c of [c1, c2]) await c.waitFor("hello_ack");
+
+    c1.send({ type: "find_random", nickname: "Alpha" });
+    const q1 = await c1.waitFor("queued");
+    expect(q1.size).toBe(1);
+
+    c2.send({ type: "find_random", nickname: "Beta" });
+    // Both clients should observe the new size=2.
+    const q2a = await c1.waitFor("queued", (m) => m.size === 2);
+    const q2b = await c2.waitFor("queued", (m) => m.size === 2);
+    expect(q2a.size).toBe(2);
+    expect(q2b.size).toBe(2);
+
+    c1.send({ type: "cancel_random" });
+    const cancelled = await c1.waitFor("match_cancelled");
+    expect(cancelled.type).toBe("match_cancelled");
+
+    // Remaining client gets a queued update with size=1, position=1.
+    const q3 = await c2.waitFor("queued", (m) => m.size === 1);
+    expect(q3.position).toBe(1);
+
+    c1.close();
+    c2.close();
+  });
+
+  it("matchmaking: ws close while queued silently dequeues", async () => {
+    const c1 = new TestClient(h.port);
+    const c2 = new TestClient(h.port);
+    await Promise.all([c1.open(), c2.open()]);
+    for (const c of [c1, c2]) await c.waitFor("hello_ack");
+
+    c1.send({ type: "find_random", nickname: "Alpha" });
+    await c1.waitFor("queued");
+    c2.send({ type: "find_random", nickname: "Beta" });
+    await c2.waitFor("queued", (m) => m.size === 2);
+
+    c1.close();
+    // Remaining client gets size=1.
+    const q = await c2.waitFor("queued", (m) => m.size === 1);
+    expect(q.position).toBe(1);
+    c2.close();
+  });
+
   it("rejects invalid JSON and unknown message types with error", async () => {
     const c = new TestClient(h.port);
     await c.open();

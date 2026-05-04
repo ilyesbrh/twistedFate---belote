@@ -21,6 +21,8 @@ describe("client message validation", () => {
     { type: "place_bid", bid: { type: "surcoinche" } },
     { type: "play_card", cardId: "card_abc123" },
     { type: "ping" },
+    { type: "find_random", nickname: "Alice" },
+    { type: "cancel_random" },
   ];
 
   for (const msg of validExamples) {
@@ -68,6 +70,11 @@ describe("client message validation", () => {
   it("parseClientMessage throws on invalid", () => {
     expect(() => parseClientMessage({ type: "nope" })).toThrow(/invalid client message/i);
   });
+
+  it("rejects find_random without a nickname", () => {
+    expect(isClientMessage({ type: "find_random" })).toBe(false);
+    expect(isClientMessage({ type: "find_random", nickname: "" })).toBe(false);
+  });
 });
 
 describe("server message validation", () => {
@@ -90,6 +97,20 @@ describe("server message validation", () => {
     { type: "event", event: { type: "trick_completed" } as unknown as Record<string, unknown> },
     { type: "error", reason: "room full", code: "ROOM_FULL" },
     { type: "pong" },
+    { type: "queued", position: 1, size: 1 },
+    { type: "match_cancelled" },
+    {
+      type: "match_found",
+      code: "ABCD",
+      seat: 0,
+      playerToken: "tok_a",
+      players: [
+        { seat: 0, nickname: "A" },
+        { seat: 1, nickname: "B" },
+        { seat: 2, nickname: "C" },
+        { seat: 3, nickname: "D" },
+      ],
+    },
   ];
 
   for (const msg of validExamples) {
@@ -101,6 +122,26 @@ describe("server message validation", () => {
 
   it("rejects unknown type", () => {
     expect(isServerMessage({ type: "wat" })).toBe(false);
+  });
+
+  it("rejects queued with non-numeric fields", () => {
+    expect(isServerMessage({ type: "queued", position: "1", size: 1 })).toBe(false);
+    expect(isServerMessage({ type: "queued", position: 1 })).toBe(false);
+  });
+
+  it("rejects match_found with malformed code or missing fields", () => {
+    expect(
+      isServerMessage({
+        type: "match_found",
+        code: "abcd",
+        seat: 0,
+        playerToken: "x",
+        players: [],
+      }),
+    ).toBe(false);
+    expect(isServerMessage({ type: "match_found", code: "ABCD", seat: 0, playerToken: "x" })).toBe(
+      false,
+    );
   });
 
   it("rejects room_created with bad seat or missing token", () => {

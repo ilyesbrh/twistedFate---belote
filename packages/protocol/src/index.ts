@@ -40,7 +40,9 @@ export type ClientMessage =
   | { readonly type: "start_game"; readonly targetScore: number }
   | { readonly type: "place_bid"; readonly bid: WireBid }
   | { readonly type: "play_card"; readonly cardId: string }
-  | { readonly type: "ping" };
+  | { readonly type: "ping" }
+  | { readonly type: "find_random"; readonly nickname: string }
+  | { readonly type: "cancel_random" };
 
 // ── Server → Client ──
 
@@ -74,7 +76,16 @@ export type ServerMessage =
     }
   | { readonly type: "event"; readonly event: Record<string, unknown> }
   | { readonly type: "error"; readonly reason: string; readonly code: string }
-  | { readonly type: "pong" };
+  | { readonly type: "pong" }
+  | { readonly type: "queued"; readonly position: number; readonly size: number }
+  | { readonly type: "match_cancelled" }
+  | {
+      readonly type: "match_found";
+      readonly code: string;
+      readonly seat: Seat;
+      readonly playerToken: string;
+      readonly players: readonly PlayerSummary[];
+    };
 
 // ── Validators ──
 // Hand-rolled (no Zod dep). Each branch validates only the fields the type tag
@@ -148,6 +159,12 @@ export function isClientMessage(v: unknown): v is ClientMessage {
     }
     case "ping":
       return true;
+    case "find_random": {
+      const nickname = v["nickname"];
+      return typeof nickname === "string" && nickname.length > 0;
+    }
+    case "cancel_random":
+      return true;
     default:
       return false;
   }
@@ -195,6 +212,20 @@ export function isServerMessage(v: unknown): v is ServerMessage {
       return typeof v["reason"] === "string" && typeof v["code"] === "string";
     case "pong":
       return true;
+    case "queued":
+      return typeof v["position"] === "number" && typeof v["size"] === "number";
+    case "match_cancelled":
+      return true;
+    case "match_found": {
+      const code = v["code"];
+      return (
+        typeof code === "string" &&
+        ROOM_CODE_REGEX.test(code) &&
+        isSeat(v["seat"]) &&
+        typeof v["playerToken"] === "string" &&
+        Array.isArray(v["players"])
+      );
+    }
     default:
       return false;
   }

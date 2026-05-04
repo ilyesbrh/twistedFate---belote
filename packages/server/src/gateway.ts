@@ -4,6 +4,7 @@ import type { ClientMessage, ServerMessage, Seat } from "@belote/protocol";
 import { parseClientMessage } from "@belote/protocol";
 import { Room, type Broadcaster } from "./room.js";
 import { RoomRegistry } from "./registry.js";
+import { MatchmakingQueue } from "./matchmakingQueue.js";
 
 interface ClientContext {
   readonly clientId: string;
@@ -30,6 +31,7 @@ export class Gateway {
   /** room.code → (seat → ClientContext) */
   private readonly _roomMembers = new Map<string, Map<Seat, ClientContext>>();
   private _clientCounter = 0;
+  private readonly _queue = new MatchmakingQueue();
 
   constructor(wss: WebSocketServer, config: GatewayConfig = {}) {
     this._wss = wss;
@@ -88,6 +90,9 @@ export class Gateway {
         ctx.room.markDisconnected(ctx.clientId);
         const members = this._roomMembers.get(ctx.room.code);
         if (members && ctx.seat !== null) members.delete(ctx.seat);
+      } else if (this._queue.has(ctx.clientId)) {
+        this._queue.cancel(ctx.clientId);
+        this._broadcastQueueState();
       }
       this._clients.delete(clientId);
     });
@@ -126,6 +131,86 @@ export class Gateway {
         if (!ctx.room || ctx.seat === null) return sendErr(ctx.ws, "NOT_IN_ROOM", "not seated");
         ctx.room.playCard(ctx.seat, msg.cardId);
         return;
+      case "find_random":
+        this._handleFindRandom(ctx, msg.nickname);
+        return;
+      case "cancel_random":
+        this._handleCancelRandom(ctx);
+        return;
+    }
+  }
+
+  private _handleFindRandom(ctx: ClientContext, nickname: string): void {
+    if (ctx.room) return sendErr(ctx.ws, "ALREADY_IN_ROOM", "leave the current room first");
+    ctx.nickname = nickname;
+    const result = this._queue.enqueue({ clientId: ctx.clientId, nickname });
+    if (!result.matched) {
+      send(ctx.ws, { type: "queued", position: result.position, size: this._queue.size });
+      // Refresh other queued clients with the new size (their position is
+      // unchanged but UI may want the size).
+      this._broadcastQueueState({ skipClientId: ctx.clientId });
+      return;
+    }
+    this._formMatch(result.group);
+  }
+
+  private _handleCancelRandom(ctx: ClientContext): void {
+    const removed = this._queue.cancel(ctx.clientId);
+    if (!removed) return;
+    send(ctx.ws, { type: "match_cancelled" });
+    this._broadcastQueueState();
+  }
+
+  private _formMatch(group: readonly { clientId: string; nickname: string }[]): void {
+    const members = new Map<Seat, ClientContext>();
+    const broadcaster: Broadcaster = {
+      sendToSeat: (seat, msg) => {
+        const m = members.get(seat);
+        if (m) send(m.ws, msg);
+      },
+      broadcastAll: (msg) => {
+        for (const m of members.values()) send(m.ws, msg);
+      },
+    };
+    const room = this._registry.createRoom(broadcaster);
+    this._roomMembers.set(room.code, members);
+
+    const joined: { ctx: ClientContext; seat: Seat; playerToken: string }[] = [];
+    for (const entry of group) {
+      const ctx = this._clients.get(entry.clientId);
+      if (!ctx) continue; // client disconnected between enqueue and match
+      const prospective = room.players.findIndex((p) => p === null);
+      if (prospective < 0) break;
+      members.set(prospective as Seat, ctx);
+      const { seat, playerToken } = room.join(ctx.clientId, entry.nickname);
+      if (seat !== prospective) {
+        members.delete(prospective as Seat);
+        members.set(seat, ctx);
+      }
+      ctx.room = room;
+      ctx.seat = seat;
+      ctx.nickname = entry.nickname;
+      joined.push({ ctx, seat, playerToken });
+    }
+
+    const players = room.players
+      .map((p, s) => (p ? { seat: s as Seat, nickname: p.nickname } : null))
+      .filter((p): p is { seat: Seat; nickname: string } => p !== null);
+
+    for (const { ctx, seat, playerToken } of joined) {
+      send(ctx.ws, { type: "match_found", code: room.code, seat, playerToken, players });
+    }
+  }
+
+  private _broadcastQueueState(opts: { skipClientId?: string } = {}): void {
+    const entries = this._queue.entries;
+    const size = entries.length;
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i]!;
+      if (opts.skipClientId && e.clientId === opts.skipClientId) continue;
+      const ctx = this._clients.get(e.clientId);
+      if (!ctx) continue;
+      send(ctx.ws, { type: "queued", position: i + 1, size });
     }
   }
 
