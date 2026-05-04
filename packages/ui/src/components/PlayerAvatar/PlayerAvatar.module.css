@@ -92,47 +92,55 @@
   box-shadow: 0 1.5px 0 rgba(42, 31, 18, 0.3);
 }
 
-/* ── Active player: terracotta glow ring ── */
+/* ── Active player: soft terracotta aura, no hard rectangle ── */
 .wrapperActive .token {
   border-color: var(--accent-terracotta);
 }
-
-.activeRing {
-  position: absolute;
-  inset: -5px;
-  border-radius: 16px;
-  border: 2px solid var(--accent-terracotta);
-  pointer-events: none;
-  opacity: 0.6;
-}
 @media (prefers-reduced-motion: no-preference) {
-  .activeRing {
-    animation: pulse 1.4s ease-in-out infinite;
+  .wrapperActive .token {
+    animation: tokenAura 1.6s ease-in-out infinite;
   }
 }
 
-@keyframes pulse {
+/* The previous activeRing was a sharp rectangular border that pulsed. The
+   token's animated box-shadow above gives a softer aura instead, so the
+   ring element is hidden but kept in the DOM for backwards-compat. */
+.activeRing {
+  display: none;
+}
+
+@keyframes tokenAura {
   0%,
   100% {
-    opacity: 0.55;
-    transform: scale(1);
+    box-shadow:
+      0 3px 0 rgba(42, 31, 18, 0.22),
+      0 6px 14px rgba(42, 31, 18, 0.22);
   }
   50% {
-    opacity: 0.95;
-    transform: scale(1.05);
+    box-shadow:
+      0 3px 0 rgba(42, 31, 18, 0.22),
+      0 6px 14px rgba(42, 31, 18, 0.22),
+      0 0 0 4px rgba(168, 50, 50, 0.22),
+      0 0 18px 2px rgba(168, 50, 50, 0.45);
   }
 }
 
-/* ── Name label (handwritten under the token) ── */
+/* ── Name label (handwritten under the token) ──
+   Side-player avatars sit on top of the back-of-card stacks (terracotta).
+   The previous transparent label was unreadable against that — the label
+   now uses a near-opaque cream paper background with a thin ink border so
+   the name stays crisp regardless of what's behind. */
 .nameLabel {
   display: flex;
   align-items: center;
   gap: 4px;
   padding: 1px 9px;
-  background: rgba(42, 31, 18, 0.04);
+  background: rgba(255, 251, 233, 0.92);
+  border: 1px solid rgba(42, 31, 18, 0.18);
   border-radius: 12px;
   max-width: 110px;
   white-space: nowrap;
+  box-shadow: 0 1px 0 rgba(42, 31, 18, 0.1);
 }
 
 .name {
@@ -293,5 +301,57 @@
   }
   .nameLabel {
     max-width: 80px;
+  }
+}
+
+/* ── Landscape phone — short height, every px counts. Compact tokens
+   and tighter wrapper so the south avatar can hug the corner without
+   pushing into the card fan. ── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .wrapper {
+    gap: 2px;
+  }
+  .lg .token {
+    width: 48px;
+    height: 48px;
+  }
+  .lg .monogram {
+    font-size: 18px;
+  }
+  .md .token {
+    width: 42px;
+    height: 42px;
+  }
+  .md .monogram {
+    font-size: 16px;
+  }
+  .sm .token {
+    width: 38px;
+    height: 38px;
+  }
+  .sm .monogram {
+    font-size: 14px;
+  }
+  .name,
+  .lg .name {
+    font-size: 11px;
+  }
+  .nameLabel {
+    padding: 0 6px;
+    max-width: 72px;
+  }
+  .dealerStamp {
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    top: -6px;
+    left: -6px;
+  }
+  .contractStamp {
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    top: -7px;
+    right: -6px;
   }
 }

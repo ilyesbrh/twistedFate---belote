@@ -107,11 +107,12 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Avatar: visually leftmost (order:-1), DOM-last so it paints above the card fan */
+/* Avatar: visually leftmost (order:-1), DOM-last so it paints above the card fan.
+   Tight to the corner — only the row's safe-area lift and 4px of breathing room. */
 .southAvatar {
   order: -1;
   flex: 0 0 auto;
-  padding: 0 0 8px 8px;
+  padding: 0 0 4px 6px;
   pointer-events: all;
   position: relative;
 }
@@ -130,6 +131,16 @@
   top: 0;
   right: -6px;
   z-index: 21;
+}
+
+/* Landscape phone: park the button to the RIGHT of the (now compact)
+   avatar token so it doesn't cover the monogram. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .chatBtn {
+    top: 6px;
+    right: auto;
+    left: 56px;
+  }
 }
 
 /* ── Bid panel: centered in the screen ── */
@@ -201,8 +212,10 @@
      forced the panel to a fixed stretched height, cropping the Coinche
      row. The natural-height centered layout fits within 390-tall phones. */
 
+  /* Landscape phone: avatar flush to the corner, no name-label padding
+     to spare. */
   .southAvatar {
-    padding-bottom: 6px;
+    padding: 0 0 0 4px;
   }
 
   /* Lift the south row just enough to keep the fan's outermost cards

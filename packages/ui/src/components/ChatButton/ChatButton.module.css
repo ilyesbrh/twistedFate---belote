@@ -98,3 +98,27 @@
     height: 12px;
   }
 }
+
+/* Landscape phone — short height, tiny chrome. Match the compact avatar
+   size so the button doesn't obscure the token next to it. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .btn {
+    width: 30px;
+    height: 30px;
+    border-width: 1.5px;
+  }
+  .icon {
+    width: 13px;
+    height: 13px;
+  }
+  .badge {
+    min-width: 14px;
+    height: 14px;
+    padding: 0 3px;
+    font-size: 9px;
+    line-height: 14px;
+    border-width: 1.2px;
+    top: -3px;
+    right: -3px;
+  }
+}
