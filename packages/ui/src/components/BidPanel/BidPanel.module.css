@@ -180,30 +180,45 @@
 }
 
 /* ── Responsive ── */
+/* Landscape phone (height ≤ 500px). The default layout's 3-col value grid
+   doesn't fit at 412px viewport height (the actions row drops off the
+   bottom). Switch to a 4-col value grid + tighter paddings so everything
+   stacks under ~290px. */
 @media (max-height: 500px) and (orientation: landscape) {
   .panel {
-    width: 160px;
+    width: 260px;
     border-radius: 10px;
   }
   .suitRow {
-    padding: 7px 8px;
-    gap: 3px;
+    padding: 6px 8px;
+    gap: 4px;
   }
   .valueGrid {
-    padding: 7px 8px;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 6px 8px;
     gap: 4px;
   }
   .actions {
-    padding: 7px 8px;
+    padding: 6px 8px;
     gap: 4px;
   }
   .btn {
-    font-size: 10px;
-    padding: 4px 2px;
+    font-size: 11px;
+    padding: 3px 2px;
     border-radius: 7px;
+    min-height: 32px;
   }
   .suitBtn {
-    font-size: 17px;
+    font-size: 18px;
+  }
+  .valueBtn {
+    font-size: 12px;
+  }
+  .bidBtn {
+    font-size: 11px;
+  }
+  .passBtn {
+    font-size: 13px;
   }
 }
 
