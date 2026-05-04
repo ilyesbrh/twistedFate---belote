@@ -1,68 +1,107 @@
-# Iteration 23 Report: UI Input Dispatch — Card Taps & Bids
+# Iteration 023 Report — In-game UI chrome alignment
 
-**Date**: 2026-02-21
+**Date**: 2026-05-04
 **Status**: Complete
-**Commit**: `3d9c602`
+**Test delta**: 715 → 715 (CSS-only, no behaviour change)
 
 ## Goal
 
-Wire user interactions (card taps, suit bids, pass) from PixiJS components back to the game session via `GameController.wireInput()`.
+Walk from menu (cream paper) into a round (felt-green table) without
+the chrome looking like two different apps. Felt stays as the
+card-room metaphor; chrome rebuilds on top in cream paper + ink +
+terracotta. Felt-green ramp tuned warmer (olive) to harmonize.
 
-## Scope
+## TDD trail
 
-1. `InputSource` interface — callback registration for card taps, suit bids, pass
-2. `wireInput()` on GameController — bridges UI events to session commands
-3. `onCardTap()` on HandDisplay — pointer events on card sprites
-4. `onSuitBid()` / `onPass()` on BiddingPanel — button interaction callbacks
-5. 6 new tests for input dispatch
+CSS-only across 8 module files + 1 token tweak. Every existing test
+covers data-testids / aria contracts unchanged. Full suite stayed at
+715/715 after each batch of edits.
 
-## Tests Written (6 new → 740 total)
+## Files
 
-### game-controller.test.ts (6 new tests)
+### Modified
 
-- Card tap dispatches `play_card` command with correct card
-- Suit bid dispatches `place_bid` with suit
-- Pass dispatches `place_bid` with bidType "pass"
-- Card tap with unknown card is silent no-op
-- Bid value defaults to 80
-- Player position hardcoded to 0 (human)
+- `packages/ui/src/styles/tokens.css` — felt-green ramp tuned to
+  warmer olive: `#4a6936` (center) → `#1a2a13` (edge). Was
+  `#3d9b58` → `#133d1f` (saturated bright green).
+- `packages/ui/src/components/ScorePanel/ScorePanel.module.css` —
+  cream paper top-left card with ink border, serif Yeseva
+  numerals, handwritten teal team labels, terracotta target +
+  contract values, sage/terracotta level badges.
+- `packages/ui/src/components/BidPanel/BidPanel.module.css` —
+  cream paper notebook; suit/value buttons are ink-bordered cream
+  cards, selected = thicker terracotta border + cream gradient. Pass
+  is neutral cream stamp, Bid is terracotta stamp, Coinche is
+  sage/teal stamp — different tones for different actions.
+- `packages/ui/src/components/ChatButton/ChatButton.module.css` —
+  cream paper round button with ink border + chunky drop-shadow,
+  terracotta unread badge with ink outline.
+- `packages/ui/src/components/ChatPanel/ChatPanel.module.css` —
+  paper-ledger sliding drawer with horizontal-rule grain (every
+  35px), cream header with ink border, message-type colours
+  (sage trick-win, terracotta contract / cancelled), terracotta
+  send button stamp.
+- `packages/ui/src/components/RoundSummary/RoundSummary.module.css`
+  — paper-card modal with corner pin dots, serif Yeseva scores,
+  handwritten labels, sage/terracotta result-met / -failed badges,
+  terracotta "NEXT ROUND" stamp.
+- `packages/ui/src/components/GameOver/GameOver.module.css` —
+  paper-card modal with corner pin dots, score bars in teal-deep
+  (NS) and terracotta (EW) on cream tracks, mustard "you won"
+  pill, terracotta "PLAY AGAIN" stamp.
+- `packages/ui/src/components/PlayerAvatar/PlayerAvatar.module.css`
+  — cream pill name labels with ink border, terracotta active-pulse
+  dot, all four thought-bubble variants on cream paper with type-
+  specific text colours (ink-dark, sage trick-win, terracotta
+  contract/cancelled).
 
-## Implementation Summary
+## Validation
 
-### Files Modified
+| Check                                 | Result                            |
+| ------------------------------------- | --------------------------------- |
+| `pnpm test`                           | 35 files / 715 passing (no delta) |
+| `pnpm typecheck`                      | Clean                             |
+| `pnpm lint`                           | 189 errors (no delta)             |
+| `pnpm format:check` (iteration scope) | Clean                             |
 
-- `packages/ui/src/game-controller.ts` — Added `wireInput()` method, `InputSource` interface
-- `packages/ui/src/components/hand/hand-display.ts` — Added `onCardTap()`, `getCardSprites()`, pointer event handling
-- `packages/ui/src/components/bidding/bidding-panel.ts` — Added `onSuitBid()`, `onPass()` callback registration
-- `packages/ui/__tests__/game-controller.test.ts` — 6 new input dispatch tests
-- `packages/ui/src/index.ts` — Exported `InputSource` type
+### Manual smoke (screen viewer fixtures)
 
-### Key API
+Verified in the screen viewer at `?screens` — clicked through
+representative fixtures across every restyled component:
 
-```typescript
-interface InputSource {
-  onCardTap(callback: (index: number, card: { suit: Suit; rank: string }) => void): void;
-  onSuitBid(callback: (suit: Suit) => void): void;
-  onPass(callback: () => void): void;
-}
+- `GameTableView "Playing — mid-trick"` — olive felt, ink-bordered
+  cream avatar pills, paper-ledger ChatPanel.
+- `GameTableView "Bidding — south (your) turn"` — paper-notebook
+  BidPanel with ink-bordered suit + value buttons, terracotta Bid
+  button.
+- `RoundSummary "Takers won simple contract (110 ♠)"` — paper-card
+  modal with ROUND 3 / COMPLETE badges, sage CONTRACT MET pill,
+  serif scores, terracotta NEXT ROUND stamp.
+- `GameOver "NS wins (you won)"` — paper-card with terracotta
+  GAME OVER stamp, gold trophy, big serif NS WINS! in teal,
+  teal/terracotta score bars, mustard "you won this game" pill,
+  terracotta PLAY AGAIN stamp.
 
-// GameController
-wireInput(input: InputSource): void;
-```
+Screenshots:
 
-## Review Fixes Applied (commit `122f504`)
+- `docs/screenshots/iteration-023-mid-trick.png`
+- `docs/screenshots/iteration-023-bidding.png`
+- `docs/screenshots/iteration-023-round-summary.png`
+- `docs/screenshots/iteration-023-game-over.png`
 
-| Finding                              | Fix                                                         |
-| ------------------------------------ | ----------------------------------------------------------- |
-| Card tap cast UI card as domain Card | Look up full Card (with id) from player's hand instead      |
-| Silent failure if card not found     | Return early (no-op) instead of dispatching invalid command |
-| Event listener ordering in harness   | Register auto-start-round before dispatching commands       |
-| Unused vi import                     | Removed from test file                                      |
+## Carryforward
 
-## Validation Results
-
-- `pnpm test`: **740/740 passing** (734 prior + 6 new)
-- After review fixes: **741/741 passing**
-- `pnpm typecheck`: Clean
-- `pnpm lint`: Clean
-- `pnpm format:check`: Clean
+- **Pixel-diff regression suite** is now extra valuable: the
+  visual language is settled across menu + lobby + random + in-game
+  chrome. Wiring Playwright screenshot diffs into CI would catch
+  visual regressions cheaply now that the baseline is stable.
+- **Radix Theme defaults** still bleed through in the level / VIP /
+  dealer badges (Radix `Badge` defaults) and the avatar `Tooltip`.
+  Could be Radix-theme-overridden if they ever feel jarring; not
+  pressing.
+- **`belote-hero.svg`** (used by `StartScreen`) is still on the
+  iteration-016 visual track — its card-fan is already cream paper
+  so it doesn't clash, but it could be hand-tuned to the new
+  vocabulary if/when that component gets touched.
+- **Card faces / backs** untouched (real card graphics from
+  `public/cards/`); no need.

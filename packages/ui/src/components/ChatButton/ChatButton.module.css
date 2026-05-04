@@ -1,65 +1,68 @@
 .btn {
   position: relative;
-  /* Hit area meets WCAG 2.5.5; visual circle is the same size to keep the
-     UI consistent with the previous design (was 28×28). The global rule in
-     index.css enforces the touch-min via [data-touch="primary"] but we set
-     it explicitly here too so the visual circle matches the hit area. */
   width: var(--touch-min, 44px);
   height: var(--touch-min, 44px);
   border-radius: 50%;
-  background: rgba(10, 20, 40, 0.75);
-  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(180deg, #fffbe9 0%, var(--paper-cream-deep) 100%);
+  border: 2px solid var(--ink-dark);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  box-shadow:
+    0 2px 0 rgba(42, 31, 18, 0.22),
+    0 4px 10px rgba(42, 31, 18, 0.18);
   cursor: pointer;
   padding: 0;
   transition:
-    background 0.15s ease,
-    transform 0.12s ease;
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
 .btn:hover {
-  background: rgba(30, 60, 100, 0.85);
+  transform: translateY(-1px);
+  box-shadow:
+    0 3px 0 rgba(42, 31, 18, 0.26),
+    0 6px 14px rgba(42, 31, 18, 0.22);
 }
 
 .btn:active {
-  transform: scale(0.91);
+  transform: translateY(1px);
+  box-shadow: 0 0 0 rgba(42, 31, 18, 0.2);
 }
 
 .icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+  color: var(--ink-dark);
+}
+.icon path {
+  fill: var(--ink-dark);
 }
 
-/* Unread badge */
+/* Unread badge — terracotta stamp */
 .badge {
   position: absolute;
-  top: -3px;
-  right: -3px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 8px;
-  background: #e53935;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 800;
-  line-height: 16px;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--accent-terracotta);
+  color: #fffbe9;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 18px;
   text-align: center;
-  border: 1.5px solid rgba(0, 0, 0, 0.4);
+  border: 1.5px solid var(--ink-dark);
   pointer-events: none;
 }
 
-/* On very narrow phones, allow a slight downsize but never below the
-   touch-min floor (handled by [data-touch="primary"] in index.css). */
 @media (max-width: 360px) {
   .btn {
-    border-width: 1px;
+    border-width: 1.5px;
   }
   .icon {
     width: 16px;

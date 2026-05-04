@@ -90,49 +90,50 @@
   z-index: 10;
 }
 
-/* ── Name pill label ── */
+/* ── Name pill label — cream chip with ink border ── */
 .nameLabel {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: var(--avatar-name-bg);
+  background: linear-gradient(180deg, #fffbe9 0%, #f1e2b6 100%);
   border-radius: 20px;
   padding: 3px 10px 3px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  border: 1.5px solid var(--ink-dark);
   cursor: default;
   transition: background 0.2s ease;
   max-width: 120px;
   white-space: nowrap;
+  box-shadow: 0 2px 0 rgba(42, 31, 18, 0.18);
 }
 
-/* Active player — highlight pill */
+/* Active player — terracotta highlight */
 .nameLabelActive {
-  background: rgba(74, 222, 128, 0.18);
-  border-color: rgba(74, 222, 128, 0.45);
+  background: linear-gradient(180deg, #fffbe9 0%, #f4ecd0 100%);
+  border-color: var(--accent-terracotta);
+  box-shadow: 0 2px 0 rgba(168, 50, 50, 0.24);
 }
 
 .globeIcon {
   font-size: 10px;
   flex-shrink: 0;
-  opacity: 0.7;
+  color: var(--accent-teal);
 }
 
 .name {
+  font-family: var(--font-display);
   font-size: var(--font-size-name, 11px);
-  font-weight: 600;
-  color: var(--text-light);
+  font-weight: 400;
+  color: var(--ink-dark);
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Pulsing green dot for active player */
+/* Pulsing terracotta dot for active player */
 .timerDot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #4ade80;
+  background: var(--accent-terracotta);
   flex-shrink: 0;
   animation: pulse 1.2s ease-in-out infinite;
 }
@@ -149,19 +150,22 @@
   }
 }
 
-/* ── Thought bubble tooltip ── */
+/* ── Thought bubble tooltip — cream paper ── */
 .tooltip {
   position: absolute;
   padding: 6px 12px;
-  border-radius: 16px;
-  font-family: var(--font);
-  font-size: 13px;
+  border-radius: 12px;
+  font-family: var(--font-hand);
+  font-size: 14px;
   font-weight: 700;
   white-space: nowrap;
   pointer-events: none;
   z-index: 30;
   animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 2px 0 rgba(42, 31, 18, 0.2),
+    0 4px 12px rgba(42, 31, 18, 0.3);
+  border: 1.5px solid var(--ink-dark);
 }
 
 .tooltipText {
@@ -192,7 +196,7 @@
   transform: translateX(-50%);
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-bottom: 6px solid rgba(20, 30, 80, 0.92);
+  border-bottom: 6px solid var(--ink-dark);
 }
 
 /* South → top: above the avatar (toward center) */
@@ -207,7 +211,7 @@
   transform: translateX(-50%);
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 6px solid rgba(20, 30, 80, 0.92);
+  border-top: 6px solid var(--ink-dark);
 }
 
 /* East → left: to the left of the avatar (toward center) */
@@ -222,7 +226,7 @@
   transform: translateY(-50%);
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
-  border-left: 6px solid rgba(20, 30, 80, 0.92);
+  border-left: 6px solid var(--ink-dark);
 }
 
 /* West → right: to the right of the avatar (toward center) */
@@ -237,83 +241,77 @@
   transform: translateY(-50%);
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
-  border-right: 6px solid rgba(20, 30, 80, 0.92);
+  border-right: 6px solid var(--ink-dark);
 }
 
-/* ── Tooltip type variants ── */
+/* ── Tooltip type variants — all on cream paper ── */
 .tooltip.bid {
-  background: rgba(20, 30, 80, 0.92);
-  color: #fff;
-  border: 1px solid rgba(80, 130, 240, 0.4);
-}
-.bid .tooltipArrow {
-  border-color: transparent;
+  background: linear-gradient(180deg, #fffbe9 0%, #f1e2b6 100%);
+  color: var(--ink-dark);
 }
 .tooltipBottom.bid .tooltipArrow {
-  border-bottom-color: rgba(20, 30, 80, 0.92);
+  border-bottom-color: var(--ink-dark);
 }
 .tooltipTop.bid .tooltipArrow {
-  border-top-color: rgba(20, 30, 80, 0.92);
+  border-top-color: var(--ink-dark);
 }
 .tooltipLeft.bid .tooltipArrow {
-  border-left-color: rgba(20, 30, 80, 0.92);
+  border-left-color: var(--ink-dark);
 }
 .tooltipRight.bid .tooltipArrow {
-  border-right-color: rgba(20, 30, 80, 0.92);
+  border-right-color: var(--ink-dark);
 }
 
 .tooltip.trickWin {
-  background: rgba(16, 60, 24, 0.92);
-  color: #4ade80;
-  border: 1px solid rgba(74, 222, 128, 0.4);
+  background: linear-gradient(180deg, #fffbe9 0%, #e6d6a4 100%);
+  color: #4a5d35;
 }
 .tooltipBottom.trickWin .tooltipArrow {
-  border-bottom-color: rgba(16, 60, 24, 0.92);
+  border-bottom-color: var(--ink-dark);
 }
 .tooltipTop.trickWin .tooltipArrow {
-  border-top-color: rgba(16, 60, 24, 0.92);
+  border-top-color: var(--ink-dark);
 }
 .tooltipLeft.trickWin .tooltipArrow {
-  border-left-color: rgba(16, 60, 24, 0.92);
+  border-left-color: var(--ink-dark);
 }
 .tooltipRight.trickWin .tooltipArrow {
-  border-right-color: rgba(16, 60, 24, 0.92);
+  border-right-color: var(--ink-dark);
 }
 
 .tooltip.contract {
-  background: rgba(100, 60, 10, 0.92);
-  color: #fbbf24;
-  border: 1px solid rgba(251, 191, 36, 0.4);
+  background: linear-gradient(180deg, #fffbe9 0%, #f1e2b6 100%);
+  color: var(--accent-terracotta);
 }
 .tooltipBottom.contract .tooltipArrow {
-  border-bottom-color: rgba(100, 60, 10, 0.92);
+  border-bottom-color: var(--ink-dark);
 }
 .tooltipTop.contract .tooltipArrow {
-  border-top-color: rgba(100, 60, 10, 0.92);
+  border-top-color: var(--ink-dark);
 }
 .tooltipLeft.contract .tooltipArrow {
-  border-left-color: rgba(100, 60, 10, 0.92);
+  border-left-color: var(--ink-dark);
 }
 .tooltipRight.contract .tooltipArrow {
-  border-right-color: rgba(100, 60, 10, 0.92);
+  border-right-color: var(--ink-dark);
 }
 
 .tooltip.roundCancelled {
-  background: rgba(60, 20, 20, 0.92);
-  color: #f87171;
-  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: linear-gradient(180deg, #fffbe9 0%, #f1e2b6 100%);
+  color: var(--accent-terracotta);
+  font-style: italic;
 }
 .tooltipBottom.roundCancelled .tooltipArrow {
-  border-bottom-color: rgba(60, 20, 20, 0.92);
+  border-bottom-color: var(--ink-dark);
 }
 .tooltipTop.roundCancelled .tooltipArrow {
-  border-top-color: rgba(60, 20, 20, 0.92);
+  border-top-color: var(--ink-dark);
 }
 .tooltipLeft.roundCancelled .tooltipArrow {
-  border-left-color: rgba(60, 20, 20, 0.92);
+  border-left-color: var(--ink-dark);
 }
 .tooltipRight.roundCancelled .tooltipArrow {
-  border-right-color: rgba(60, 20, 20, 0.92);
+  border-right-color: var(--ink-dark);
 }
 
 @keyframes popIn {

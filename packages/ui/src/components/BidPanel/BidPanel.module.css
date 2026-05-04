@@ -1,18 +1,18 @@
-/* ── Vertical bid panel ── */
+/* ── Vertical bid panel — paper notebook ─────────────────────────────────── */
 .panel {
   display: flex;
   flex-direction: column;
   gap: 0;
   width: 220px;
   max-width: calc(100vw - 16px);
-  border-radius: 18px;
-  background: rgba(8, 16, 32, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
-  color: var(--text-light);
-  font-family: var(--font);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffbe9 0%, var(--paper-cream-deep) 100%);
+  border: 2px solid var(--ink-dark);
+  box-shadow:
+    0 4px 0 rgba(42, 31, 18, 0.22),
+    0 14px 28px rgba(42, 31, 18, 0.25);
+  color: var(--ink-dark);
+  font-family: var(--font-body);
   user-select: none;
   overflow: hidden;
 }
@@ -37,7 +37,7 @@
 .sep {
   width: 100%;
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--ink-faint);
   flex-shrink: 0;
 }
 
@@ -46,24 +46,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
+  border: 1.5px solid var(--ink-dark);
   cursor: pointer;
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 10px 6px;
-  /* Note: [data-touch="primary"] in index.css enforces min-height: 44px on
-     individual buttons. The grid cells are intentionally compact (24% width
-     for suits) so the buttons get a tall-but-narrow shape — that's still
-     comfortable for thumbs because the full grid cell is the hit area. */
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 400;
+  padding: 8px 6px;
+  background: var(--paper-cream);
+  color: var(--ink-dark);
   transition:
     background 0.12s,
-    transform 0.1s;
+    transform 0.1s,
+    box-shadow 0.1s;
 }
 
 .btn:active {
-  transform: scale(0.93);
+  transform: scale(0.95);
 }
 
 /* ── Suit row ── */
@@ -78,20 +77,22 @@
 .suitBtn {
   font-size: 24px;
   padding: 5px 2px;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--text-light);
+  background: var(--paper-cream);
+  color: var(--ink-dark);
   border-radius: 8px;
 }
 .suitBtn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: #f4ecd0;
+  border-color: var(--accent-terracotta);
 }
 .suitBtn.suitSelected {
-  border-color: var(--gold);
-  background: rgba(255, 213, 79, 0.15);
+  background: linear-gradient(180deg, #fffbe9 0%, #f1e2b6 100%);
+  border-color: var(--accent-terracotta);
+  border-width: 2px;
+  box-shadow: inset 0 0 0 1px rgba(168, 50, 50, 0.3);
 }
 .suitBtn.redSuit {
-  color: var(--suit-red);
+  color: var(--accent-terracotta);
 }
 
 /* ── Value grid 3 × N ── */
@@ -104,19 +105,22 @@
 
 /* Value button */
 .valueBtn {
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--text-light);
-  font-size: 12px;
+  background: var(--paper-cream);
+  color: var(--ink-dark);
+  font-family: var(--font-display);
+  font-size: 13px;
   border-radius: 8px;
   padding: 6px 2px;
 }
 .valueBtn:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: #f4ecd0;
+  border-color: var(--accent-terracotta);
 }
 .valueBtn.valueSelected {
-  background: rgba(255, 213, 79, 0.2);
-  color: var(--gold);
-  border: 1px solid rgba(255, 213, 79, 0.45);
+  background: linear-gradient(180deg, #fffbe9 0%, #f1e2b6 100%);
+  color: var(--accent-terracotta);
+  border-color: var(--accent-terracotta);
+  border-width: 2px;
 }
 
 /* ── Actions ── */
@@ -127,38 +131,48 @@
   padding: 14px 14px;
 }
 
-/* Pass */
+/* Pass — neutral cream stamp */
 .passBtn {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-light);
+  background: var(--paper-cream);
+  color: var(--ink-medium);
+  font-family: var(--font-hand);
+  font-size: 14px;
+  font-weight: 700;
 }
 .passBtn:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: #f4ecd0;
+  color: var(--ink-dark);
 }
 
-/* Confirm bid */
+/* Confirm bid — terracotta stamp */
 .bidBtn {
-  background: var(--gold);
-  color: #1a1000;
-  font-size: 11px;
+  background: linear-gradient(180deg, #d24545 0%, var(--accent-terracotta) 100%);
+  color: #fffbe9;
+  font-family: var(--font-display);
+  font-size: 12px;
+  box-shadow: 0 2px 0 rgba(42, 31, 18, 0.22);
 }
-.bidBtn:hover {
-  background: #ffe082;
+.bidBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 rgba(42, 31, 18, 0.26);
 }
 .bidBtn:disabled {
   opacity: 0.35;
   cursor: default;
   transform: none;
+  box-shadow: none;
 }
 
-/* Coinche — spans both columns */
+/* Coinche — sage/teal stamp, spans both columns */
 .coincheBtn {
-  background: rgba(255, 60, 60, 0.2);
-  color: #ff6b6b;
-  border: 1px solid rgba(255, 60, 60, 0.35);
+  background: linear-gradient(180deg, #3a8181 0%, var(--accent-teal) 100%);
+  color: #fffbe9;
+  font-family: var(--font-display);
+  box-shadow: 0 2px 0 rgba(42, 31, 18, 0.22);
 }
 .coincheBtn:hover {
-  background: rgba(255, 60, 60, 0.32);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 rgba(42, 31, 18, 0.26);
 }
 
 .fullWidth {
@@ -169,7 +183,7 @@
 @media (max-height: 500px) and (orientation: landscape) {
   .panel {
     width: 160px;
-    border-radius: 12px;
+    border-radius: 10px;
   }
   .suitRow {
     padding: 7px 8px;

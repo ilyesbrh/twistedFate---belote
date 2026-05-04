@@ -73,11 +73,11 @@
   --anim-card-hover: 0.12s ease;
   --anim-card-select: 0.15s ease;
 
-  /* ── Table ── */
-  --felt-green-center: #3d9b58;
-  --felt-green-mid: #2b7a42;
-  --felt-green-deep: #1e5c30;
-  --felt-green-edge: #133d1f;
+  /* ── Table — warmer olive felt to harmonize with the cream paper menus ── */
+  --felt-green-center: #4a6936;
+  --felt-green-mid: #3a5429;
+  --felt-green-deep: #2a3f1d;
+  --felt-green-edge: #1a2a13;
 
   /* ── Menu surfaces (iteration 015) ──
      Used by ModeSelectScreen, StartScreen, OnlineLobby, OnlineRandomScreen,

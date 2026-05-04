@@ -1,19 +1,19 @@
-/* ── Compact horizontal score bar (dark-glass, BidPanel family) ── */
+/* ── Compact horizontal score bar — cream paper card top-left ───────────── */
 .panel {
   display: inline-flex;
   align-items: center;
   gap: clamp(6px, 1vw, 8px);
   padding: 7px clamp(10px, 2vw, 14px);
-  border-radius: 0 0 14px 0;
-  background: rgba(8, 16, 32, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0 0 12px 0;
+  background: linear-gradient(180deg, #fffbe9 0%, var(--paper-cream-deep) 100%);
+  border: 1.5px solid var(--ink-dark);
   border-top: none;
   border-left: none;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-  color: var(--text-light);
-  font-family: var(--font);
+  box-shadow:
+    0 2px 0 rgba(42, 31, 18, 0.16),
+    0 6px 18px rgba(42, 31, 18, 0.22);
+  color: var(--ink-dark);
+  font-family: var(--font-body);
   white-space: nowrap;
   max-width: calc(100vw - 8px);
 }
@@ -22,7 +22,7 @@
 .sep {
   width: 1px;
   height: 28px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--ink-faint);
   flex-shrink: 0;
 }
 
@@ -30,14 +30,13 @@
 .trump {
   font-size: var(--score-trump-size);
   line-height: 1;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
 }
 
 .trumpRed {
-  color: #e53935;
+  color: var(--accent-terracotta);
 }
 .trumpBlack {
-  color: #ffffff;
+  color: var(--ink-dark);
 }
 
 /* ── Team block: label + round score + total ── */
@@ -50,73 +49,79 @@
 }
 
 .teamLabel {
+  font-family: var(--font-hand);
   font-size: var(--score-label-size);
   font-weight: 700;
-  letter-spacing: 0.8px;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.38);
+  color: var(--accent-teal);
 }
 
 .teamScore {
+  font-family: var(--font-display);
   font-size: var(--score-team-size);
-  font-weight: 800;
-  letter-spacing: -0.5px;
+  font-weight: 400;
+  letter-spacing: -0.3px;
+  color: var(--ink-dark);
 }
 
 .teamTotal {
+  font-family: var(--font-hand);
   font-size: var(--score-team-total-size);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--ink-medium);
 }
 
 /* ── Dot between teams ── */
 .dot {
   font-size: 16px;
-  color: rgba(255, 255, 255, 0.22);
+  color: var(--ink-faint);
   line-height: 1;
 }
 
 /* ── Contract value & level badge ── */
 .contractValue {
+  font-family: var(--font-display);
   font-size: var(--score-contract-size);
-  font-weight: 800;
-  color: var(--gold);
+  font-weight: 400;
+  color: var(--accent-terracotta);
   letter-spacing: -0.3px;
 }
 
 .contractLevel {
+  font-family: var(--font-hand);
   font-size: var(--score-contract-level-size);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.6px;
-  padding: 3px 7px;
-  border-radius: 10px;
+  padding: 2px 7px;
+  border-radius: 8px;
   line-height: 1;
   text-transform: uppercase;
 }
 
 .contractLevelContre {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.45);
+  background: rgba(168, 50, 50, 0.16);
+  color: var(--accent-terracotta);
+  border: 1px solid var(--accent-terracotta);
 }
 
 .contractLevelSurcontre {
-  background: rgba(168, 85, 247, 0.22);
-  color: #e9d5ff;
-  border: 1px solid rgba(168, 85, 247, 0.55);
+  background: rgba(122, 143, 90, 0.18);
+  color: #4a5d35;
+  border: 1px solid var(--accent-sage);
 }
 
 /* ── Target ── */
 .target {
+  font-family: var(--font-display);
   font-size: var(--score-target-size);
-  font-weight: 800;
-  color: var(--gold);
+  font-weight: 400;
+  color: var(--accent-terracotta);
   letter-spacing: 0.5px;
-  filter: drop-shadow(0 1px 4px rgba(255, 200, 50, 0.35));
 }
 
 /* On very narrow phones (< 360px), allow the bar to wrap so it never
-   exceeds the viewport. The trump + score chunks stay visually grouped. */
+   exceeds the viewport. */
 @media (max-width: 360px) {
   .panel {
     flex-wrap: wrap;

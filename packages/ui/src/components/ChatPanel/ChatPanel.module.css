@@ -2,29 +2,29 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0);
+  background: rgba(42, 31, 18, 0);
   pointer-events: none;
   z-index: 90;
   transition: background 0.2s ease;
 }
 
 .backdropVisible {
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(42, 31, 18, 0.4);
   pointer-events: all;
 }
 
-/* ── Slide-in panel from right ── */
+/* ── Slide-in panel from right — paper ledger ────────────────────────────── */
 .panel {
   position: fixed;
   top: 0;
   right: 0;
   height: 100%;
   width: min(320px, 80vw);
-  background: rgba(8, 16, 68, 0.96);
-  border-left: 1px solid rgba(80, 130, 240, 0.35);
-  box-shadow: -4px 0 32px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  background:
+    repeating-linear-gradient(0deg, transparent 0 35px, rgba(42, 31, 18, 0.05) 35px 36px),
+    linear-gradient(180deg, #fffbe9 0%, var(--paper-cream-deep) 100%);
+  border-left: 2px solid var(--ink-dark);
+  box-shadow: -6px 0 32px rgba(42, 31, 18, 0.4);
   display: flex;
   flex-direction: column;
   z-index: 100;
@@ -42,41 +42,42 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid var(--ink-dark);
+  background: linear-gradient(180deg, #f1e2b6 0%, transparent 100%);
   flex-shrink: 0;
 }
 
 .title {
+  font-family: var(--font-display);
   font-size: var(--chat-title-size);
-  font-weight: 700;
-  color: var(--text-light);
+  font-weight: 400;
+  color: var(--ink-dark);
   letter-spacing: 0.5px;
 }
 
 .closeBtn {
-  /* Hit area meets WCAG 2.5.5 (was 28×28). */
   width: var(--touch-min, 44px);
   height: var(--touch-min, 44px);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-muted);
-  font-size: 14px;
+  background: var(--paper-cream);
+  color: var(--ink-dark);
+  font-family: var(--font-display);
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition:
-    background 0.1s ease,
-    color 0.1s ease;
-  border: none;
+    transform 0.12s ease,
+    background 0.12s ease;
+  border: 1.5px solid var(--ink-dark);
 }
 .closeBtn:active {
   transform: scale(0.94);
 }
 
 .closeBtn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: var(--text-light);
+  background: #f4ecd0;
 }
 
 /* ── Message area ── */
@@ -87,8 +88,9 @@
 }
 
 .empty {
-  color: var(--text-muted);
-  font-size: 13px;
+  color: var(--ink-medium);
+  font-family: var(--font-hand);
+  font-size: 16px;
   text-align: center;
   margin-top: 40px;
 }
@@ -99,8 +101,9 @@
   align-items: baseline;
   gap: 6px;
   padding: 6px 0;
+  font-family: var(--font-body);
   font-size: var(--chat-msg-size);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px dashed rgba(42, 31, 18, 0.12);
 }
 @media (prefers-reduced-motion: no-preference) {
   .messageItem {
@@ -109,27 +112,31 @@
 }
 
 .messageName {
+  font-family: var(--font-hand);
   font-weight: 700;
-  color: rgba(130, 170, 255, 0.9);
+  color: var(--accent-teal);
   flex-shrink: 0;
 }
 
 .messageText {
-  color: var(--text-light);
+  color: var(--ink-dark);
 }
 
 /* Message type accent colors */
 .messageItem.bid .messageText {
-  color: #e2e8f0;
+  color: var(--ink-dark);
 }
 .messageItem.trick_win .messageText {
-  color: #4ade80;
+  color: #4a5d35; /* sage deep */
+  font-weight: 700;
 }
 .messageItem.contract .messageText {
-  color: #fbbf24;
+  color: var(--accent-terracotta);
+  font-weight: 700;
 }
 .messageItem.round_cancelled .messageText {
-  color: #f87171;
+  color: var(--accent-terracotta);
+  font-style: italic;
 }
 
 @keyframes fadeIn {
@@ -148,18 +155,18 @@
   display: flex;
   gap: 8px;
   padding: 10px 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid var(--ink-dark);
+  background: linear-gradient(180deg, transparent 0%, #f1e2b6 100%);
   flex-shrink: 0;
 }
 
 .input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #fdf6df;
+  border: 1.5px solid var(--ink-dark);
   border-radius: 20px;
-  color: var(--text-light);
-  font-family: var(--font);
-  /* iOS Safari: <16 triggers auto-zoom on focus. */
+  color: var(--ink-dark);
+  font-family: var(--font-body);
   font-size: 16px;
   padding: 10px 14px;
   outline: none;
@@ -168,38 +175,41 @@
 }
 
 .input::placeholder {
-  color: var(--text-muted);
+  color: var(--ink-medium);
+  font-style: italic;
 }
 
 .input:focus {
-  border-color: rgba(80, 130, 240, 0.6);
+  border-color: var(--accent-terracotta);
+  box-shadow: 0 0 0 3px rgba(168, 50, 50, 0.18);
 }
 
 .sendBtn {
   width: var(--touch-min, 44px);
   height: var(--touch-min, 44px);
   border-radius: 50%;
-  background: linear-gradient(145deg, #2250e0, #1a44cc);
-  color: #fff;
-  font-size: 18px;
-  font-weight: 700;
+  background: linear-gradient(180deg, #d24545 0%, var(--accent-terracotta) 100%);
+  color: #fffbe9;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 400;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
   transition:
-    opacity 0.1s ease,
-    transform 0.12s ease;
-  border: none;
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+  border: 2px solid var(--ink-dark);
+  box-shadow: 0 2px 0 rgba(42, 31, 18, 0.22);
 }
 .sendBtn:active {
-  transform: scale(0.94);
+  transform: translateY(1px);
+  box-shadow: 0 0 0 rgba(42, 31, 18, 0.2);
 }
 
 .sendBtn:hover {
-  opacity: 0.85;
-}
-.sendBtn:active {
-  opacity: 0.7;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 rgba(42, 31, 18, 0.26);
 }
