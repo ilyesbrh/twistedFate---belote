@@ -9,6 +9,17 @@
   width: 100%;
   max-width: 560px;
   text-align: center;
+  /* Optical balance: the 2-row mode grid is visually heavier than the
+     cards + title block above it, so a geometrically centered column
+     reads bottom-heavy. A small bottom margin lifts the content so the
+     optical center matches the viewport center. */
+  margin-bottom: clamp(0px, 6vh, 56px);
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .contentColumn {
+    margin-bottom: 0;
+  }
 }
 
 /* ── Hero: hand-drawn fan of five cards ──────────────────────────────────── */

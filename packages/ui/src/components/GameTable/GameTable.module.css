@@ -196,20 +196,22 @@
   .eastCards {
     right: calc(env(safe-area-inset-right, 0px) + 2px);
   }
-  .bidPanel {
-    bottom: 70px;
-  }
+  /* Bid panel — landscape: centered, sized to content. The previous
+     `bottom: 70px` override fought with the desktop rule's top:50% and
+     forced the panel to a fixed stretched height, cropping the Coinche
+     row. The natural-height centered layout fits within 390-tall phones. */
 
   .southAvatar {
     padding-bottom: 6px;
   }
 
-  /* Lift the south row well above the viewport edge so the fan's
-     outermost cards don't clip beneath the bottom at 390-tall phones.
-     The fan's rotation around a pivot below pushes corner-card bottoms
-     ~30-40px below the resting baseline. */
+  /* Lift the south row just enough to keep the fan's outermost cards
+     from clipping below the viewport. The fan rotates around a pivot
+     200px below itself; corner-card bottoms reach ~12-16px past the
+     row baseline, so a 16px lift is sufficient and lets the hand feel
+     anchored to the screen edge. */
   .southRow {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 42px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
   }
 }
 
