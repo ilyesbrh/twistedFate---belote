@@ -33,8 +33,12 @@ ARG VITE_BASE_PATH="/"
 ENV VITE_BASE_PATH=${VITE_BASE_PATH}
 
 # Build only the UI — the server runs via tsx at runtime, no build step
-# needed for it.
-RUN pnpm --filter ui build
+# needed for it. Invoke vite directly instead of `pnpm --filter ui build`
+# because the local script also runs `tsc -b`, which surfaces pre-existing
+# type errors in test/fixture files unrelated to the production bundle.
+# Type safety is enforced by `pnpm typecheck` in the CI checks job; this
+# step is bundling-only.
+RUN pnpm --filter ui exec vite build
 
 # ── Stage 2: slim runtime ────────────────────────────────────────────────────
 FROM node:20-bookworm-slim AS runtime
