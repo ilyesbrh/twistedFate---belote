@@ -159,6 +159,15 @@
   border-color: var(--ink-dark);
 }
 
+/* On phones, let the subtitle wrap rather than ellipsize — "Add to home
+   screen for the best experience" is too long for a single line below
+   ~480px. */
+@media (max-width: 600px) {
+  .subtitle {
+    white-space: normal;
+  }
+}
+
 /* Stack on very narrow screens. */
 @media (max-width: 380px) {
   .banner {

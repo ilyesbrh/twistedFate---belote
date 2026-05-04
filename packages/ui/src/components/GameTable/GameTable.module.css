@@ -148,6 +148,17 @@
   .eastAvatar {
     right: 6px;
   }
+  /* Lift south row to keep the fanned hand's outermost cards clear of
+     the viewport bottom — the fan rotation pushes corner cards down a
+     few px below the baseline. */
+  .southRow {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  }
+  /* Drop north hand a touch so the rotated card backs at the corners
+     don't peek above the viewport top. */
+  .northHand {
+    top: 18px;
+  }
 }
 
 /* ═══════════════════════════════════════
@@ -194,6 +205,14 @@
 
   .southAvatar {
     padding-bottom: 6px;
+  }
+
+  /* Lift the south row well above the viewport edge so the fan's
+     outermost cards don't clip beneath the bottom at 390-tall phones.
+     The fan's rotation around a pivot below pushes corner-card bottoms
+     ~30-40px below the resting baseline. */
+  .southRow {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 42px);
   }
 }
 
