@@ -1,10 +1,30 @@
+/* Card back — cream paper with ink ornament. Matches the iteration 027
+   board-game aesthetic (paper / ink / terracotta). */
+
 .card {
   width: var(--cw, var(--card-w-opp));
   height: var(--ch, var(--card-h-opp));
-  background-color: var(--card-back-primary);
+  background:
+    /* Diamond-lattice pattern in ink, more visible than the table's */
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 5px,
+      rgba(42, 31, 18, 0.18) 5px 6px,
+      transparent 6px 11px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0 5px,
+      rgba(42, 31, 18, 0.18) 5px 6px,
+      transparent 6px 11px
+    ),
+    /* Deep terracotta-tinted card base — contrasts cream board, reads as a real card-back */
+    linear-gradient(180deg, #8a3a3a 0%, #6f2828 100%);
   border-radius: var(--card-radius);
-  border: 2px solid var(--card-back-border);
-  box-shadow: var(--card-shadow);
+  border: 2px solid var(--ink-dark);
+  box-shadow:
+    0 2px 0 rgba(42, 31, 18, 0.28),
+    0 4px 10px rgba(42, 31, 18, 0.34);
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
@@ -12,37 +32,32 @@
   backface-visibility: hidden;
 }
 
-/* Outer inner border frame */
+/* Inner ornamental frame — gold-thread ink border just inside the edge. */
 .card::before {
   content: "";
   position: absolute;
   inset: 4px;
-  border: 1.5px solid var(--card-back-border);
-  border-radius: 4px;
+  border: 1px solid rgba(232, 192, 122, 0.55);
+  border-radius: 3px;
   z-index: 1;
+  pointer-events: none;
 }
 
-/* Hatch pattern */
+/* Centre ornament — small cream paper rosette / dot. Reads as a hand-
+   stamped maker's mark. */
 .card::after {
   content: "";
   position: absolute;
-  inset: 7px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 36%;
+  height: 36%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 220, 0.95) 0 14%, transparent 15%),
+    radial-gradient(circle at 50% 50%, rgba(232, 192, 122, 0.85) 0 30%, transparent 31%);
+  border: 1px solid rgba(232, 192, 122, 0.75);
   border-radius: 3px;
-  background-image:
-    repeating-linear-gradient(
-      45deg,
-      rgba(255, 255, 255, 0.06) 0,
-      rgba(255, 255, 255, 0.06) 1px,
-      transparent 0,
-      transparent 8px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(255, 255, 255, 0.06) 0,
-      rgba(255, 255, 255, 0.06) 1px,
-      transparent 0,
-      transparent 8px
-    );
-  background-color: var(--card-back-mid);
   z-index: 0;
+  pointer-events: none;
 }
