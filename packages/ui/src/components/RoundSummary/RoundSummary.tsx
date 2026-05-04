@@ -71,7 +71,12 @@ export function RoundSummary({
         </div>
 
         {/* ── Action ── */}
-        <button className={styles.nextBtn} onClick={onNextRound}>
+        <button
+          className={styles.nextBtn}
+          onClick={onNextRound}
+          aria-label="Next round"
+          data-touch="primary"
+        >
           NEXT ROUND
         </button>
       </div>

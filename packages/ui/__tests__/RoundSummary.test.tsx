@@ -269,6 +269,14 @@ describe("RoundSummary", () => {
       await user.click(screen.getByRole("button", { name: /next round/i }));
       expect(onNextRound).toHaveBeenCalledTimes(1);
     });
+
+    it("is marked as a primary touch target", () => {
+      renderRoundSummary();
+      expect(screen.getByRole("button", { name: /next round/i })).toHaveAttribute(
+        "data-touch",
+        "primary",
+      );
+    });
   });
 
   describe("accessibility", () => {

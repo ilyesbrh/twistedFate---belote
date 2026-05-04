@@ -98,6 +98,11 @@ describe("ChatPanel", () => {
       await user.click(screen.getByLabelText("Close chat"));
       expect(onClose).toHaveBeenCalledTimes(1);
     });
+
+    it("close button is marked as a primary touch target", () => {
+      renderPanel();
+      expect(screen.getByLabelText("Close chat")).toHaveAttribute("data-touch", "primary");
+    });
   });
 
   describe("round_cancelled messages", () => {

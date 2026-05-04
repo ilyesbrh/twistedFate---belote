@@ -104,6 +104,18 @@
   --safe-bottom: max(16px, env(safe-area-inset-bottom));
   --safe-left: max(16px, env(safe-area-inset-left));
   --safe-right: max(16px, env(safe-area-inset-right));
+
+  /* ── Board surfaces (iteration 016) ── */
+  --score-target-size: clamp(11px, 1.4vw, 14px);
+  --score-team-size: clamp(15px, 2.2vw, 20px);
+  --score-team-total-size: clamp(10px, 1.1vw, 11px);
+  --score-trump-size: clamp(16px, 2.8vw, 22px);
+  --score-label-size: clamp(8px, 1vw, 9px);
+  --score-contract-size: clamp(13px, 1.8vw, 16px);
+  --score-contract-level-size: clamp(9px, 1vw, 10px);
+
+  --chat-msg-size: clamp(12px, 1.4vw, 13px);
+  --chat-title-size: clamp(13px, 1.5vw, 15px);
 }
 
 /* ── Tablet (≤ 900px) ── */

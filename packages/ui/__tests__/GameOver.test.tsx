@@ -127,6 +127,14 @@ describe("GameOver", () => {
       await user.click(screen.getByRole("button", { name: /play again/i }));
       expect(onPlayAgain).toHaveBeenCalledTimes(1);
     });
+
+    it("is marked as a primary touch target", () => {
+      renderGameOver();
+      expect(screen.getByRole("button", { name: /play again/i })).toHaveAttribute(
+        "data-touch",
+        "primary",
+      );
+    });
   });
 
   describe("accessibility", () => {

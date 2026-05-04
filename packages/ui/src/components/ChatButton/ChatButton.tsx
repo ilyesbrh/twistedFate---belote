@@ -11,6 +11,7 @@ export function ChatButton({ onClick, unreadCount = 0 }: ChatButtonProps) {
       className={styles.btn}
       onClick={onClick}
       aria-label="Open chat"
+      data-touch="primary"
       data-testid="chat-button"
     >
       <svg className={styles.icon} viewBox="0 0 24 24" fill="none" aria-hidden="true">

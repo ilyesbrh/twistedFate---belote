@@ -2,8 +2,8 @@
 .panel {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
+  gap: clamp(6px, 1vw, 8px);
+  padding: 7px clamp(10px, 2vw, 14px);
   border-radius: 0 0 14px 0;
   background: rgba(8, 16, 32, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -15,6 +15,7 @@
   color: var(--text-light);
   font-family: var(--font);
   white-space: nowrap;
+  max-width: calc(100vw - 8px);
 }
 
 /* ── Vertical separator ── */
@@ -27,7 +28,7 @@
 
 /* ── Trump suit icon ── */
 .trump {
-  font-size: 22px;
+  font-size: var(--score-trump-size);
   line-height: 1;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
 }
@@ -49,7 +50,7 @@
 }
 
 .teamLabel {
-  font-size: 9px;
+  font-size: var(--score-label-size);
   font-weight: 700;
   letter-spacing: 0.8px;
   text-transform: uppercase;
@@ -57,13 +58,13 @@
 }
 
 .teamScore {
-  font-size: 20px;
+  font-size: var(--score-team-size);
   font-weight: 800;
   letter-spacing: -0.5px;
 }
 
 .teamTotal {
-  font-size: 11px;
+  font-size: var(--score-team-total-size);
   font-weight: 600;
   color: rgba(255, 255, 255, 0.4);
 }
@@ -77,14 +78,14 @@
 
 /* ── Contract value & level badge ── */
 .contractValue {
-  font-size: 16px;
+  font-size: var(--score-contract-size);
   font-weight: 800;
   color: var(--gold);
   letter-spacing: -0.3px;
 }
 
 .contractLevel {
-  font-size: 10px;
+  font-size: var(--score-contract-level-size);
   font-weight: 800;
   letter-spacing: 0.6px;
   padding: 3px 7px;
@@ -107,9 +108,23 @@
 
 /* ── Target ── */
 .target {
-  font-size: 14px;
+  font-size: var(--score-target-size);
   font-weight: 800;
   color: var(--gold);
   letter-spacing: 0.5px;
   filter: drop-shadow(0 1px 4px rgba(255, 200, 50, 0.35));
+}
+
+/* On very narrow phones (< 360px), allow the bar to wrap so it never
+   exceeds the viewport. The trump + score chunks stay visually grouped. */
+@media (max-width: 360px) {
+  .panel {
+    flex-wrap: wrap;
+    white-space: normal;
+    gap: 5px;
+    padding: 6px 10px;
+  }
+  .sep {
+    height: 22px;
+  }
 }

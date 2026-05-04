@@ -58,6 +58,8 @@ export function BidPanel({ biddingRound, validBidValues, onBid }: BidPanelProps)
                 className={`${styles.btn} ${styles.suitBtn} ${RED_SUITS.includes(s) ? styles.redSuit : ""} ${selectedSuit === s ? styles.suitSelected : ""}`}
                 onClick={() => setSelectedSuit((prev) => (prev === s ? null : s))}
                 aria-pressed={selectedSuit === s}
+                aria-label={`Pick ${s}`}
+                data-touch="primary"
               >
                 {SUIT_SYMBOLS[s]}
               </button>
@@ -73,6 +75,8 @@ export function BidPanel({ biddingRound, validBidValues, onBid }: BidPanelProps)
                 className={`${styles.btn} ${styles.valueBtn} ${selectedValue === v ? styles.valueSelected : ""}`}
                 onClick={() => setSelectedValue((prev) => (prev === v ? null : v))}
                 aria-pressed={selectedValue === v}
+                aria-label={`Bid ${String(v)} points`}
+                data-touch="primary"
               >
                 {String(v)}
               </button>
@@ -84,7 +88,12 @@ export function BidPanel({ biddingRound, validBidValues, onBid }: BidPanelProps)
       )}
 
       <div className={styles.actions}>
-        <button className={`${styles.btn} ${styles.passBtn}`} onClick={() => onBid("pass")}>
+        <button
+          className={`${styles.btn} ${styles.passBtn}`}
+          onClick={() => onBid("pass")}
+          aria-label="Pass"
+          data-touch="primary"
+        >
           Pass
         </button>
 
@@ -93,6 +102,12 @@ export function BidPanel({ biddingRound, validBidValues, onBid }: BidPanelProps)
             className={`${styles.btn} ${styles.bidBtn}`}
             disabled={!canBid}
             onClick={handleBid}
+            aria-label={
+              canBid
+                ? `Place bid ${SUIT_SYMBOLS[selectedSuit!]} ${String(selectedValue!)}`
+                : "Place bid"
+            }
+            data-touch="primary"
           >
             {canBid ? `${SUIT_SYMBOLS[selectedSuit!]} ${String(selectedValue!)}` : "Bid"}
           </button>
@@ -102,6 +117,8 @@ export function BidPanel({ biddingRound, validBidValues, onBid }: BidPanelProps)
           <button
             className={`${styles.btn} ${styles.coincheBtn} ${styles.fullWidth}`}
             onClick={() => onBid("coinche")}
+            aria-label="Contrer"
+            data-touch="primary"
           >
             Contrer
           </button>
@@ -111,6 +128,8 @@ export function BidPanel({ biddingRound, validBidValues, onBid }: BidPanelProps)
           <button
             className={`${styles.btn} ${styles.coincheBtn} ${styles.fullWidth}`}
             onClick={() => onBid("surcoinche")}
+            aria-label="Surcontrer"
+            data-touch="primary"
           >
             Surcontrer
           </button>

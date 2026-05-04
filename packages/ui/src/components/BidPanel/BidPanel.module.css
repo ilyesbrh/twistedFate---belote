@@ -4,6 +4,7 @@
   flex-direction: column;
   gap: 0;
   width: 220px;
+  max-width: calc(100vw - 16px);
   border-radius: 18px;
   background: rgba(8, 16, 32, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -14,7 +15,11 @@
   font-family: var(--font);
   user-select: none;
   overflow: hidden;
-  animation: slideUp 0.2s ease;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .panel {
+    animation: slideUp 0.2s ease;
+  }
 }
 
 @keyframes slideUp {
@@ -47,7 +52,11 @@
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
-  padding: 8px 4px;
+  padding: 10px 6px;
+  /* Note: [data-touch="primary"] in index.css enforces min-height: 44px on
+     individual buttons. The grid cells are intentionally compact (24% width
+     for suits) so the buttons get a tall-but-narrow shape — that's still
+     comfortable for thumbs because the full grid cell is the hit area. */
   transition:
     background 0.12s,
     transform 0.1s;

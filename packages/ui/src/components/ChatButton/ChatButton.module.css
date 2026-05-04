@@ -1,7 +1,11 @@
 .btn {
   position: relative;
-  width: 28px;
-  height: 28px;
+  /* Hit area meets WCAG 2.5.5; visual circle is the same size to keep the
+     UI consistent with the previous design (was 28×28). The global rule in
+     index.css enforces the touch-min via [data-touch="primary"] but we set
+     it explicitly here too so the visual circle matches the hit area. */
+  width: var(--touch-min, 44px);
+  height: var(--touch-min, 44px);
   border-radius: 50%;
   background: rgba(10, 20, 40, 0.75);
   border: 1.5px solid rgba(255, 255, 255, 0.22);
@@ -27,8 +31,8 @@
 }
 
 .icon {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
 }
 
@@ -37,16 +41,28 @@
   position: absolute;
   top: -3px;
   right: -3px;
-  min-width: 14px;
-  height: 14px;
-  padding: 0 3px;
-  border-radius: 7px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
   background: #e53935;
   color: #fff;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 800;
-  line-height: 14px;
+  line-height: 16px;
   text-align: center;
   border: 1.5px solid rgba(0, 0, 0, 0.4);
   pointer-events: none;
+}
+
+/* On very narrow phones, allow a slight downsize but never below the
+   touch-min floor (handled by [data-touch="primary"] in index.css). */
+@media (max-width: 360px) {
+  .btn {
+    border-width: 1px;
+  }
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
 }

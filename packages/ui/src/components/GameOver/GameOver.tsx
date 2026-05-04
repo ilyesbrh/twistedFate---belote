@@ -77,7 +77,12 @@ export function GameOver({
         </div>
 
         {/* ── Play again ── */}
-        <button className={styles.playAgainBtn} onClick={onPlayAgain}>
+        <button
+          className={styles.playAgainBtn}
+          onClick={onPlayAgain}
+          aria-label="Play again"
+          data-touch="primary"
+        >
           PLAY AGAIN
         </button>
       </div>

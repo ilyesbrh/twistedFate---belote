@@ -34,7 +34,12 @@ export function ChatPanel({ isOpen, onClose, messages = [] }: ChatPanelProps) {
       >
         <div className={styles.header}>
           <span className={styles.title}>Chat</span>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close chat">
+          <button
+            className={styles.closeBtn}
+            onClick={onClose}
+            aria-label="Close chat"
+            data-touch="primary"
+          >
             ✕
           </button>
         </div>

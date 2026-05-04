@@ -47,19 +47,20 @@
 }
 
 .title {
-  font-size: 15px;
+  font-size: var(--chat-title-size);
   font-weight: 700;
   color: var(--text-light);
   letter-spacing: 0.5px;
 }
 
 .closeBtn {
-  width: 28px;
-  height: 28px;
+  /* Hit area meets WCAG 2.5.5 (was 28×28). */
+  width: var(--touch-min, 44px);
+  height: var(--touch-min, 44px);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,6 +68,10 @@
   transition:
     background 0.1s ease,
     color 0.1s ease;
+  border: none;
+}
+.closeBtn:active {
+  transform: scale(0.94);
 }
 
 .closeBtn:hover {
@@ -94,9 +99,13 @@
   align-items: baseline;
   gap: 6px;
   padding: 6px 0;
-  font-size: 13px;
+  font-size: var(--chat-msg-size);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  animation: fadeIn 0.15s ease;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .messageItem {
+    animation: fadeIn 0.15s ease;
+  }
 }
 
 .messageName {
@@ -150,10 +159,12 @@
   border-radius: 20px;
   color: var(--text-light);
   font-family: var(--font);
-  font-size: 13px;
-  padding: 7px 14px;
+  /* iOS Safari: <16 triggers auto-zoom on focus. */
+  font-size: 16px;
+  padding: 10px 14px;
   outline: none;
   transition: border-color 0.15s ease;
+  min-height: var(--touch-min, 44px);
 }
 
 .input::placeholder {
@@ -165,8 +176,8 @@
 }
 
 .sendBtn {
-  width: 34px;
-  height: 34px;
+  width: var(--touch-min, 44px);
+  height: var(--touch-min, 44px);
   border-radius: 50%;
   background: linear-gradient(145deg, #2250e0, #1a44cc);
   color: #fff;
@@ -177,7 +188,13 @@
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: opacity 0.1s ease;
+  transition:
+    opacity 0.1s ease,
+    transform 0.12s ease;
+  border: none;
+}
+.sendBtn:active {
+  transform: scale(0.94);
 }
 
 .sendBtn:hover {

@@ -1,0 +1,60 @@
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { ScorePanel } from "../src/components/ScorePanel/ScorePanel.js";
+
+const BASE = {
+  target: 501,
+  usScore: 32,
+  themScore: 28,
+  usTotalScore: 142,
+  themTotalScore: 89,
+  trumpSuit: "hearts" as const,
+  dealerName: "ElenaP",
+};
+
+describe("ScorePanel", () => {
+  it("renders the score-panel testid", () => {
+    render(<ScorePanel {...BASE} />);
+    expect(screen.getByTestId("score-panel")).toBeInTheDocument();
+  });
+
+  it("displays target, both teams' totals, and the trump suit", () => {
+    render(<ScorePanel {...BASE} />);
+    expect(screen.getByText("501")).toBeInTheDocument();
+    expect(screen.getByText("NS")).toBeInTheDocument();
+    expect(screen.getByText("EW")).toBeInTheDocument();
+    expect(screen.getByText("32")).toBeInTheDocument();
+    expect(screen.getByText("28")).toBeInTheDocument();
+    expect(screen.getByText("142")).toBeInTheDocument();
+    expect(screen.getByText("89")).toBeInTheDocument();
+    expect(screen.getByText("♥")).toBeInTheDocument();
+  });
+
+  it("renders the contract value when provided", () => {
+    render(<ScorePanel {...BASE} contractValue={120} />);
+    expect(screen.getByText("120")).toBeInTheDocument();
+  });
+
+  it("does not render a coinche badge for a normal contract", () => {
+    render(<ScorePanel {...BASE} contractValue={100} contractCoincheLevel={1} />);
+    expect(screen.queryByText(/CONTRE/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/SURCONTRE/i)).not.toBeInTheDocument();
+  });
+
+  it("renders a CONTRE badge for coinche level 2", () => {
+    render(<ScorePanel {...BASE} contractValue={100} contractCoincheLevel={2} />);
+    expect(screen.getByText(/CONTRE/)).toBeInTheDocument();
+  });
+
+  it("renders a SURCONTRE badge for coinche level 4", () => {
+    render(<ScorePanel {...BASE} contractValue={100} contractCoincheLevel={4} />);
+    expect(screen.getByText(/SURCONTRE/)).toBeInTheDocument();
+  });
+
+  it("renders without crashing at a 320px viewport", () => {
+    Object.defineProperty(window, "innerWidth", { value: 320, configurable: true });
+    Object.defineProperty(window, "innerHeight", { value: 568, configurable: true });
+    render(<ScorePanel {...BASE} />);
+    expect(screen.getByTestId("score-panel")).toBeInTheDocument();
+  });
+});
