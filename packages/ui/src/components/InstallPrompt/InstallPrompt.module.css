@@ -1,4 +1,4 @@
-/* ── Install banner — fixed at top ── */
+/* ── Install banner — fixed at top, respects iOS notch ── */
 .banner {
   position: fixed;
   top: 0;
@@ -9,13 +9,21 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-bottom: 12px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
   background: rgba(8, 16, 32, 0.96);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-  animation: slideIn 0.35s ease-out;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .banner {
+    animation: slideIn 0.35s ease-out;
+  }
 }
 
 @keyframes slideIn {
@@ -50,7 +58,7 @@
 }
 
 .title {
-  font-size: 14px;
+  font-size: clamp(13px, 1.4vw, 14px);
   font-weight: 700;
   color: var(--text-light, #f5f5f5);
   white-space: nowrap;
@@ -59,7 +67,7 @@
 }
 
 .subtitle {
-  font-size: 11px;
+  font-size: clamp(10px, 1vw, 11px);
   color: rgba(255, 255, 255, 0.45);
   white-space: nowrap;
   overflow: hidden;
@@ -74,7 +82,7 @@
 }
 
 .installBtn {
-  padding: 8px 18px;
+  padding: 10px 18px;
   border-radius: 8px;
   background: var(--gold, #ffd54f);
   color: #1a1000;
@@ -85,7 +93,11 @@
   cursor: pointer;
   border: none;
   font-family: inherit;
-  transition: background 0.13s, transform 0.1s;
+  transition:
+    background 0.13s,
+    transform 0.1s;
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
 }
 
 .installBtn:hover {
@@ -97,7 +109,7 @@
 }
 
 .dismissBtn {
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-radius: 8px;
   background: transparent;
   color: rgba(255, 255, 255, 0.45);
@@ -106,8 +118,12 @@
   cursor: pointer;
   border: 1px solid rgba(255, 255, 255, 0.12);
   font-family: inherit;
-  transition: color 0.13s, border-color 0.13s;
+  transition:
+    color 0.13s,
+    border-color 0.13s;
   white-space: nowrap;
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
 }
 
 .dismissBtn:hover {
@@ -115,8 +131,8 @@
   border-color: rgba(255, 255, 255, 0.25);
 }
 
-/* Responsive: stack vertically on very narrow screens */
-@media (max-width: 360px) {
+/* Stack on very narrow screens. */
+@media (max-width: 380px) {
   .banner {
     flex-direction: column;
     align-items: stretch;

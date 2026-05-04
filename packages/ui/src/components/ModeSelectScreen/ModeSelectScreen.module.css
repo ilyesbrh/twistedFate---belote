@@ -8,22 +8,23 @@
   background: radial-gradient(circle at 50% 30%, #1a2d5a 0%, #0b1329 70%, #05080f 100%);
   color: var(--text-light, #e5e7eb);
   font-family: var(--font, "Inter", system-ui, sans-serif);
-  gap: 24px;
-  padding: 32px 16px;
+  gap: var(--menu-gap);
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
   z-index: 100;
 }
 
 .title {
   margin: 0;
-  font-size: 52px;
+  font-size: var(--menu-title-size);
   font-weight: 900;
   letter-spacing: -1px;
   color: var(--gold, #fbbf24);
   filter: drop-shadow(0 2px 10px rgba(251, 191, 36, 0.35));
+  line-height: 1;
 }
 .subtitle {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--menu-subtitle-size);
   color: rgba(255, 255, 255, 0.55);
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -31,14 +32,43 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(160px, 240px));
-  gap: 14px;
-  margin-top: 18px;
+  grid-template-columns: repeat(2, minmax(140px, 240px));
+  gap: clamp(10px, 1.6vw, 14px);
+  margin-top: clamp(8px, 2vh, 18px);
+  width: 100%;
+  max-width: 520px;
 }
 
-@media (max-width: 520px) {
+/* Narrow portrait phones: stack into a single column. */
+@media (max-width: 480px) and (orientation: portrait) {
   .grid {
     grid-template-columns: 1fr;
+    max-width: 360px;
+  }
+  .title {
+    letter-spacing: 0;
+  }
+}
+
+/* Short landscape (phones rotated): keep 2 columns but tighter and with a
+   shrunk title so we don't overflow the ~390px height. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .root {
+    gap: var(--menu-gap-tight);
+  }
+  .grid {
+    grid-template-columns: repeat(2, minmax(140px, 220px));
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .title {
+    font-size: clamp(24px, 6vh, 36px);
+  }
+  .subtitle {
+    letter-spacing: 2px;
+  }
+  .btn {
+    padding: 12px 14px;
   }
 }
 
@@ -47,8 +77,8 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 22px 18px;
-  border-radius: 14px;
+  padding: 18px 16px;
+  border-radius: var(--menu-radius);
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: linear-gradient(180deg, rgba(30, 50, 100, 0.8) 0%, rgba(14, 26, 60, 0.85) 100%);
   color: #fff;
@@ -70,12 +100,12 @@
   cursor: not-allowed;
 }
 .btnLabel {
-  font-size: 17px;
+  font-size: clamp(14px, 1.6vw, 17px);
   font-weight: 800;
   letter-spacing: 0.2px;
 }
 .btnSubtitle {
-  font-size: 11px;
+  font-size: clamp(10px, 1vw, 11px);
   color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
   letter-spacing: 1.2px;

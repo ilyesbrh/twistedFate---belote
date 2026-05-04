@@ -35,3 +35,26 @@ button {
   cursor: pointer;
   font-family: inherit;
 }
+
+/* ── Touch targets (iteration 015) ──
+   Any interactive control marked data-touch="primary" gets the WCAG-recommended
+   minimum hit area + a tactile press transform. Component-specific styles can
+   still override the look — this only floors the size and adds press feedback. */
+[data-touch="primary"] {
+  min-height: var(--touch-min, 44px);
+  min-width: var(--touch-min, 44px);
+}
+[data-touch="primary"]:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* Honour OS-level reduced-motion: shrink slide / fade animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

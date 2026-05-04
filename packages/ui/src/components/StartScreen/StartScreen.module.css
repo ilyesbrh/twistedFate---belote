@@ -9,7 +9,13 @@
   background: rgba(0, 0, 0, 0.78);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  animation: fadeIn 0.4s ease;
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .overlay {
+    animation: fadeIn 0.4s ease;
+  }
 }
 
 @keyframes fadeIn {
@@ -26,12 +32,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
-  padding: 36px 44px;
-  min-width: 360px;
-  max-width: 480px;
-  width: 90vw;
-  border-radius: 22px;
+  gap: var(--menu-gap);
+  padding: clamp(24px, 4vh, 36px) clamp(20px, 5vw, 44px);
+  width: min(480px, 100%);
+  max-height: 100dvh;
+  border-radius: var(--menu-radius-lg);
   background: rgba(8, 16, 32, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(24px);
@@ -39,7 +44,13 @@
   box-shadow:
     0 24px 72px rgba(0, 0, 0, 0.85),
     0 1px 0 rgba(255, 255, 255, 0.07) inset;
-  animation: slideDown 0.38s cubic-bezier(0.34, 1.45, 0.64, 1);
+  overflow-y: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card {
+    animation: slideDown 0.38s cubic-bezier(0.34, 1.45, 0.64, 1);
+  }
 }
 
 @keyframes slideDown {
@@ -56,7 +67,7 @@
 /* ── Hero image ── */
 .heroImage {
   width: 100%;
-  max-width: 360px;
+  max-width: clamp(220px, 40vw, 360px);
   height: auto;
   border-radius: 14px;
   pointer-events: none;
@@ -65,8 +76,8 @@
 
 /* ── Target score ── */
 .target {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.38);
+  font-size: var(--menu-body-size);
+  color: rgba(255, 255, 255, 0.6);
   text-align: center;
   font-family: var(--font);
 }
@@ -78,11 +89,11 @@
 
 /* ── Play button ── */
 .playBtn {
-  padding: 15px 52px;
+  padding: 14px clamp(36px, 8vw, 52px);
   border-radius: 12px;
   background: var(--gold);
   color: #1a1000;
-  font-size: 15px;
+  font-size: var(--menu-cta-size);
   font-weight: 900;
   letter-spacing: 2.5px;
   text-transform: uppercase;
@@ -94,6 +105,7 @@
     transform 0.1s,
     box-shadow 0.13s;
   box-shadow: 0 4px 22px rgba(255, 213, 79, 0.38);
+  min-height: var(--touch-min);
 }
 
 .playBtn:hover {
@@ -105,39 +117,24 @@
   transform: scale(0.95);
 }
 
-/* ── Responsive ── */
-@media (max-width: 600px) {
-  .card {
-    padding: 24px 20px;
-    gap: 16px;
-    min-width: 0;
-    max-height: calc(100dvh - 32px);
-    overflow-y: auto;
-  }
-  .heroImage {
-    max-width: 280px;
-  }
-  .playBtn {
-    padding: 12px 32px;
-    font-size: 13px;
-  }
-  .target {
-    font-size: 12px;
-  }
-}
-
+/* ── Short landscape (phone rotated): collapse vertical rhythm ── */
 @media (max-height: 500px) and (orientation: landscape) {
   .card {
-    gap: 10px;
-    padding: 14px 24px;
-    max-height: calc(100dvh - 24px);
-    overflow-y: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 24px;
   }
   .heroImage {
-    max-width: 220px;
+    max-width: 200px;
   }
   .playBtn {
-    padding: 8px 28px;
-    font-size: 12px;
+    padding: 10px 28px;
+    letter-spacing: 2px;
+  }
+  .target {
+    width: 100%;
+    text-align: center;
   }
 }

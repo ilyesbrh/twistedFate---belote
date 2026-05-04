@@ -26,7 +26,12 @@ export function OnlineRandomScreen(props: OnlineRandomScreenProps): ReactElement
 
   return (
     <div className={styles.root} data-testid="online-random-screen">
-      <button className={styles.back} onClick={onBack} data-testid="random-back-btn">
+      <button
+        className={styles.back}
+        onClick={onBack}
+        aria-label="Back to menu"
+        data-testid="random-back-btn"
+      >
         ← Back
       </button>
       <h2 className={styles.title}>Random match</h2>
@@ -44,12 +49,17 @@ export function OnlineRandomScreen(props: OnlineRandomScreenProps): ReactElement
             placeholder="Your nickname"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
+            aria-label="Nickname"
             data-testid="random-nickname-input"
           />
           <button
             className={styles.primaryBtn}
             disabled={findDisabled}
-            onClick={() => onFind(trimmed)}
+            onClick={() => {
+              onFind(trimmed);
+            }}
+            aria-label="Find a random game"
+            data-touch="primary"
             data-testid="random-find-btn"
           >
             Find a game
@@ -59,12 +69,19 @@ export function OnlineRandomScreen(props: OnlineRandomScreenProps): ReactElement
         <div className={styles.queued}>
           <div className={styles.spinner} aria-hidden="true" />
           <p className={styles.searching}>Searching for players…</p>
-          <p className={styles.progress} data-testid="random-progress">
+          <p
+            className={styles.progress}
+            role="status"
+            aria-live="polite"
+            data-testid="random-progress"
+          >
             {String(size)}/{String(TARGET_SIZE)}
           </p>
           <button
             className={styles.secondaryBtn}
             onClick={onCancel}
+            aria-label="Cancel matchmaking"
+            data-touch="primary"
             data-testid="random-cancel-btn"
           >
             Cancel

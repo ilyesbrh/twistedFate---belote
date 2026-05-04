@@ -78,6 +78,32 @@
   --felt-green-mid: #2b7a42;
   --felt-green-deep: #1e5c30;
   --felt-green-edge: #133d1f;
+
+  /* ── Menu surfaces (iteration 015) ──
+     Used by ModeSelectScreen, StartScreen, OnlineLobby, OnlineRandomScreen,
+     InstallPrompt. Fluid sizing + safe-area-aware. */
+  --menu-pad-block: clamp(20px, 5vh, 48px);
+  --menu-pad-inline: clamp(16px, 4vw, 40px);
+  --menu-gap: clamp(12px, 3vh, 24px);
+  --menu-gap-tight: clamp(8px, 2vh, 16px);
+  --menu-radius: 14px;
+  --menu-radius-lg: 22px;
+
+  --menu-title-size: clamp(32px, 8vw, 56px);
+  --menu-heading-size: clamp(20px, 4vw, 28px);
+  --menu-subtitle-size: clamp(11px, 1.6vw, 16px);
+  --menu-body-size: clamp(13px, 1.6vw, 16px);
+  --menu-cta-size: clamp(13px, 1.4vw, 15px);
+
+  /* WCAG 2.5.5 minimum touch target (recommended 48 for comfort). */
+  --touch-min: 44px;
+
+  /* Safe-area shortcuts: ensures fixed top-left buttons + edge-aligned
+     overlays clear the iPhone notch / home indicator on standalone PWA. */
+  --safe-top: max(16px, env(safe-area-inset-top));
+  --safe-bottom: max(16px, env(safe-area-inset-bottom));
+  --safe-left: max(16px, env(safe-area-inset-left));
+  --safe-right: max(16px, env(safe-area-inset-right));
 }
 
 /* ── Tablet (≤ 900px) ── */

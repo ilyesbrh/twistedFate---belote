@@ -8,38 +8,43 @@
   background: radial-gradient(circle at 50% 30%, #1a2d5a 0%, #0b1329 70%, #05080f 100%);
   color: var(--text-light, #e5e7eb);
   font-family: var(--font, "Inter", system-ui, sans-serif);
-  gap: 18px;
-  padding: 32px 16px;
+  gap: var(--menu-gap);
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
   z-index: 100;
 }
 
 .back {
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: var(--safe-top);
+  left: var(--safe-left);
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: rgba(255, 255, 255, 0.7);
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
+  font-size: clamp(12px, 1.4vw, 14px);
+  min-height: var(--touch-min);
 }
 .back:hover {
   border-color: rgba(255, 255, 255, 0.5);
   color: #fff;
 }
+.back:active {
+  transform: scale(0.97);
+}
 
 .title {
   margin: 0;
-  font-size: 28px;
+  font-size: var(--menu-heading-size);
   font-weight: 800;
   color: var(--gold, #fbbf24);
 }
 
 .status {
   margin: 0;
-  font-size: 12px;
+  font-size: clamp(10px, 1vw, 12px);
   color: rgba(255, 255, 255, 0.45);
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -47,18 +52,19 @@
 
 .error {
   color: #f87171;
-  font-size: 13px;
+  font-size: var(--menu-body-size);
   background: rgba(239, 68, 68, 0.12);
   border: 1px solid rgba(239, 68, 68, 0.3);
   padding: 8px 14px;
   border-radius: 8px;
   margin: 0;
+  max-width: min(420px, 100%);
 }
 
 .lobbyForms {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--menu-gap-tight);
   width: 100%;
   max-width: 360px;
 }
@@ -68,10 +74,11 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: #fff;
   font-family: inherit;
-  font-size: 16px;
+  font-size: 16px; /* iOS safari: <16 triggers auto-zoom */
   padding: 12px 14px;
   border-radius: 10px;
   outline: none;
+  min-height: var(--touch-min);
 }
 .input:focus {
   border-color: rgba(251, 191, 36, 0.55);
@@ -99,7 +106,7 @@
   border-radius: 10px;
   padding: 12px 18px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--menu-cta-size);
   transition:
     transform 0.12s ease,
     opacity 0.12s ease;
@@ -125,14 +132,14 @@
   width: 100%;
   margin-top: 12px;
   padding: 14px;
-  font-size: 15px;
+  font-size: clamp(14px, 1.6vw, 15px);
 }
 
 .inRoom {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: var(--menu-gap-tight);
   width: 100%;
   max-width: 360px;
 }
@@ -142,7 +149,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 14px 28px;
+  padding: clamp(10px, 1.6vh, 14px) clamp(20px, 4vw, 28px);
   background: rgba(8, 16, 32, 0.85);
   border: 1px solid rgba(251, 191, 36, 0.4);
   border-radius: 12px;
@@ -154,9 +161,9 @@
   color: rgba(255, 255, 255, 0.5);
 }
 .codeValue {
-  font-size: 36px;
+  font-size: clamp(28px, 7vw, 42px);
   font-weight: 900;
-  letter-spacing: 8px;
+  letter-spacing: clamp(4px, 1.2vw, 8px);
   color: var(--gold, #fbbf24);
 }
 
@@ -172,12 +179,14 @@
 .playerRow {
   display: flex;
   justify-content: space-between;
-  padding: 8px 14px;
+  padding: 10px 14px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 13px;
   color: rgba(255, 255, 255, 0.5);
+  min-height: var(--touch-min);
+  align-items: center;
 }
 .playerSeated {
   background: rgba(74, 222, 128, 0.1);
@@ -192,4 +201,31 @@
   font-size: 12px;
   color: rgba(255, 255, 255, 0.45);
   margin: 0;
+}
+
+/* Short landscape (phones in landscape) — collapse vertical rhythm. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .root {
+    gap: var(--menu-gap-tight);
+    justify-content: flex-start;
+    padding-top: calc(var(--safe-top) + 38px);
+  }
+  .lobbyForms,
+  .inRoom {
+    max-width: 480px;
+  }
+  .codeValue {
+    font-size: 28px;
+  }
+  .players {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .playerRow {
+    flex: 1 1 calc(50% - 4px);
+  }
+  .startBtn {
+    margin-top: 4px;
+    padding: 10px;
+  }
 }

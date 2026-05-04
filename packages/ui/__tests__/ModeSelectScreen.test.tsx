@@ -44,4 +44,25 @@ describe("ModeSelectScreen", () => {
     await user.click(screen.getByTestId("mode-btn-ranked"));
     expect(onSelect).not.toHaveBeenCalled();
   });
+
+  it("each mode button has an accessible aria-label", () => {
+    render(<ModeSelectScreen onSelect={vi.fn()} />);
+    expect(screen.getByTestId("mode-btn-ai")).toHaveAttribute("aria-label", "Play vs AI");
+    expect(screen.getByTestId("mode-btn-friends")).toHaveAttribute(
+      "aria-label",
+      "Play with Friends",
+    );
+    expect(screen.getByTestId("mode-btn-random")).toHaveAttribute(
+      "aria-label",
+      "Random matchmaking",
+    );
+    expect(screen.getByTestId("mode-btn-ranked")).toHaveAttribute("aria-label", "Ranked play");
+  });
+
+  it("each interactive button is marked as a touch target", () => {
+    render(<ModeSelectScreen onSelect={vi.fn()} />);
+    for (const id of ["mode-btn-ai", "mode-btn-friends", "mode-btn-random", "mode-btn-ranked"]) {
+      expect(screen.getByTestId(id)).toHaveAttribute("data-touch", "primary");
+    }
+  });
 });

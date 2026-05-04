@@ -30,13 +30,13 @@ authoritative `Room`, and the in-game UX is identical to Friends mode.
 
 Strict TDD — each step landed red first.
 
-| Step | Test file | Tests added | Notes |
-| --- | --- | --- | --- |
-| 1 | [packages/server/\_\_tests\_\_/matchmakingQueue.test.ts](../../packages/server/__tests__/matchmakingQueue.test.ts) | 11 | Pure logic: empty, enqueue, re-enqueue idempotency, FIFO matching, cancellation, position recompute, mid-queue cancel + match correctness. |
-| 2 | [packages/protocol/\_\_tests\_\_/messages.test.ts](../../packages/protocol/__tests__/messages.test.ts) | 11 (additions) | Validators for `find_random`, `cancel_random`, `queued`, `match_cancelled`, `match_found` + negative cases (empty nickname, malformed code, missing fields). |
-| 3 | [packages/server/\_\_tests\_\_/gateway.integration.test.ts](../../packages/server/__tests__/gateway.integration.test.ts) | 3 (additions) | Real `ws` clients: 4-way auto-pair end-to-end, cancel flow, queued client ws-close cleanup. |
-| 4 | [packages/ui/\_\_tests\_\_/ModeSelectScreen.test.tsx](../../packages/ui/__tests__/ModeSelectScreen.test.tsx) | 6 | Random enabled, ranked still disabled, click routes correctly. |
-| 5 | [packages/ui/\_\_tests\_\_/OnlineRandomScreen.test.tsx](../../packages/ui/__tests__/OnlineRandomScreen.test.tsx) | 8 | Idle vs queued render, nickname trimming, disabled states, error display, callbacks. |
+| Step | Test file                                                                                                                | Tests added    | Notes                                                                                                                                                        |
+| ---- | ------------------------------------------------------------------------------------------------------------------------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1    | [packages/server/\_\_tests\_\_/matchmakingQueue.test.ts](../../packages/server/__tests__/matchmakingQueue.test.ts)       | 11             | Pure logic: empty, enqueue, re-enqueue idempotency, FIFO matching, cancellation, position recompute, mid-queue cancel + match correctness.                   |
+| 2    | [packages/protocol/\_\_tests\_\_/messages.test.ts](../../packages/protocol/__tests__/messages.test.ts)                   | 11 (additions) | Validators for `find_random`, `cancel_random`, `queued`, `match_cancelled`, `match_found` + negative cases (empty nickname, malformed code, missing fields). |
+| 3    | [packages/server/\_\_tests\_\_/gateway.integration.test.ts](../../packages/server/__tests__/gateway.integration.test.ts) | 3 (additions)  | Real `ws` clients: 4-way auto-pair end-to-end, cancel flow, queued client ws-close cleanup.                                                                  |
+| 4    | [packages/ui/\_\_tests\_\_/ModeSelectScreen.test.tsx](../../packages/ui/__tests__/ModeSelectScreen.test.tsx)             | 6              | Random enabled, ranked still disabled, click routes correctly.                                                                                               |
+| 5    | [packages/ui/\_\_tests\_\_/OnlineRandomScreen.test.tsx](../../packages/ui/__tests__/OnlineRandomScreen.test.tsx)         | 8              | Idle vs queued render, nickname trimming, disabled states, error display, callbacks.                                                                         |
 
 **Net delta**: 610 → 646 tests (**+36** passing).
 
@@ -64,12 +64,12 @@ Strict TDD — each step landed red first.
 
 ## Validation
 
-| Check | Status | Notes |
-| --- | --- | --- |
-| `pnpm test` | ✓ | 646 / 646 |
-| `pnpm typecheck` | ✓ | clean |
-| `pnpm lint` | delta clean | 178 errors, all pre-existing; iteration delta is **−1** |
-| `pnpm format:check` | delta clean | 5 pre-existing files; iteration delta is **0** |
+| Check               | Status      | Notes                                                   |
+| ------------------- | ----------- | ------------------------------------------------------- |
+| `pnpm test`         | ✓           | 646 / 646                                               |
+| `pnpm typecheck`    | ✓           | clean                                                   |
+| `pnpm lint`         | delta clean | 178 errors, all pre-existing; iteration delta is **−1** |
+| `pnpm format:check` | delta clean | 5 pre-existing files; iteration delta is **0**          |
 
 > Lint/format had 179 / 5 pre-existing issues before iteration 014 — none in
 > files this iteration touched. The matchmaking changes pass both checks.

@@ -20,7 +20,12 @@ export function OnlineLobby({ lobby, onBack, onGameStarted }: OnlineLobbyProps):
 
   return (
     <div className={styles.root} data-testid="online-lobby">
-      <button className={styles.back} onClick={onBack} data-testid="lobby-back">
+      <button
+        className={styles.back}
+        onClick={onBack}
+        aria-label="Back to menu"
+        data-testid="lobby-back"
+      >
         ← Back
       </button>
 
@@ -69,6 +74,8 @@ export function OnlineLobby({ lobby, onBack, onGameStarted }: OnlineLobbyProps):
                 lobby.startGame(501);
                 onGameStarted();
               }}
+              aria-label={isFull ? "Start game" : "Start game (waiting for players)"}
+              data-touch="primary"
               data-testid="start-game-btn"
             >
               {isFull ? "Start game" : `Waiting for ${String(4 - lobby.players.length)} more`}
@@ -83,6 +90,7 @@ export function OnlineLobby({ lobby, onBack, onGameStarted }: OnlineLobbyProps):
             placeholder="Your nickname"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
+            aria-label="Nickname"
             data-testid="nickname-input"
           />
           {mode === "choose" ? (
@@ -90,7 +98,11 @@ export function OnlineLobby({ lobby, onBack, onGameStarted }: OnlineLobbyProps):
               <button
                 className={styles.primaryBtn}
                 disabled={!nickname.trim() || lobby.status !== "open"}
-                onClick={() => lobby.createRoom(nickname.trim())}
+                onClick={() => {
+                  lobby.createRoom(nickname.trim());
+                }}
+                aria-label="Create a room"
+                data-touch="primary"
                 data-testid="create-room-btn"
               >
                 Create room
@@ -99,6 +111,8 @@ export function OnlineLobby({ lobby, onBack, onGameStarted }: OnlineLobbyProps):
                 className={styles.secondaryBtn}
                 disabled={!nickname.trim() || lobby.status !== "open"}
                 onClick={() => setMode("join")}
+                aria-label="Join an existing room"
+                data-touch="primary"
                 data-testid="enter-join-btn"
               >
                 Join room
@@ -112,17 +126,27 @@ export function OnlineLobby({ lobby, onBack, onGameStarted }: OnlineLobbyProps):
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                 maxLength={4}
+                aria-label="Room code"
                 data-testid="join-code-input"
               />
               <button
                 className={styles.primaryBtn}
                 disabled={joinCode.length !== 4}
-                onClick={() => lobby.joinRoom(nickname.trim(), joinCode)}
+                onClick={() => {
+                  lobby.joinRoom(nickname.trim(), joinCode);
+                }}
+                aria-label="Join room"
+                data-touch="primary"
                 data-testid="join-room-btn"
               >
                 Join
               </button>
-              <button className={styles.secondaryBtn} onClick={() => setMode("choose")}>
+              <button
+                className={styles.secondaryBtn}
+                onClick={() => setMode("choose")}
+                aria-label="Cancel join"
+                data-touch="primary"
+              >
                 Cancel
               </button>
             </div>

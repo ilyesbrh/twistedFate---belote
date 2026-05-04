@@ -151,4 +151,76 @@ describe("OnlineRandomScreen", () => {
     await user.click(screen.getByTestId("random-back-btn"));
     expect(onBack).toHaveBeenCalledTimes(1);
   });
+
+  it("queued progress is announced via role='status' + aria-live='polite'", () => {
+    render(
+      <OnlineRandomScreen
+        phase="queued"
+        position={2}
+        size={3}
+        status="open"
+        error={null}
+        onFind={vi.fn()}
+        onCancel={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    );
+    const progress = screen.getByTestId("random-progress");
+    expect(progress).toHaveAttribute("role", "status");
+    expect(progress).toHaveAttribute("aria-live", "polite");
+  });
+
+  it("interactive controls expose accessible labels", () => {
+    const { rerender } = render(
+      <OnlineRandomScreen
+        phase="idle"
+        position={null}
+        size={0}
+        status="open"
+        error={null}
+        onFind={vi.fn()}
+        onCancel={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("random-back-btn")).toHaveAttribute("aria-label", "Back to menu");
+    expect(screen.getByTestId("random-find-btn")).toHaveAttribute(
+      "aria-label",
+      "Find a random game",
+    );
+    expect(screen.getByTestId("random-nickname-input")).toHaveAttribute("aria-label", "Nickname");
+
+    rerender(
+      <OnlineRandomScreen
+        phase="queued"
+        position={1}
+        size={1}
+        status="open"
+        error={null}
+        onFind={vi.fn()}
+        onCancel={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("random-cancel-btn")).toHaveAttribute(
+      "aria-label",
+      "Cancel matchmaking",
+    );
+  });
+
+  it("primary CTAs are tagged data-touch='primary' for sizing", () => {
+    render(
+      <OnlineRandomScreen
+        phase="idle"
+        position={null}
+        size={0}
+        status="open"
+        error={null}
+        onFind={vi.fn()}
+        onCancel={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("random-find-btn")).toHaveAttribute("data-touch", "primary");
+  });
 });
