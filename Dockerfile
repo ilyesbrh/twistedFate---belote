@@ -1,0 +1,77 @@
+# Multi-stage build: workspace install + UI build → slim runtime that runs
+# the Fastify server. The server also serves the built UI from STATIC_ROOT.
+#
+# Build args:
+#   VITE_BASE_PATH  Vite `base` for the UI build. Defaults to "/" (bare-domain
+#                   deploy). Override to "/twistedFate-belote/" if hosting
+#                   under a subpath.
+
+# ── Stage 1: build everything ────────────────────────────────────────────────
+FROM node:20-bookworm-slim AS build
+WORKDIR /app
+
+# Enable corepack so the matching pnpm version (per package.json engines) is
+# always used regardless of host pnpm version.
+RUN corepack enable
+
+# Copy lockfile + manifests first for better layer caching.
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY tsconfig.base.json tsconfig.json ./
+COPY packages/animation/package.json ./packages/animation/
+COPY packages/app/package.json ./packages/app/
+COPY packages/core/package.json ./packages/core/
+COPY packages/protocol/package.json ./packages/protocol/
+COPY packages/server/package.json ./packages/server/
+COPY packages/ui/package.json ./packages/ui/
+
+RUN pnpm install --frozen-lockfile
+
+# Now bring in the rest of the source tree and build.
+COPY . .
+
+ARG VITE_BASE_PATH="/"
+ENV VITE_BASE_PATH=${VITE_BASE_PATH}
+
+# Build only the UI — the server runs via tsx at runtime, no build step
+# needed for it.
+RUN pnpm --filter ui build
+
+# ── Stage 2: slim runtime ────────────────────────────────────────────────────
+FROM node:20-bookworm-slim AS runtime
+WORKDIR /app
+
+RUN corepack enable
+
+ENV NODE_ENV=production
+ENV PORT=4100
+ENV HOST=0.0.0.0
+ENV STATIC_ROOT=/app/packages/ui/dist
+
+# Bring in the workspace skeleton + production deps. We ship sources for the
+# server (since it's tsx-run) and the built UI dist. Other workspace packages
+# the server imports from need their `src/` (no build step) too.
+COPY --from=build /app/package.json /app/pnpm-workspace.yaml /app/pnpm-lock.yaml ./
+COPY --from=build /app/tsconfig.base.json /app/tsconfig.json ./
+COPY --from=build /app/packages/server ./packages/server
+COPY --from=build /app/packages/core ./packages/core
+COPY --from=build /app/packages/app ./packages/app
+COPY --from=build /app/packages/protocol ./packages/protocol
+COPY --from=build /app/packages/animation ./packages/animation
+COPY --from=build /app/packages/ui/package.json ./packages/ui/
+COPY --from=build /app/packages/ui/dist ./packages/ui/dist
+
+# Production install — skips dev deps everywhere except where needed (tsx is
+# in the server's devDependencies, so we install all and rely on the slim
+# bookworm base for size).
+RUN pnpm install --frozen-lockfile
+
+EXPOSE 4100
+
+# Use a non-root user for the runtime.
+RUN useradd --system --uid 1001 belote && chown -R belote:belote /app
+USER belote
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+CMD ["pnpm", "--filter", "@belote/server", "start"]

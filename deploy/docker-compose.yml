@@ -1,0 +1,34 @@
+# Deployed copy of this file lives at /opt/belote/docker-compose.yml on the
+# host. The GitHub Actions workflow scp's it there on every deploy.
+#
+# Required env (set in /opt/belote/.env on the host):
+#   IMAGE_REF — full GHCR image ref, e.g. ghcr.io/<owner>/twistedfate-belote:latest
+
+services:
+  belote:
+    image: ${IMAGE_REF}
+    container_name: belote
+    restart: unless-stopped
+    # Bind only to localhost — nginx on the host is the public ingress.
+    ports:
+      - "127.0.0.1:4100:4100"
+    environment:
+      NODE_ENV: production
+      PORT: "4100"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4100/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

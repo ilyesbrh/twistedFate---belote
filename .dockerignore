@@ -1,0 +1,35 @@
+**/node_modules
+**/dist
+**/.vite
+**/coverage
+**/.tsbuildinfo
+**/*.tsbuildinfo
+
+# CI / git
+.git
+.github
+
+# Tests / dev artefacts
+e2e/baseline
+e2e/diff
+e2e/diag
+e2e/screenshots
+docs/screenshots
+docs/iterations
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Local-only
+.env
+.env.local
+.env.*.local
+.claude
