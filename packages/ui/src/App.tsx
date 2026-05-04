@@ -1,4 +1,4 @@
-import { type ReactElement, useEffect, useState } from "react";
+import { type ReactElement, Suspense, lazy, useEffect, useState } from "react";
 import { GameTable, GameTableView } from "./components/GameTable/GameTable.js";
 import { InstallPrompt } from "./components/InstallPrompt/InstallPrompt.js";
 import { ModeSelectScreen, type Mode } from "./components/ModeSelectScreen/ModeSelectScreen.js";
@@ -6,6 +6,14 @@ import { OnlineLobby } from "./components/OnlineLobby/OnlineLobby.js";
 import { OnlineRandomScreen } from "./components/OnlineRandomScreen/OnlineRandomScreen.js";
 import { useOnlineLobby } from "./online/useOnlineLobby.js";
 import { useOnlineGameSession } from "./online/useOnlineGameSession.js";
+
+const ScreenViewerHost = lazy(() => import("./dev/ScreenViewerHost.js"));
+
+function shouldRenderDevScreens(): boolean {
+  if (!import.meta.env.DEV) return false;
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).has("screens");
+}
 
 const SUITS = ["hearts", "diamonds", "clubs", "spades"] as const;
 const RANKS = ["7", "8", "9", "10", "jack", "queen", "king", "ace"] as const;
@@ -28,6 +36,14 @@ function initialScreen(): Screen {
 export default function App(): ReactElement {
   const [screen, setScreen] = useState<Screen>(initialScreen);
   const [gameKey, setGameKey] = useState(0);
+
+  if (shouldRenderDevScreens()) {
+    return (
+      <Suspense fallback={null}>
+        <ScreenViewerHost />
+      </Suspense>
+    );
+  }
 
   return (
     <>
