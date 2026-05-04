@@ -1,96 +1,52 @@
-# Iteration 22 Report: GameController — Event-Driven Bridge
+# Iteration 022 Report — InstallPrompt cream-paper restyle
 
-**Date**: 2026-02-21
+**Date**: 2026-05-04
 **Status**: Complete
-**Commit**: `dedd8ff`
+**Test delta**: 715 → 715 (no behaviour change)
 
 ## Goal
 
-Create `GameController`, the event-driven bridge between `GameSession` (app layer) and `GameRenderer` (UI layer). The controller subscribes to session events, tracks the active turn, rebuilds `GameView`, and pushes updates to the render target.
+The PWA install banner was the only menu surface still on the
+iteration-018 dark style and clashed against the cream paper from
+iteration 021. CSS-only restyle into the new vocabulary.
 
-## Scope
+## TDD trail
 
-1. `game-controller.ts` — Event subscription, turn tracking, view rebuilding
-2. Decoupled interfaces: `GameSessionAccess`, `RenderTarget`
-3. 24 TDD tests for event handling and turn tracking
+Pure CSS swap, no markup change. Existing 5 InstallPrompt tests
+covered all interactions and stayed green.
 
-## Tests Written (24 test cases)
+## Files
 
-### game-controller.test.ts (24 tests)
+### Modified
 
-**Lifecycle (3 tests):**
+- `packages/ui/src/components/InstallPrompt/InstallPrompt.module.css`
+  — banner now a cream paper card inset 12px from page edges, with
+  2px ink border, chunky drop-shadow, decorative pin-dot corners
+  matching the room-code paper tag. Title in serif Yeseva, subtitle
+  in handwritten Caveat, Install button is the same terracotta stamp
+  the lobby uses, Dismiss is a cream chip with handwritten label.
 
-- `start()` subscribes and renders initial view
-- `stop()` unsubscribes
-- Multiple start/stop cycles
+## Validation
 
-**Turn tracking (8 tests):**
+| Check                                 | Result                 |
+| ------------------------------------- | ---------------------- |
+| `pnpm test`                           | 35 files / 715 passing |
+| `pnpm typecheck`                      | Clean                  |
+| `pnpm lint`                           | 189 errors (no delta)  |
+| `pnpm format:check` (iteration scope) | Clean                  |
 
-- `round_started` → dealer+1 is active
-- `bid_placed` → next player active
-- `bidding_completed` → dealer+1 leads first trick
-- `card_played` → next player active
-- `trick_completed` → winner is active
-- `round_completed` → no active turn
-- `round_cancelled` → no active turn
-- `game_completed` → no active turn
+### Manual smoke
 
-**View rendering (5 tests):**
+Fired `beforeinstallprompt` via the DevTools console at
+`http://localhost:5179/twistedFate-belote/`. Banner rendered as
+cream paper card sitting on top of the menu — visually consistent
+with the rest of the surface (no longer the dark-banner clash).
 
-- Initial render produces valid GameView
-- Phase mapping (bidding, playing, completed)
-- Scores from session.game.teamScores
-- Active seat from tracked turn
+Screenshot: `docs/screenshots/iteration-022-install-prompt.png`.
 
-**Refresh on events (8 tests):**
+## Carryforward
 
-- Each event type triggers a re-render
-- View reflects latest session state after event
-
-## Implementation Summary
-
-### Files Created
-
-- `packages/ui/src/game-controller.ts` — Event-driven bridge
-- `packages/ui/__tests__/game-controller.test.ts` — 24 TDD test cases
-
-### Key Types
-
-```typescript
-interface GameSessionAccess {
-  on(listener: GameEventListener): () => void;
-  dispatch(command: GameCommand): void;
-  readonly currentRound: RoundSnapshot | null;
-  readonly game: { readonly teamScores: readonly [number, number] } | null;
-}
-
-interface RenderTarget {
-  update(view: GameView): void;
-}
-
-class GameController {
-  constructor(
-    session: GameSessionAccess,
-    renderer: RenderTarget,
-    playerNames: [string, string, string, string],
-  );
-  start(): void;
-  stop(): void;
-  wireInput(input: InputSource): void;
-}
-```
-
-## Technical Decisions
-
-| Decision             | Choice                               | Rationale                                                                              |
-| -------------------- | ------------------------------------ | -------------------------------------------------------------------------------------- |
-| Interface decoupling | `GameSessionAccess`, `RenderTarget`  | Controller doesn't depend on concrete GameSession or GameRenderer; testable with mocks |
-| Turn tracking        | State machine in `trackActiveTurn()` | Each event type updates `activeTurn`; deterministic, no polling                        |
-| Dealer tracking      | Stored from `round_started`          | Needed for `bidding_completed` → first-trick leader (dealer+1)                         |
-
-## Validation Results
-
-- `pnpm test`: **734/734 passing** (710 prior + 24 new)
-- `pnpm typecheck`: Clean
-- `pnpm lint`: Clean
-- `pnpm format:check`: Clean
+- **In-game UI chrome** still on iteration-016 visual track —
+  iteration 023.
+- The banner is still always-on-top; could become smaller / chip-
+  shaped after first dismissal if we want to be more polite.

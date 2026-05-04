@@ -1,23 +1,40 @@
-/* ── Install banner — fixed at top, respects iOS notch ── */
+/* ── Install banner — cream paper card, fixed at top ───────────────────── */
 .banner {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding-top: max(12px, env(safe-area-inset-top));
-  padding-bottom: 12px;
-  padding-left: max(16px, env(safe-area-inset-left));
-  padding-right: max(16px, env(safe-area-inset-right));
-  background: rgba(8, 16, 32, 0.96);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  padding: 10px 14px;
+  background: linear-gradient(180deg, #fffbe9 0%, var(--paper-cream-deep) 100%);
+  border: 2px solid var(--ink-dark);
+  border-radius: 12px;
+  box-shadow:
+    0 3px 0 rgba(42, 31, 18, 0.2),
+    0 8px 22px rgba(42, 31, 18, 0.18);
+}
+
+/* Decorative corner pin dots — match the room-code paper tag. */
+.banner::before,
+.banner::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  width: 4px;
+  height: 4px;
+  background: var(--ink-dark);
+  border-radius: 50%;
+  opacity: 0.55;
+}
+.banner::before {
+  left: 8px;
+}
+.banner::after {
+  right: 8px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -29,7 +46,7 @@
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(-100%);
+    transform: translateY(-110%);
   }
   to {
     opacity: 1;
@@ -47,28 +64,36 @@
 .icon {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: 8px;
+  border: 1.5px solid var(--ink-dark);
   flex-shrink: 0;
+  background: #fff;
 }
 
 .text {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  gap: 1px;
 }
 
 .title {
-  font-size: clamp(13px, 1.4vw, 14px);
-  font-weight: 700;
-  color: var(--text-light, #f5f5f5);
+  font-family: var(--font-display);
+  font-size: clamp(15px, 1.6vw, 18px);
+  font-weight: 400;
+  color: var(--ink-dark);
+  line-height: 1.05;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .subtitle {
-  font-size: clamp(10px, 1vw, 11px);
-  color: rgba(255, 255, 255, 0.45);
+  font-family: var(--font-hand);
+  font-size: clamp(13px, 1.3vw, 15px);
+  color: var(--ink-medium);
+  font-weight: 500;
+  letter-spacing: 0.3px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -81,54 +106,57 @@
   flex-shrink: 0;
 }
 
+/* Terracotta stamp — same vocabulary as the lobby's primary CTA. */
 .installBtn {
-  padding: 10px 18px;
+  padding: 8px 16px;
   border-radius: 8px;
-  background: var(--gold, #ffd54f);
-  color: #1a1000;
-  font-size: 13px;
-  font-weight: 800;
+  background: linear-gradient(180deg, #d24545 0%, var(--accent-terracotta) 100%);
+  color: #fffbe9;
+  font-family: var(--font-display);
+  font-size: clamp(13px, 1.4vw, 16px);
+  font-weight: 400;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
   cursor: pointer;
-  border: none;
-  font-family: inherit;
-  transition:
-    background 0.13s,
-    transform 0.1s;
+  border: 2px solid var(--ink-dark);
   min-height: var(--touch-min);
   min-width: var(--touch-min);
+  box-shadow: 0 2px 0 rgba(42, 31, 18, 0.24);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
 .installBtn:hover {
-  background: #ffe082;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 rgba(42, 31, 18, 0.28);
 }
 
 .installBtn:active {
-  transform: scale(0.96);
+  transform: translateY(1px);
+  box-shadow: 0 0 0 rgba(42, 31, 18, 0.2);
 }
 
 .dismissBtn {
-  padding: 10px 12px;
+  padding: 8px 12px;
   border-radius: 8px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 12px;
-  font-weight: 600;
+  color: var(--ink-medium);
+  font-family: var(--font-hand);
+  font-size: clamp(13px, 1.4vw, 16px);
+  font-weight: 700;
   cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  font-family: inherit;
-  transition:
-    color 0.13s,
-    border-color 0.13s;
+  border: 1.5px solid var(--ink-faint);
   white-space: nowrap;
   min-height: var(--touch-min);
   min-width: var(--touch-min);
+  transition:
+    color 0.13s ease,
+    border-color 0.13s ease;
 }
 
 .dismissBtn:hover {
-  color: rgba(255, 255, 255, 0.7);
-  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--ink-dark);
+  border-color: var(--ink-dark);
 }
 
 /* Stack on very narrow screens. */
