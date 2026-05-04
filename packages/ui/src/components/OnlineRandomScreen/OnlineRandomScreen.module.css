@@ -1,16 +1,17 @@
+/* Background + watermarks come from the shared MenuFelt wrapper. This file
+   owns the screen-specific layout (back button, title, form, queued
+   spinner + paper-card progress badge). */
+
 .root {
-  position: fixed;
-  inset: 0;
+  /* MenuFelt provides flex column centred. */
+}
+
+.contentColumn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at 50% 30%, #1a2d5a 0%, #0b1329 70%, #05080f 100%);
-  color: var(--text-light, #e5e7eb);
-  font-family: var(--font, "Inter", system-ui, sans-serif);
   gap: var(--menu-gap-tight);
-  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
-  z-index: 100;
+  width: 100%;
 }
 
 .back {
@@ -26,6 +27,7 @@
   font-family: inherit;
   font-size: clamp(12px, 1.4vw, 14px);
   min-height: var(--touch-min);
+  z-index: 2;
 }
 .back:hover {
   border-color: rgba(255, 255, 255, 0.5);
@@ -39,8 +41,19 @@
   margin: 0;
   font-size: var(--menu-heading-size);
   font-weight: 800;
-  color: var(--gold, #fbbf24);
+  background: linear-gradient(
+    180deg,
+    var(--gold-ramp-1) 0%,
+    var(--gold-ramp-2) 60%,
+    var(--gold-ramp-3) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 10px rgba(247, 185, 74, 0.28));
+  line-height: 1;
 }
+
 .status {
   margin: 0;
   font-size: clamp(10px, 1vw, 12px);
@@ -48,6 +61,7 @@
   letter-spacing: 1px;
   text-transform: uppercase;
 }
+
 .error {
   color: #f87171;
   font-size: var(--menu-body-size);
@@ -78,7 +92,7 @@
   min-height: var(--touch-min);
 }
 .input:focus {
-  border-color: rgba(251, 191, 36, 0.55);
+  border-color: rgba(247, 185, 74, 0.55);
 }
 
 .primaryBtn,
@@ -90,32 +104,44 @@
   padding: 12px 18px;
   cursor: pointer;
   font-size: var(--menu-cta-size);
+  min-height: var(--touch-min);
   transition:
     transform 0.12s ease,
-    opacity 0.12s ease;
+    opacity 0.12s ease,
+    box-shadow 0.12s ease;
 }
 .primaryBtn {
-  background: linear-gradient(180deg, #fbbf24, #d97706);
-  color: #3b1d00;
+  background: linear-gradient(180deg, var(--gold-ramp-1) 0%, var(--gold-ramp-2) 100%);
+  color: #2a1700;
   width: 100%;
+  box-shadow: 0 4px 14px rgba(247, 185, 74, 0.28);
+}
+.primaryBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(247, 185, 74, 0.38);
 }
 .primaryBtn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 .secondaryBtn {
-  background: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, var(--menu-tile-bg-1) 0%, var(--menu-tile-bg-2) 100%);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--menu-tile-border);
   margin-top: 8px;
   min-width: 160px;
+}
+.secondaryBtn:hover {
+  border-color: var(--menu-tile-border-hover);
 }
 
 .queued {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(8px, 1.6vh, 12px);
+  gap: clamp(8px, 1.6vh, 14px);
   width: 100%;
   max-width: 360px;
 }
@@ -124,21 +150,49 @@
   font-size: var(--menu-body-size);
   color: rgba(255, 255, 255, 0.85);
 }
+
+/* ── Progress paper-card badge ─────────────────────────────────────────────
+   Mirrors the room-code card style on the lobby screen. The big "N/4"
+   number reads like the front face of a card. */
+.progressCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: clamp(12px, 1.8vh, 18px) clamp(28px, 6vw, 40px);
+  background: linear-gradient(180deg, #fdf6e3 0%, #f1e1bd 100%);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
 .progress {
   margin: 0;
   font-size: clamp(32px, 8vw, 48px);
   font-weight: 900;
-  color: var(--gold, #fbbf24);
+  color: #2a1700;
   letter-spacing: 2px;
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+}
+.progressLabel {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgba(60, 32, 0, 0.55);
 }
 
 .spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid rgba(255, 255, 255, 0.15);
-  border-top-color: var(--gold, #fbbf24);
+  width: 42px;
+  height: 42px;
+  border: 4px solid rgba(247, 185, 74, 0.18);
+  border-top-color: var(--gold-ramp-1);
   border-radius: 50%;
-  animation: spin 0.9s linear infinite;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .spinner {
+    animation: spin 0.9s linear infinite;
+  }
 }
 @keyframes spin {
   to {
@@ -147,16 +201,17 @@
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
-  .root {
+  .contentColumn {
     gap: 8px;
     justify-content: flex-start;
-    padding-top: calc(var(--safe-top) + 38px);
+    padding-top: 38px;
   }
   .progress {
     font-size: 32px;
   }
   .spinner {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
   }
 }

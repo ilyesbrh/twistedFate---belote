@@ -1,16 +1,17 @@
+/* Background + watermarks come from the shared MenuFelt wrapper. This file
+   owns the screen-specific layout (back button, title, forms, in-room
+   panel, room-code paper card, player rows). */
+
 .root {
-  position: fixed;
-  inset: 0;
+  /* MenuFelt provides flex column centred. */
+}
+
+.contentColumn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at 50% 30%, #1a2d5a 0%, #0b1329 70%, #05080f 100%);
-  color: var(--text-light, #e5e7eb);
-  font-family: var(--font, "Inter", system-ui, sans-serif);
   gap: var(--menu-gap);
-  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
-  z-index: 100;
+  width: 100%;
 }
 
 .back {
@@ -26,6 +27,7 @@
   font-family: inherit;
   font-size: clamp(12px, 1.4vw, 14px);
   min-height: var(--touch-min);
+  z-index: 2;
 }
 .back:hover {
   border-color: rgba(255, 255, 255, 0.5);
@@ -39,7 +41,17 @@
   margin: 0;
   font-size: var(--menu-heading-size);
   font-weight: 800;
-  color: var(--gold, #fbbf24);
+  background: linear-gradient(
+    180deg,
+    var(--gold-ramp-1) 0%,
+    var(--gold-ramp-2) 60%,
+    var(--gold-ramp-3) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 10px rgba(247, 185, 74, 0.28));
+  line-height: 1;
 }
 
 .status {
@@ -81,7 +93,7 @@
   min-height: var(--touch-min);
 }
 .input:focus {
-  border-color: rgba(251, 191, 36, 0.55);
+  border-color: rgba(247, 185, 74, 0.55);
 }
 
 .btnRow,
@@ -107,26 +119,39 @@
   padding: 12px 18px;
   cursor: pointer;
   font-size: var(--menu-cta-size);
+  min-height: var(--touch-min);
   transition:
     transform 0.12s ease,
-    opacity 0.12s ease;
+    opacity 0.12s ease,
+    box-shadow 0.12s ease;
 }
 .primaryBtn,
 .startBtn {
-  background: linear-gradient(180deg, #fbbf24, #d97706);
-  color: #3b1d00;
+  background: linear-gradient(180deg, var(--gold-ramp-1) 0%, var(--gold-ramp-2) 100%);
+  color: #2a1700;
   flex: 1;
+  box-shadow: 0 4px 14px rgba(247, 185, 74, 0.28);
+}
+.primaryBtn:hover:not(:disabled),
+.startBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(247, 185, 74, 0.38);
 }
 .secondaryBtn {
-  background: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, var(--menu-tile-bg-1) 0%, var(--menu-tile-bg-2) 100%);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--menu-tile-border);
   flex: 1;
+}
+.secondaryBtn:hover {
+  border-color: var(--menu-tile-border-hover);
 }
 .primaryBtn:disabled,
 .startBtn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 .startBtn {
   width: 100%;
@@ -144,27 +169,34 @@
   max-width: 360px;
 }
 
+/* ── Room-code paper card ─────────────────────────────────────────────────
+   Styled like a flipped card: cream paper, dark text, gold outline. The
+   visible thing-to-share. */
 .codeBlock {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: clamp(10px, 1.6vh, 14px) clamp(20px, 4vw, 28px);
-  background: rgba(8, 16, 32, 0.85);
-  border: 1px solid rgba(251, 191, 36, 0.4);
+  padding: clamp(12px, 1.8vh, 18px) clamp(24px, 5vw, 36px);
+  background: linear-gradient(180deg, #fdf6e3 0%, #f1e1bd 100%);
+  border: 1px solid rgba(0, 0, 0, 0.18);
   border-radius: 12px;
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 .codeLabel {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(60, 32, 0, 0.55);
 }
 .codeValue {
   font-size: clamp(28px, 7vw, 42px);
   font-weight: 900;
   letter-spacing: clamp(4px, 1.2vw, 8px);
-  color: var(--gold, #fbbf24);
+  color: #2a1700;
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
 }
 
 .players {
@@ -180,17 +212,17 @@
   display: flex;
   justify-content: space-between;
   padding: 10px 14px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--menu-tile-bg-1) 0%, var(--menu-tile-bg-2) 100%);
+  border: 1px solid var(--menu-tile-border);
   font-size: 13px;
   color: rgba(255, 255, 255, 0.5);
   min-height: var(--touch-min);
   align-items: center;
 }
 .playerSeated {
-  background: rgba(74, 222, 128, 0.1);
-  border-color: rgba(74, 222, 128, 0.3);
+  background: linear-gradient(180deg, rgba(74, 222, 128, 0.18) 0%, rgba(74, 222, 128, 0.08) 100%);
+  border-color: rgba(74, 222, 128, 0.4);
   color: #fff;
 }
 .seatLabel {
@@ -205,10 +237,10 @@
 
 /* Short landscape (phones in landscape) — collapse vertical rhythm. */
 @media (max-height: 500px) and (orientation: landscape) {
-  .root {
+  .contentColumn {
     gap: var(--menu-gap-tight);
     justify-content: flex-start;
-    padding-top: calc(var(--safe-top) + 38px);
+    padding-top: 38px;
   }
   .lobbyForms,
   .inRoom {

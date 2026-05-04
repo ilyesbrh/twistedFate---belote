@@ -223,4 +223,39 @@ describe("OnlineRandomScreen", () => {
     );
     expect(screen.getByTestId("random-find-btn")).toHaveAttribute("data-touch", "primary");
   });
+
+  // ── iteration 020: visual alignment with iteration 019 menu ───────────────
+
+  it("wraps content in the shared MenuFelt surface", () => {
+    render(
+      <OnlineRandomScreen
+        phase="idle"
+        position={null}
+        size={0}
+        status="open"
+        error={null}
+        onFind={vi.fn()}
+        onCancel={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("menu-felt")).toBeInTheDocument();
+    expect(screen.getByTestId("menu-felt-watermarks")).toBeInTheDocument();
+  });
+
+  it("renders the queue progress as a paper-card badge when queued", () => {
+    render(
+      <OnlineRandomScreen
+        phase="queued"
+        position={2}
+        size={2}
+        status="open"
+        error={null}
+        onFind={vi.fn()}
+        onCancel={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("random-progress-card")).toBeInTheDocument();
+  });
 });

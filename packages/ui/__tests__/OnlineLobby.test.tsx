@@ -99,4 +99,23 @@ describe("OnlineLobby", () => {
     render(<OnlineLobby lobby={makeLobby()} onBack={vi.fn()} onGameStarted={vi.fn()} />);
     expect(screen.getByTestId("online-lobby")).toBeInTheDocument();
   });
+
+  // ── iteration 020: visual alignment with iteration 019 menu ───────────────
+
+  it("wraps content in the shared MenuFelt surface", () => {
+    render(<OnlineLobby lobby={makeLobby()} onBack={vi.fn()} onGameStarted={vi.fn()} />);
+    expect(screen.getByTestId("menu-felt")).toBeInTheDocument();
+    expect(screen.getByTestId("menu-felt-watermarks")).toBeInTheDocument();
+  });
+
+  it("renders the room code as a paper-card badge in the in_room phase", () => {
+    const lobby = makeLobby({
+      phase: "in_room",
+      code: "ABCD",
+      seat: 0,
+      players: [{ seat: 0, nickname: "A" }],
+    });
+    render(<OnlineLobby lobby={lobby} onBack={vi.fn()} onGameStarted={vi.fn()} />);
+    expect(screen.getByTestId("room-code-card")).toBeInTheDocument();
+  });
 });

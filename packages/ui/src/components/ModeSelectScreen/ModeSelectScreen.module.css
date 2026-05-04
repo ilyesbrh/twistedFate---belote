@@ -1,77 +1,17 @@
+/* Layout-only override on top of the shared MenuFelt root. The felt + suit
+   watermarks come from MenuFelt; this file owns the screen-specific
+   composition (hero, title, mode-tile grid, tile chrome). */
+
 .root {
-  position: fixed;
-  inset: 0;
+  /* MenuFelt already centres flex column; no extra layout overrides needed. */
+}
+
+.contentColumn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  /* Layered card-table background:
-       1. radial blue → near-black (depth)
-       2. faint diagonal felt overlay (texture)
-       3. solid base color underneath everything */
-  background:
-    repeating-linear-gradient(135deg, var(--menu-felt-overlay) 0 2px, transparent 2px 6px),
-    radial-gradient(
-      ellipse at 50% 22%,
-      var(--menu-felt-deep) 0%,
-      var(--menu-felt-mid) 45%,
-      var(--menu-felt-base) 100%
-    ),
-    var(--menu-felt-base);
-  color: var(--text-light, #e5e7eb);
-  font-family: var(--font, "Inter", system-ui, sans-serif);
   gap: var(--menu-gap);
-  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
-  z-index: 100;
-  overflow: hidden;
-}
-
-/* ── Suit watermarks (decorative, corner-anchored) ───────────────────────── */
-.watermarks {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  user-select: none;
-  z-index: 0;
-}
-
-.watermark {
-  position: absolute;
-  font-size: clamp(120px, 22vw, 220px);
-  line-height: 1;
-  color: #fff;
-  opacity: var(--menu-suit-watermark-opacity);
-  font-family: serif;
-}
-
-.watermarkTL {
-  top: -28px;
-  left: -22px;
-  transform: rotate(-12deg);
-}
-.watermarkTR {
-  top: -22px;
-  right: -28px;
-  transform: rotate(14deg);
-}
-.watermarkBL {
-  bottom: -36px;
-  left: -28px;
-  transform: rotate(8deg);
-}
-.watermarkBR {
-  bottom: -28px;
-  right: -22px;
-  transform: rotate(-10deg);
-}
-
-/* All foreground content sits above the watermark layer. */
-.hero,
-.title,
-.subtitle,
-.grid {
-  position: relative;
-  z-index: 1;
+  width: 100%;
 }
 
 /* ── Hero strip: fan of four suit cards ──────────────────────────────────── */
@@ -186,7 +126,7 @@
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
-  .root {
+  .contentColumn {
     gap: var(--menu-gap-tight);
   }
   .grid {

@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { MenuFelt } from "../MenuFelt/MenuFelt.js";
 import styles from "./ModeSelectScreen.module.css";
 
 export type Mode = "ai" | "friends" | "random" | "ranked";
@@ -53,38 +54,43 @@ const MODES: ModeButton[] = [
 
 export function ModeSelectScreen({ onSelect }: ModeSelectScreenProps): ReactElement {
   return (
-    <div className={styles.root} data-testid="mode-select-screen">
-      <SuitWatermarks />
-      <HeroFan />
-      <h1 className={styles.title}>Belote</h1>
-      <p className={styles.subtitle}>Coinchée</p>
-      <div className={styles.grid}>
-        {MODES.map((m) => (
-          <button
-            key={m.id}
-            className={`${styles.btn} ${m.disabled ? styles.btnDisabled : ""}`}
-            onClick={() => {
-              if (!m.disabled) onSelect(m.id);
-            }}
-            disabled={m.disabled}
-            aria-label={m.ariaLabel}
-            data-touch="primary"
-            data-testid={`mode-btn-${m.id}`}
-          >
-            <span className={styles.iconSlot} data-testid={`mode-icon-${m.id}`} aria-hidden="true">
-              {m.icon}
-            </span>
-            <span className={styles.btnLabel}>{m.label}</span>
-            <span className={styles.btnSubtitle}>{m.subtitle}</span>
-            {m.disabled && (
-              <span className={styles.comingPill} data-testid={`mode-pill-${m.id}`}>
-                Coming soon
+    <MenuFelt className={styles.root}>
+      <div data-testid="mode-select-screen" className={styles.contentColumn}>
+        <HeroFan />
+        <h1 className={styles.title}>Belote</h1>
+        <p className={styles.subtitle}>Coinchée</p>
+        <div className={styles.grid}>
+          {MODES.map((m) => (
+            <button
+              key={m.id}
+              className={`${styles.btn} ${m.disabled ? styles.btnDisabled : ""}`}
+              onClick={() => {
+                if (!m.disabled) onSelect(m.id);
+              }}
+              disabled={m.disabled}
+              aria-label={m.ariaLabel}
+              data-touch="primary"
+              data-testid={`mode-btn-${m.id}`}
+            >
+              <span
+                className={styles.iconSlot}
+                data-testid={`mode-icon-${m.id}`}
+                aria-hidden="true"
+              >
+                {m.icon}
               </span>
-            )}
-          </button>
-        ))}
+              <span className={styles.btnLabel}>{m.label}</span>
+              <span className={styles.btnSubtitle}>{m.subtitle}</span>
+              {m.disabled && (
+                <span className={styles.comingPill} data-testid={`mode-pill-${m.id}`}>
+                  Coming soon
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
+    </MenuFelt>
   );
 }
 
@@ -113,19 +119,6 @@ function HeroFan(): ReactElement {
           {c.suit}
         </span>
       ))}
-    </div>
-  );
-}
-
-// ── Decorative suit watermarks anchored to corners ──────────────────────────
-
-function SuitWatermarks(): ReactElement {
-  return (
-    <div className={styles.watermarks} aria-hidden="true">
-      <span className={`${styles.watermark} ${styles.watermarkTL}`}>♠</span>
-      <span className={`${styles.watermark} ${styles.watermarkTR}`}>♥</span>
-      <span className={`${styles.watermark} ${styles.watermarkBL}`}>♦</span>
-      <span className={`${styles.watermark} ${styles.watermarkBR}`}>♣</span>
     </div>
   );
 }
