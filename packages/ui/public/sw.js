@@ -1,4 +1,4 @@
-const CACHE_NAME = "belote-v1";
+const CACHE_NAME = "belote-v2";
 
 // Install: pre-cache the app shell
 self.addEventListener("install", (event) => {
@@ -28,12 +28,18 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Fetch: network-first for navigation, cache-first for assets
+// Fetch: network-first for navigation, cache-first for same-origin assets,
+// pass-through for cross-origin (Google Fonts, etc.).
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
   // Skip non-GET
   if (request.method !== "GET") return;
+
+  // Skip cross-origin — let the browser handle it natively. Trying to
+  // proxy cross-origin (e.g. fonts.gstatic.com) through respondWith
+  // fails CORS and surfaces noisy console errors to the user.
+  if (!request.url.startsWith(self.location.origin)) return;
 
   // Navigation requests: network-first
   if (request.mode === "navigate") {
@@ -49,13 +55,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Assets: cache-first
+  // Same-origin assets: cache-first
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
-        // Only cache same-origin successful responses
-        if (response.ok && request.url.startsWith(self.location.origin)) {
+        if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
