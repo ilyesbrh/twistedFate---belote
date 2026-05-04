@@ -65,4 +65,33 @@ describe("ModeSelectScreen", () => {
       expect(screen.getByTestId(id)).toHaveAttribute("data-touch", "primary");
     }
   });
+
+  // ── iteration 019: visual makeover ────────────────────────────────────────
+
+  it("renders a hero strip above the title", () => {
+    render(<ModeSelectScreen onSelect={vi.fn()} />);
+    expect(screen.getByTestId("menu-hero")).toBeInTheDocument();
+  });
+
+  it("each mode tile renders its decorative icon", () => {
+    render(<ModeSelectScreen onSelect={vi.fn()} />);
+    for (const mode of ["ai", "friends", "random", "ranked"]) {
+      expect(screen.getByTestId(`mode-icon-${mode}`)).toBeInTheDocument();
+    }
+  });
+
+  it("ranked tile shows a 'Coming soon' pill (not just a disabled state)", () => {
+    render(<ModeSelectScreen onSelect={vi.fn()} />);
+    const pill = screen.getByTestId("mode-pill-ranked");
+    expect(pill).toBeInTheDocument();
+    expect(pill).toHaveTextContent(/coming soon/i);
+  });
+
+  it("decorative icons are aria-hidden so they don't pollute the accessible name", () => {
+    render(<ModeSelectScreen onSelect={vi.fn()} />);
+    for (const mode of ["ai", "friends", "random", "ranked"]) {
+      expect(screen.getByTestId(`mode-icon-${mode}`)).toHaveAttribute("aria-hidden", "true");
+    }
+    expect(screen.getByTestId("menu-hero")).toHaveAttribute("aria-hidden", "true");
+  });
 });

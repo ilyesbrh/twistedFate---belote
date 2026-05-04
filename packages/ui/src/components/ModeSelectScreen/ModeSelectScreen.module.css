@@ -5,23 +5,141 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 50% 30%, #1a2d5a 0%, #0b1329 70%, #05080f 100%);
+  /* Layered card-table background:
+       1. radial blue → near-black (depth)
+       2. faint diagonal felt overlay (texture)
+       3. solid base color underneath everything */
+  background:
+    repeating-linear-gradient(135deg, var(--menu-felt-overlay) 0 2px, transparent 2px 6px),
+    radial-gradient(
+      ellipse at 50% 22%,
+      var(--menu-felt-deep) 0%,
+      var(--menu-felt-mid) 45%,
+      var(--menu-felt-base) 100%
+    ),
+    var(--menu-felt-base);
   color: var(--text-light, #e5e7eb);
   font-family: var(--font, "Inter", system-ui, sans-serif);
   gap: var(--menu-gap);
   padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
   z-index: 100;
+  overflow: hidden;
 }
 
+/* ── Suit watermarks (decorative, corner-anchored) ───────────────────────── */
+.watermarks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+.watermark {
+  position: absolute;
+  font-size: clamp(120px, 22vw, 220px);
+  line-height: 1;
+  color: #fff;
+  opacity: var(--menu-suit-watermark-opacity);
+  font-family: serif;
+}
+
+.watermarkTL {
+  top: -28px;
+  left: -22px;
+  transform: rotate(-12deg);
+}
+.watermarkTR {
+  top: -22px;
+  right: -28px;
+  transform: rotate(14deg);
+}
+.watermarkBL {
+  bottom: -36px;
+  left: -28px;
+  transform: rotate(8deg);
+}
+.watermarkBR {
+  bottom: -28px;
+  right: -22px;
+  transform: rotate(-10deg);
+}
+
+/* All foreground content sits above the watermark layer. */
+.hero,
+.title,
+.subtitle,
+.grid {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Hero strip: fan of four suit cards ──────────────────────────────────── */
+.hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(-6px, -0.6vw, -2px);
+  margin-bottom: clamp(4px, 1vh, 12px);
+  perspective: 600px;
+}
+
+.heroCard {
+  width: var(--menu-hero-card-w);
+  height: calc(var(--menu-hero-card-w) * 1.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--menu-hero-card-w) * 0.55);
+  background: linear-gradient(180deg, #fdf6e3 0%, #f1e1bd 100%);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  margin-inline: -8px;
+  transform-origin: bottom center;
+}
+
+.heroCardRed {
+  color: var(--suit-red);
+}
+.heroCardBlack {
+  color: var(--suit-black);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .heroCard {
+    animation: heroCardEnter 0.55s cubic-bezier(0.34, 1.45, 0.64, 1) backwards;
+  }
+}
+
+@keyframes heroCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) rotate(0) scale(0.85);
+  }
+}
+
+/* ── Title + subtitle ────────────────────────────────────────────────────── */
 .title {
   margin: 0;
   font-size: var(--menu-title-size);
   font-weight: 900;
   letter-spacing: -1px;
-  color: var(--gold, #fbbf24);
-  filter: drop-shadow(0 2px 10px rgba(251, 191, 36, 0.35));
+  background: linear-gradient(
+    180deg,
+    var(--gold-ramp-1) 0%,
+    var(--gold-ramp-2) 60%,
+    var(--gold-ramp-3) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 14px rgba(247, 185, 74, 0.35));
   line-height: 1;
 }
+
 .subtitle {
   margin: 0;
   font-size: var(--menu-subtitle-size);
@@ -30,6 +148,24 @@
   text-transform: uppercase;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .title {
+    animation: titleEnter 0.55s ease-out 0.18s backwards;
+  }
+  .subtitle {
+    animation: titleEnter 0.55s ease-out 0.32s backwards;
+  }
+}
+
+@keyframes titleEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    letter-spacing: 0;
+  }
+}
+
+/* ── Mode tile grid ──────────────────────────────────────────────────────── */
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(140px, 240px));
@@ -39,7 +175,6 @@
   max-width: 520px;
 }
 
-/* Narrow portrait phones: stack into a single column. */
 @media (max-width: 480px) and (orientation: portrait) {
   .grid {
     grid-template-columns: 1fr;
@@ -50,8 +185,6 @@
   }
 }
 
-/* Short landscape (phones rotated): keep 2 columns but tighter and with a
-   shrunk title so we don't overflow the ~390px height. */
 @media (max-height: 500px) and (orientation: landscape) {
   .root {
     gap: var(--menu-gap-tight);
@@ -67,46 +200,118 @@
   .subtitle {
     letter-spacing: 2px;
   }
+  .hero {
+    margin-bottom: 0;
+  }
+  .heroCard {
+    width: clamp(28px, 4.5vh, 42px);
+    height: calc(clamp(28px, 4.5vh, 42px) * 1.4);
+  }
   .btn {
     padding: 12px 14px;
   }
 }
 
+/* ── Mode tile chrome ────────────────────────────────────────────────────── */
 .btn {
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
   align-items: center;
-  gap: 4px;
-  padding: 18px 16px;
+  column-gap: 12px;
+  row-gap: 2px;
+  padding: 14px 16px;
   border-radius: var(--menu-radius);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: linear-gradient(180deg, rgba(30, 50, 100, 0.8) 0%, rgba(14, 26, 60, 0.85) 100%);
+  border: 1px solid var(--menu-tile-border);
+  background: linear-gradient(180deg, var(--menu-tile-bg-1) 0%, var(--menu-tile-bg-2) 100%);
   color: #fff;
   font-family: inherit;
   cursor: pointer;
+  text-align: left;
+  box-shadow: var(--menu-tile-shadow);
   transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    border-color 0.15s ease;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 }
-.btn:hover:not(.btnDisabled) {
-  transform: translateY(-2px);
-  border-color: rgba(251, 191, 36, 0.55);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+
+.iconSlot {
+  grid-row: 1 / span 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--menu-icon-size);
+  height: var(--menu-icon-size);
+  color: var(--gold-ramp-1);
 }
-.btnDisabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+
+.iconSlot svg {
+  width: 100%;
+  height: 100%;
 }
+
 .btnLabel {
+  grid-row: 1;
+  grid-column: 2;
   font-size: clamp(14px, 1.6vw, 17px);
   font-weight: 800;
   letter-spacing: 0.2px;
 }
+
 .btnSubtitle {
+  grid-row: 2;
+  grid-column: 2;
   font-size: clamp(10px, 1vw, 11px);
   color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
   letter-spacing: 1.2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .btn:hover:not(.btnDisabled) {
+    transform: translateY(-3px) rotate(-0.6deg);
+    border-color: var(--menu-tile-border-hover);
+    box-shadow: var(--menu-tile-shadow-hover);
+  }
+  .btn:active:not(.btnDisabled) {
+    transform: translateY(-1px) rotate(0deg);
+  }
+}
+
+.btnDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btnDisabled .iconSlot {
+  color: rgba(255, 213, 102, 0.5);
+}
+
+/* "Coming soon" pill on the ranked tile. Anchored top-right. */
+.comingPill {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(247, 185, 74, 0.16);
+  border: 1px solid rgba(247, 185, 74, 0.4);
+  color: var(--gold-ramp-1);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  pointer-events: none;
+}
+
+/* ── Reduced-motion safety net ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .heroCard,
+  .title,
+  .subtitle,
+  .btn {
+    animation: none !important;
+    transition: none !important;
+  }
 }
