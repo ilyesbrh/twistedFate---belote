@@ -35,57 +35,101 @@ const baseUrl = args["url"] ?? "http://localhost:5173/twistedFate-belote/";
  *  - `target`   : optional CSS selector to clip the screenshot to
  *  - `waitMs`   : settle time after navigation (animations, etc.)
  */
+const liveBiddingSetup = async (page) => {
+  await page.locator('[data-testid="mode-btn-ai"]').click();
+  await page.waitForTimeout(300);
+  await page.locator('button:has-text("Play game")').click();
+  // Let the AI bid until it's south's turn (BidPanel visible).
+  await page.waitForTimeout(5000);
+};
+
+const fixtureSetup = (text) => async (page) => {
+  await page.locator(`button:has-text("${text}")`).click();
+  await page.waitForTimeout(300);
+};
+
 const CASES = [
-  {
-    label: "menu-desktop",
-    route: "",
-    viewport: { w: 1280, h: 800 },
-    waitMs: 600,
-  },
-  {
-    label: "menu-portrait",
-    route: "",
-    viewport: { w: 390, h: 844 },
-    waitMs: 600,
-  },
+  // ── Menu — every viewport we care about ────────────────────────────────
+  { label: "menu-desktop", route: "", viewport: { w: 1280, h: 800 }, waitMs: 600 },
+  { label: "menu-portrait", route: "", viewport: { w: 390, h: 844 }, waitMs: 600 },
+  { label: "menu-portrait-320", route: "", viewport: { w: 320, h: 568 }, waitMs: 600 },
+  { label: "menu-landscape-844", route: "", viewport: { w: 844, h: 390 }, waitMs: 600 },
+  { label: "menu-landscape-915", route: "", viewport: { w: 915, h: 412 }, waitMs: 600 },
+
+  // (live-bidding cases skipped — AI bidding sequence is non-deterministic
+  // at fixed wait times. Fixture-based cases below are deterministic.)
+
+  // ── Fixtures (component-isolation) at desktop ─────────────────────────
   {
     label: "fixture-lobby-full",
     route: "?screens",
     viewport: { w: 1280, h: 800 },
-    setup: async (page) => {
-      await page.locator('button:has-text("Host — full room (start enabled)")').click();
-      await page.waitForTimeout(300);
-    },
+    setup: fixtureSetup("Host — full room (start enabled)"),
     target: '[data-testid="screen-viewer-stage"]',
   },
   {
     label: "fixture-mid-trick",
     route: "?screens",
     viewport: { w: 1280, h: 800 },
-    setup: async (page) => {
-      await page.locator('button:has-text("Playing — mid-trick (2 cards down)")').click();
-      await page.waitForTimeout(300);
-    },
+    setup: fixtureSetup("Playing — mid-trick (2 cards down)"),
     target: '[data-testid="screen-viewer-stage"]',
   },
   {
     label: "fixture-bidding-south",
     route: "?screens",
     viewport: { w: 1280, h: 800 },
-    setup: async (page) => {
-      await page.locator('button:has-text("Bidding — south (your) turn")').click();
-      await page.waitForTimeout(300);
-    },
+    setup: fixtureSetup("Bidding — south (your) turn"),
     target: '[data-testid="screen-viewer-stage"]',
   },
   {
     label: "fixture-round-summary-takers-won",
     route: "?screens",
     viewport: { w: 1280, h: 800 },
-    setup: async (page) => {
-      await page.locator('button:has-text("Takers won simple contract (110 ♠)")').click();
-      await page.waitForTimeout(300);
-    },
+    setup: fixtureSetup("Takers won simple contract (110 ♠)"),
+    target: '[data-testid="screen-viewer-stage"]',
+  },
+  {
+    label: "fixture-game-over-ns-wins",
+    route: "?screens",
+    viewport: { w: 1280, h: 800 },
+    setup: fixtureSetup("NS wins (you won)"),
+    target: '[data-testid="screen-viewer-stage"]',
+  },
+
+  // ── In-game fixtures at the breakage-prone viewports ───────────────────
+  {
+    label: "fixture-bidding-844x390",
+    route: "?screens",
+    viewport: { w: 844, h: 390 },
+    setup: fixtureSetup("Bidding — south (your) turn"),
+    target: '[data-testid="screen-viewer-stage"]',
+  },
+  {
+    label: "fixture-bidding-915x412",
+    route: "?screens",
+    viewport: { w: 915, h: 412 },
+    setup: fixtureSetup("Bidding — south (your) turn"),
+    target: '[data-testid="screen-viewer-stage"]',
+  },
+  {
+    label: "fixture-bidding-390x844",
+    route: "?screens",
+    viewport: { w: 390, h: 844 },
+    setup: fixtureSetup("Bidding — south (your) turn"),
+    target: '[data-testid="screen-viewer-stage"]',
+  },
+  {
+    label: "fixture-mid-trick-844x390",
+    route: "?screens",
+    viewport: { w: 844, h: 390 },
+    setup: fixtureSetup("Playing — mid-trick (2 cards down)"),
+    target: '[data-testid="screen-viewer-stage"]',
+  },
+  {
+    label: "fixture-mid-trick-390x844",
+    route: "?screens",
+    viewport: { w: 390, h: 844 },
+    setup: fixtureSetup("Playing — mid-trick (2 cards down)"),
     target: '[data-testid="screen-viewer-stage"]',
   },
 ];
