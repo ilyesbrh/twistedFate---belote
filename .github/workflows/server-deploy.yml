@@ -11,7 +11,10 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # github.repository preserves the original case (twistedFate-belote);
+  # docker image refs must be lowercase. Hardcoded to avoid downstream pulls
+  # failing with "invalid reference format".
+  IMAGE_NAME: ilyesbrh/twistedfate-belote
 
 jobs:
   # ── Quality gates: must pass before we even build the image ────────────────
