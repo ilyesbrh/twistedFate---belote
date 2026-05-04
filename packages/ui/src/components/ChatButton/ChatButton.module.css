@@ -60,12 +60,41 @@
   pointer-events: none;
 }
 
-@media (max-width: 360px) {
+/* Portrait phone (width ≤ 600px) — shrink the button so it doesn't feel
+   oversized next to the smaller avatar token / cards. WCAG 2.5.5
+   minimum is 44×44, but here the button sits in the south avatar's
+   personal space; surrounding empty area gives an effective tap zone
+   well over the floor. */
+@media (max-width: 600px) {
   .btn {
+    width: 34px;
+    height: 34px;
     border-width: 1.5px;
   }
   .icon {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
+  }
+  .badge {
+    min-width: 15px;
+    height: 15px;
+    padding: 0 4px;
+    border-radius: 8px;
+    font-size: 9px;
+    line-height: 15px;
+    border-width: 1.2px;
+    top: -3px;
+    right: -3px;
+  }
+}
+
+@media (max-width: 360px) {
+  .btn {
+    width: 30px;
+    height: 30px;
+  }
+  .icon {
+    width: 12px;
+    height: 12px;
   }
 }
