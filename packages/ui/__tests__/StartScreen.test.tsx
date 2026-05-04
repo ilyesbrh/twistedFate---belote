@@ -58,10 +58,10 @@ function renderStartScreen(
 }
 
 describe("StartScreen", () => {
-  it("renders the hero image", () => {
+  it("renders the title and subtitle", () => {
     renderStartScreen();
-    const img = screen.getByAltText("Belote card game");
-    expect(img).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /belote/i })).toBeInTheDocument();
+    expect(screen.getByText(/coinchée/i)).toBeInTheDocument();
   });
 
   it("displays the target score", () => {

@@ -47,7 +47,8 @@ export default function App(): ReactElement {
 
   return (
     <>
-      <InstallPrompt />
+      {/* Install banner only on the menu — it overlaps the in-game score panel. */}
+      {screen === "menu" && <InstallPrompt />}
       <div
         style={{
           position: "absolute",

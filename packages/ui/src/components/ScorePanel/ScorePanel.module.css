@@ -1,21 +1,44 @@
-/* ── Compact horizontal score bar — cream paper card top-left ───────────── */
+/* ── Compact horizontal score bar — pinned kraft paper note ─────────────── */
 .panel {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: clamp(6px, 1vw, 8px);
-  padding: 7px clamp(10px, 2vw, 14px);
-  border-radius: 0 0 12px 0;
-  background: linear-gradient(180deg, #fffbe9 0%, var(--paper-cream-deep) 100%);
-  border: 1.5px solid var(--ink-dark);
-  border-top: none;
-  border-left: none;
+  margin: 12px;
+  padding: 8px clamp(12px, 2.2vw, 16px);
+  padding-top: 14px;
+  border-radius: 8px;
+  /* Deeper kraft tone so the panel floats above the cream board. */
+  background: linear-gradient(180deg, #ead9b3 0%, #d8c393 100%);
+  border: 2px solid var(--ink-dark);
   box-shadow:
-    0 2px 0 rgba(42, 31, 18, 0.16),
-    0 6px 18px rgba(42, 31, 18, 0.22);
+    0 3px 0 rgba(42, 31, 18, 0.24),
+    0 6px 18px rgba(42, 31, 18, 0.3);
+  /* Slight tilt so it reads as a pinned note. */
+  transform: rotate(-0.6deg);
   color: var(--ink-dark);
   font-family: var(--font-body);
   white-space: nowrap;
-  max-width: calc(100vw - 8px);
+  max-width: calc(100vw - 24px);
+}
+
+/* Two pin dots top-corners — same vocabulary as RoundSummary panel. */
+.panel::before,
+.panel::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  width: 4px;
+  height: 4px;
+  background: var(--ink-dark);
+  border-radius: 50%;
+  opacity: 0.6;
+}
+.panel::before {
+  left: 8px;
+}
+.panel::after {
+  right: 8px;
 }
 
 /* ── Vertical separator ── */

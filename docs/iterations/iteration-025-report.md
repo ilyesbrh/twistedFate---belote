@@ -1,104 +1,137 @@
-# Iteration 25 Report: Deep Fixes — Phase Gating & Resize Re-render
+# Iteration 025 Report — Smoke-test fixes
 
-**Date**: 2026-02-22
+**Date**: 2026-05-04
 **Status**: Complete
-**Commits**: `6bb5d87` (feat), `d3b47fb` (review fixes)
+**Test delta**: 715 → 715 (one assertion text adjusted)
 
 ## Goal
 
-Fix two structural issues identified through code review:
+End-to-end Playwright smoke of the live `/` flow caught four issues
+the iteration-017 screen-viewer fixtures had missed (because they
+render each component in isolation, never in real composition):
 
-1. No phase gating on input dispatch — card taps during bidding and bids during playing were silently forwarded to the session
-2. Resize didn't re-render — `GameRenderer.resize()` repositioned zone containers but never re-rendered child components, leaving stale positions
+1. **StartScreen** still on the iteration-016 dark style — jarring
+   mid-flow break against the cream-paper aesthetic everywhere else.
+2. **InstallPrompt** overlapped the in-game `ScorePanel` (both top-
+   left).
+3. **ScorePanel cream-on-cream contrast** — designed for dark felt,
+   nearly invisible against the cream paper board.
+4. **Apparent auto-bid bug** — chat history showed human bids that
+   weren't manually placed.
 
-## Scope
+## What landed
 
-1. Phase-gated input dispatch in `GameController.wireInput()`
-2. View caching + replay in `GameRenderer.resize()`
-3. Score panel repositioning on every `update()` (handles resize correctly)
-4. 8 new phase-gating tests + 1 cancelled-phase test
+### Fixes 1–3 (visual)
 
-## Tests Written (9 new → 756 total, then 757 after review)
+- **StartScreen** rewritten with the menu's vocabulary:
+  - Removed the dark `belote-hero.svg` reference. Replaced with an
+    inline 4-card fan using the same custom-SVG `SuitPip` shapes the
+    menu uses (one card per suit, slight rotation each).
+  - Cream paper card with corner pin-dot decorations, 2px ink border,
+    chunky drop-shadow.
+  - Title in serif Yeseva, "— Coinchée —" subtitle in handwritten
+    Caveat (terracotta), "first to **501** points wins" with a serif
+    terracotta number, and a terracotta stamp "PLAY GAME" button —
+    the same vocabulary the lobby's Start-game CTA uses.
+- **InstallPrompt** now scoped to `screen === "menu"`. It can never
+  overlap the in-game score panel because it doesn't render in-game.
+- **ScorePanel** redesigned as a "pinned kraft paper note":
+  - Deeper kraft palette (`#ead9b3` → `#d8c393`) so the panel floats
+    above the cream paper board — the contrast is finally there.
+  - Full 2px ink border, rounded corners, 12px margin so it sits
+    inset from the edge instead of flush.
+  - `transform: rotate(-0.6deg)` for a slightly-pinned feel.
+  - Corner pin dots (top-left + top-right) matching the room-code
+    paper tag and the RoundSummary modal.
 
-### game-controller.test.ts (9 new tests)
+### Fix 4 (investigation)
 
-**Phase gating — card play (3 tests):**
+The apparent auto-bid bug was traced to the recurring **Vite HMR cache
+footgun** flagged in iteration 021/024 reports: the earlier dev
+server was serving stale CSS _and_ stale module state, leading to a
+session that had been mounted before the iteration-023 changes
+applied. After `rm -rf packages/ui/node_modules/.vite` and a clean
+dev restart, the live BidPanel mounts correctly when it's the
+human's turn and dispatches `placeBid` only on user click. No code
+change needed.
 
-- Card tap ignored during bidding phase
-- Card tap ignored during completed phase
-- Card tap dispatched during playing phase (existing, updated)
+The session validation in `packages/app/src/session.ts:243` already
+throws if a non-human position dispatches `placeBid`, so an AI bot
+genuinely cannot place a human bid. The bug was purely a stale-state
+illusion.
 
-**Phase gating — suit bid (2 tests):**
+## Files
 
-- Suit bid ignored during playing phase
-- Suit bid ignored during completed phase
+### Modified
 
-**Phase gating — pass (2 tests):**
+- `packages/ui/src/components/StartScreen/StartScreen.tsx` — full
+  rewrite: hero asset replaced by inline `<HeroFan>` + `<SuitPip>`
+  components.
+- `packages/ui/src/components/StartScreen/StartScreen.module.css` —
+  full restyle (cream paper card, ink border, terracotta CTA).
+- `packages/ui/src/components/ScorePanel/ScorePanel.module.css` —
+  panel restyled as pinned kraft note.
+- `packages/ui/src/App.tsx` — `<InstallPrompt />` gated behind
+  `screen === "menu"`.
+- `packages/ui/__tests__/StartScreen.test.tsx` — one assertion text
+  updated (was: "renders the hero image" / `getByAltText("Belote
+card game")`; now: "renders the title and subtitle" /
+  `getByRole("heading", { name: /belote/i })`).
 
-- Pass ignored during playing phase
-- Pass ignored during completed phase
+### Not changed
 
-**Phase gating — cancelled (1 test, added in review):**
+- Card faces, hand display, bid panel, chat panel, game-over modal,
+  round-summary modal, player avatars — all still on their iteration-
+  023 cream paper styling. Verified in the live browser smoke.
+- `packages/ui/public/table-paper.svg` — board background pending
+  direction pick from the user (A1 layered wood + felt + paper, A2
+  burgundy/teal felt with embroidery, A3 aged parchment / map).
+- `packages/app/src/session.ts` — no change. The auto-bid was cache.
 
-- All inputs ignored during cancelled phase
+## Validation
 
-**Existing tests updated (3 tests):**
+| Check                                 | Result                            |
+| ------------------------------------- | --------------------------------- |
+| `pnpm test`                           | 35 files / 715 passing (no delta) |
+| `pnpm typecheck`                      | Clean                             |
+| `pnpm lint`                           | 189 (no delta)                    |
+| `pnpm format:check` (iteration scope) | Clean                             |
 
-- Bid/pass tests now set bidding-phase rounds before dispatching
+### Manual smoke (browser, fresh dev server on :5182)
 
-## Implementation Summary
+- `/` (menu): cream paper, hero card-fan, Belote / Coinchée, four
+  mode tiles, "SOON" stamp on Ranked, **InstallPrompt** banner at
+  top-only, no console errors.
+- Click Solo Match → **StartScreen** appears as cream paper card with
+  4-card mini fan, "Belote" / "— Coinchée —", "first to 501 points
+  wins" / "PLAY GAME" stamp. **No InstallPrompt clash** in
+  background.
+- Click PLAY GAME → in-game flow:
+  - **ScorePanel** top-left as pinned kraft note ("501 NS 0 0 EW 0
+    0 ♠"), readable against cream board.
+  - North avatar with cream pill name label.
+  - Cream paper game board with compass medallion + suit pips
+    visible behind.
+  - Side avatars West / East with their hand strips.
+  - Wait for AI → my turn → **BidPanel appears** as cream paper
+    notebook with ink-bordered suit/value buttons, terracotta Bid +
+    sage Contrer stamps, neutral Pass cream stamp.
+- Auto-bid bug **does not reproduce**.
 
-### Files Modified
+Screenshots:
 
-- `packages/ui/src/game-controller.ts` — Added `currentPhase()` helper, phase guards in `wireInput()`
-- `packages/ui/src/game-renderer.ts` — Added `lastView` cache, `resize()` replays `update()`, score panel positioned in `update()`
-- `packages/ui/__tests__/game-controller.test.ts` — 9 new tests, 3 updated tests
+- `docs/screenshots/iteration-025-startscreen.png`
+- `docs/screenshots/iteration-025-ingame.png`
 
-### Key Code
+## Carryforward
 
-```typescript
-// Phase gating
-wireInput(input: InputSource): void {
-  input.onCardTap((_index, card) => {
-    if (this.currentPhase() !== "playing") return;  // ← gate
-    // ...
-  });
-  input.onSuitBid((suit) => {
-    if (this.currentPhase() !== "bidding") return;  // ← gate
-    // ...
-  });
-}
-
-// Resize re-render
-resize(viewport: Viewport): void {
-  this.tableLayout.resize(viewport);
-  if (this.lastView) {
-    this.update(this.lastView);  // ← replay cached view
-  }
-}
-```
-
-## Review Fixes Applied (commit `d3b47fb`)
-
-| Finding                                       | Severity | Fix                                                  |
-| --------------------------------------------- | -------- | ---------------------------------------------------- |
-| `RoundSnapshot.phase` typed as `string`       | Medium   | Tightened to `RoundPhase` from `@belote/core`        |
-| Magic number 108 for score panel position     | Medium   | Replaced with `SCORE_PANEL_WIDTH + THEME.spacing.sm` |
-| Redundant constructor score panel positioning | Low      | Removed; `update()` handles all positioning          |
-| No cancelled-phase test                       | Low      | Added test for all inputs ignored during cancelled   |
-| Phase mapping ternary chain lint error        | —        | Converted to exhaustive switch statement             |
-
-## Technical Decisions
-
-| Decision                   | Choice                       | Rationale                                                                 |
-| -------------------------- | ---------------------------- | ------------------------------------------------------------------------- |
-| Phase gating in controller | Not in components            | Controller is the single decision point; components remain phase-agnostic |
-| View caching               | `lastView: GameView \| null` | Minimal overhead; enables resize re-render without re-querying session    |
-| `SCORE_PANEL_WIDTH` export | From `score-panel.ts`        | Single source of truth for layout calculations                            |
-
-## Validation Results
-
-- `pnpm test`: **757/757 passing**
-- `pnpm typecheck`: Clean
-- `pnpm lint`: Clean
-- `pnpm format:check`: Clean
+- **Board background** redesign pending user pick between A1
+  (layered wood + felt + paper), A2 (rich felt with embroidery), A3
+  (aged parchment).
+- **CLAUDE.md note about Vite HMR cache** — bit me three times now
+  (021, 024, 025). Worth codifying the recipe so future iterations
+  know to nuke `node_modules/.vite` whenever changes don't reflect.
+- **Pixel-diff regression suite** — would have caught all four of
+  these as visual regressions or compositional clashes. The fixture-
+  level tests don't see how components stack together, but a full-
+  page diff would.
