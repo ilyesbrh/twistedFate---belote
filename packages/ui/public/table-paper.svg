@@ -1,172 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
   <defs>
-    <!-- Hand-drawn imperfection filter -->
-    <filter id="rough" x="-2%" y="-2%" width="104%" height="104%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="1" seed="3"/>
-      <feDisplacementMap in="SourceGraphic" scale="1.6"/>
-    </filter>
-
-    <!-- Walnut wood gradient + grain pattern (outer frame) -->
-    <linearGradient id="wood-tone" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#5a3418"/>
-      <stop offset="40%" stop-color="#4a2812"/>
-      <stop offset="60%" stop-color="#3d1f0c"/>
-      <stop offset="100%" stop-color="#2a1408"/>
-    </linearGradient>
-    <pattern id="wood" patternUnits="userSpaceOnUse" width="600" height="1080" patternTransform="rotate(0.6)">
-      <rect width="600" height="1080" fill="url(#wood-tone)"/>
-      <line x1="40" y1="0" x2="38" y2="1080" stroke="rgba(0,0,0,0.18)" stroke-width="2"/>
-      <line x1="80" y1="0" x2="82" y2="1080" stroke="rgba(0,0,0,0.10)" stroke-width="1"/>
-      <line x1="120" y1="0" x2="118" y2="1080" stroke="rgba(180,90,30,0.10)" stroke-width="3"/>
-      <line x1="170" y1="0" x2="172" y2="1080" stroke="rgba(0,0,0,0.14)" stroke-width="1.5"/>
-      <line x1="220" y1="0" x2="218" y2="1080" stroke="rgba(0,0,0,0.08)" stroke-width="1"/>
-      <line x1="270" y1="0" x2="272" y2="1080" stroke="rgba(0,0,0,0.16)" stroke-width="2"/>
-      <line x1="320" y1="0" x2="318" y2="1080" stroke="rgba(180,90,30,0.08)" stroke-width="2.5"/>
-      <line x1="380" y1="0" x2="382" y2="1080" stroke="rgba(0,0,0,0.10)" stroke-width="1.2"/>
-      <line x1="430" y1="0" x2="428" y2="1080" stroke="rgba(0,0,0,0.18)" stroke-width="2.5"/>
-      <line x1="490" y1="0" x2="492" y2="1080" stroke="rgba(0,0,0,0.10)" stroke-width="1"/>
-      <line x1="540" y1="0" x2="538" y2="1080" stroke="rgba(0,0,0,0.12)" stroke-width="1.4"/>
-      <line x1="580" y1="0" x2="582" y2="1080" stroke="rgba(180,90,30,0.06)" stroke-width="2"/>
-    </pattern>
-
-    <!-- Deep felt: aged forest-burgundy gradient (warm dark green/brown). -->
-    <radialGradient id="felt" cx="50%" cy="50%" r="65%">
-      <stop offset="0%" stop-color="#3a4f2c"/>
-      <stop offset="55%" stop-color="#2a3b20"/>
-      <stop offset="100%" stop-color="#1c2814"/>
+    <!-- Base: warm muted backdrop with a soft radial highlight at the top.
+         Tone is between "aged linen" and "card-table felt"; calm enough to
+         sit behind cards without competing. -->
+    <radialGradient id="base" cx="50%" cy="38%" r="80%">
+      <stop offset="0%" stop-color="#e9d9b4"/>
+      <stop offset="55%" stop-color="#d8c693"/>
+      <stop offset="100%" stop-color="#b09a64"/>
     </radialGradient>
 
-    <!-- Felt weave texture overlay -->
-    <pattern id="felt-weave" patternUnits="userSpaceOnUse" width="6" height="6">
-      <rect width="6" height="6" fill="rgba(0,0,0,0)"/>
-      <line x1="0" y1="0" x2="6" y2="6" stroke="rgba(255,255,255,0.025)" stroke-width="0.6"/>
-      <line x1="6" y1="0" x2="0" y2="6" stroke="rgba(0,0,0,0.07)" stroke-width="0.6"/>
+    <!-- Argyle / diamond-lattice pattern: classic card-back motif drawn
+         once at modest opacity so it reads as "designed" but not busy. -->
+    <pattern id="lattice" patternUnits="userSpaceOnUse" width="80" height="80">
+      <path d="M 0 40 L 40 0 L 80 40 L 40 80 Z"
+            fill="none" stroke="#6a4a28" stroke-width="1.1" opacity="0.18"/>
+      <circle cx="40" cy="40" r="1.6" fill="#6a4a28" opacity="0.32"/>
+      <circle cx="0"  cy="40" r="1.2" fill="#6a4a28" opacity="0.22"/>
+      <circle cx="80" cy="40" r="1.2" fill="#6a4a28" opacity="0.22"/>
+      <circle cx="40" cy="0"  r="1.2" fill="#6a4a28" opacity="0.22"/>
+      <circle cx="40" cy="80" r="1.2" fill="#6a4a28" opacity="0.22"/>
     </pattern>
 
-    <!-- Cream paper for the playing mat -->
-    <radialGradient id="paper" cx="50%" cy="35%" r="80%">
-      <stop offset="0%" stop-color="#fbf3da"/>
-      <stop offset="55%" stop-color="#f3e9cf"/>
-      <stop offset="100%" stop-color="#e6d4a8"/>
+    <!-- Edge vignette so the centre stays bright. -->
+    <radialGradient id="vignette" cx="50%" cy="50%" r="80%">
+      <stop offset="60%"  stop-color="rgba(0,0,0,0)"/>
+      <stop offset="100%" stop-color="rgba(40,28,12,0.3)"/>
     </radialGradient>
-    <pattern id="paper-grain" patternUnits="userSpaceOnUse" width="14" height="14" patternTransform="rotate(28)">
-      <rect width="14" height="14" fill="none"/>
-      <line x1="0" y1="0" x2="0" y2="14" stroke="rgba(112,78,32,0.05)" stroke-width="1"/>
-    </pattern>
-
-    <!-- Suit pip glyphs -->
-    <symbol id="pip-spade" viewBox="0 0 32 32">
-      <path d="M16 3 C 11 9 5 13 5 19 c 0 4 3 7 7 7 c 1.6 0 2.7 -0.6 3.4 -1.6 c -0.4 1.5 -1 2.9 -2 4.1 c -0.5 0.6 -0.1 1.5 0.7 1.5 h 5.8 c 0.8 0 1.2 -0.9 0.7 -1.5 c -1 -1.2 -1.6 -2.6 -2 -4.1 c 0.7 1 1.8 1.6 3.4 1.6 c 4 0 7 -3 7 -7 c 0 -6 -6 -10 -11 -16 z"/>
-    </symbol>
-    <symbol id="pip-heart" viewBox="0 0 32 32">
-      <path d="M16 28 C 6 21 3 14 3 10 C 3 6 6 3 10 3 c 2.4 0 4.6 1.4 6 3.6 C 17.4 4.4 19.6 3 22 3 c 4 0 7 3 7 7 c 0 4 -3 11 -13 18 z"/>
-    </symbol>
-    <symbol id="pip-diamond" viewBox="0 0 32 32">
-      <path d="M16 2 C 14 8 10 12 4 16 C 10 20 14 24 16 30 C 18 24 22 20 28 16 C 22 12 18 8 16 2 z"/>
-    </symbol>
-    <symbol id="pip-club" viewBox="0 0 32 32">
-      <circle cx="16" cy="9" r="5"/>
-      <circle cx="9" cy="18" r="5"/>
-      <circle cx="23" cy="18" r="5"/>
-      <path d="M14 19 c 0 5 -1 7 -3 9 c -0.6 0.6 -0.1 1.5 0.7 1.5 h 8.6 c 0.8 0 1.3 -0.9 0.7 -1.5 c -2 -2 -3 -4 -3 -9 z"/>
-    </symbol>
-
-    <!-- Paper drop shadow for the central playing mat -->
-    <filter id="paper-shadow" x="-5%" y="-5%" width="110%" height="115%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="14"/>
-      <feOffset dx="0" dy="14"/>
-      <feComponentTransfer><feFuncA type="linear" slope="0.55"/></feComponentTransfer>
-      <feComposite in="SourceGraphic" operator="over"/>
-    </filter>
   </defs>
 
-  <!-- ─── LAYER 1: Walnut wood frame (full canvas) ──────────────────────── -->
-  <rect width="1920" height="1080" fill="url(#wood)"/>
-  <!-- Bevel highlight at the inner edge -->
-  <rect x="0" y="0" width="1920" height="1080" fill="none" stroke="rgba(255,200,140,0.08)" stroke-width="6"/>
+  <!-- Solid base -->
+  <rect width="1920" height="1080" fill="url(#base)"/>
+  <!-- Pattern -->
+  <rect width="1920" height="1080" fill="url(#lattice)"/>
 
-  <!-- ─── LAYER 2: Felt cloth surface (inset rectangle, rounded) ─────────── -->
-  <g>
-    <!-- Inner shadow on the wood at the felt edge — gives depth -->
-    <rect x="50" y="50" width="1820" height="980" rx="22" ry="22" fill="rgba(0,0,0,0.45)"/>
-    <!-- Felt fill -->
-    <rect x="56" y="56" width="1808" height="968" rx="18" ry="18" fill="url(#felt)"/>
-    <!-- Felt weave overlay -->
-    <rect x="56" y="56" width="1808" height="968" rx="18" ry="18" fill="url(#felt-weave)"/>
-    <!-- Subtle inner highlight at top — light from above on cloth -->
-    <rect x="60" y="60" width="1800" height="50" rx="18" ry="18" fill="url(#felt-highlight)" opacity="0.3"/>
-  </g>
-  <linearGradient id="felt-highlight" x1="0%" y1="0%" x2="0%" y2="100%">
-    <stop offset="0%" stop-color="rgba(255,255,220,0.1)"/>
-    <stop offset="100%" stop-color="rgba(255,255,220,0)"/>
-  </linearGradient>
+  <!-- Thin double-line frame inset from the edges. Quiet, classic. -->
+  <rect x="40" y="40" width="1840" height="1000" rx="14" ry="14"
+        fill="none" stroke="#6a4a28" stroke-width="2" opacity="0.55"/>
+  <rect x="56" y="56" width="1808" height="968" rx="10" ry="10"
+        fill="none" stroke="#6a4a28" stroke-width="1" opacity="0.35"/>
 
-  <!-- Decorative gold piping on the felt edge -->
-  <rect x="68" y="68" width="1784" height="944" rx="14" ry="14" fill="none" stroke="rgba(196,148,80,0.5)" stroke-width="1.5" stroke-dasharray="3 7"/>
-
-  <!-- Faint suit ornaments on the felt corners -->
-  <g opacity="0.06" fill="#fff">
-    <use href="#pip-spade" x="100" y="100" width="200" height="200" transform="rotate(-12 200 200)"/>
-    <use href="#pip-heart" x="1620" y="100" width="200" height="200" transform="rotate(14 1720 200)"/>
-    <use href="#pip-diamond" x="100" y="780" width="200" height="200" transform="rotate(8 200 880)"/>
-    <use href="#pip-club" x="1620" y="780" width="200" height="200" transform="rotate(-10 1720 880)"/>
-  </g>
-
-  <!-- ─── LAYER 3: Cream paper playing mat (centred on the felt) ────────── -->
-  <g filter="url(#paper-shadow)">
-    <rect x="370" y="170" width="1180" height="740" rx="18" ry="18" fill="url(#paper)"/>
-    <rect x="370" y="170" width="1180" height="740" rx="18" ry="18" fill="url(#paper-grain)"/>
-  </g>
-
-  <!-- Hand-drawn ornamental ink border on the mat -->
-  <g fill="none" stroke="#2a1f12" stroke-linecap="round" stroke-linejoin="round" filter="url(#rough)">
-    <rect x="386" y="186" width="1148" height="708" rx="14" ry="14" stroke-width="4"/>
-    <rect x="404" y="204" width="1112" height="672" rx="9" ry="9" stroke-width="1.5" stroke-dasharray="2 8"/>
-  </g>
-
-  <!-- Mat corner flourishes (sized to the smaller mat) -->
-  <g fill="none" stroke="#2a1f12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#rough)">
-    <path d="M 416 222 q 40 -16 80 0"/>
-    <path d="M 422 216 q -16 40 0 80"/>
-    <circle cx="422" cy="222" r="2.5" fill="#2a1f12" stroke="none"/>
-    <path d="M 1504 222 q -40 -16 -80 0"/>
-    <path d="M 1498 216 q 16 40 0 80"/>
-    <circle cx="1498" cy="222" r="2.5" fill="#2a1f12" stroke="none"/>
-    <path d="M 416 858 q 40 16 80 0"/>
-    <path d="M 422 864 q -16 -40 0 -80"/>
-    <circle cx="422" cy="858" r="2.5" fill="#2a1f12" stroke="none"/>
-    <path d="M 1504 858 q -40 16 -80 0"/>
-    <path d="M 1498 864 q 16 -40 0 -80"/>
-    <circle cx="1498" cy="858" r="2.5" fill="#2a1f12" stroke="none"/>
-  </g>
-
-  <!-- Compass medallion (centred on the paper mat) -->
-  <radialGradient id="medallion" cx="50%" cy="50%" r="50%">
-    <stop offset="0%" stop-color="#fdf6e0" stop-opacity="1"/>
-    <stop offset="80%" stop-color="#fdf6e0" stop-opacity="0.55"/>
-    <stop offset="100%" stop-color="#fdf6e0" stop-opacity="0"/>
-  </radialGradient>
-  <circle cx="960" cy="540" r="320" fill="url(#medallion)"/>
-
-  <g fill="none" stroke="#2a1f12" stroke-linecap="round" filter="url(#rough)">
-    <circle cx="960" cy="540" r="270" stroke-width="2.5"/>
-    <circle cx="960" cy="540" r="256" stroke-width="0.8" stroke-dasharray="3 9"/>
-    <circle cx="960" cy="540" r="200" stroke-width="1.6" stroke-dasharray="1 7"/>
-    <circle cx="960" cy="540" r="148" stroke-width="1.2"/>
-  </g>
-
-  <!-- Cardinal suit pips on the medallion -->
-  <g fill="#2a1f12" filter="url(#rough)">
-    <use href="#pip-spade" x="936" y="288" width="48" height="48"/>
-    <use href="#pip-heart" x="1196" y="516" width="48" height="48" fill="#a83232"/>
-    <use href="#pip-diamond" x="936" y="744" width="48" height="48" fill="#a83232"/>
-    <use href="#pip-club" x="676" y="516" width="48" height="48"/>
-  </g>
-
-  <!-- Outer felt vignette so the wood frame reads cleanly -->
-  <radialGradient id="vignette" cx="50%" cy="50%" r="80%">
-    <stop offset="60%" stop-color="rgba(0,0,0,0)"/>
-    <stop offset="100%" stop-color="rgba(0,0,0,0.35)"/>
-  </radialGradient>
+  <!-- Outer vignette -->
   <rect width="1920" height="1080" fill="url(#vignette)" pointer-events="none"/>
 </svg>

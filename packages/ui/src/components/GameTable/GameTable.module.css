@@ -36,10 +36,11 @@
   z-index: 5;
 }
 
-/* North avatar overlays the north hand (centered horizontally) */
+/* North avatar — below the north hand so the new monogram token doesn't
+   sit half-occluded by the back-of-card stack. */
 .northAvatar {
   position: absolute;
-  top: 24px;
+  top: 90px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;

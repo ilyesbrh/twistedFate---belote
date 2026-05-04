@@ -1,7 +1,6 @@
-import { Badge, Tooltip } from "@radix-ui/themes";
+import type { ReactElement } from "react";
 import type { PlayerData, Position } from "../../data/mockGame.js";
 import type { GameMessage, MessageType } from "../../messages/gameMessages.js";
-import { TimerRing } from "../TimerRing/TimerRing.js";
 import styles from "./PlayerAvatar.module.css";
 
 type AvatarSize = "lg" | "md" | "sm";
@@ -28,59 +27,52 @@ const TYPE_CLASS: Record<MessageType, string> = {
   round_cancelled: styles.roundCancelled,
 };
 
+/**
+ * Player avatar — paper "name-tag" token.
+ *
+ * Replaces the iteration-016 photo+badge avatar (round pravatar photo,
+ * Radix VIP/level/dealer badges, timer ring) with a compact cream paper
+ * card showing the player's monogram in serif. Indicators (dealer, VIP,
+ * contract holder, active turn) are small ink/terracotta stamps in the
+ * corners of the card.
+ */
 export function PlayerAvatar({
   player,
   size = "md",
   isActive = false,
   isContractHolder = false,
   bubbleMessage,
-}: PlayerAvatarProps) {
+}: PlayerAvatarProps): ReactElement {
+  // 2-letter monogram so players with the same first letter are
+  // distinguishable (e.g. Villy / Vane_Bane → "Vi" / "Va").
+  const monogram = player.name.slice(0, 2).replace(/_/g, "").toUpperCase();
   return (
     <div
-      className={`${styles.wrapper} ${styles[size]}`}
+      className={`${styles.wrapper} ${styles[size]} ${isActive ? styles.wrapperActive : ""}`}
       data-testid={`player-avatar-${player.position}`}
     >
-      {/* Circular photo frame */}
-      <div className={styles.frame}>
-        {/* Timer countdown ring */}
-        <TimerRing isActive={isActive} />
+      {/* Token: paper card with monogram */}
+      <div className={styles.token}>
+        <span className={styles.monogram}>{monogram}</span>
 
-        {player.isVip && (
-          <span className={styles.vipBadge}>
-            <Badge color="yellow" variant="solid" size="1" radius="small">
-              VIP
-            </Badge>
+        {player.isDealer && (
+          <span className={styles.dealerStamp} aria-label="Dealer">
+            D
           </span>
         )}
-
-        <img className={styles.photo} src={player.avatarUrl} alt={player.name} draggable={false} />
-
-        <div className={styles.levelBadge}>
-          <Badge color="blue" variant="solid" size="1" radius="full">
-            {player.level}
-          </Badge>
-        </div>
-
         {isContractHolder && (
-          <div
-            className={styles.contractHolderBadge}
+          <span
+            className={styles.contractStamp}
             aria-label="Contract holder"
             title="Contract holder"
           >
             ★
-          </div>
+          </span>
         )}
-
-        {player.isDealer && (
-          <div className={styles.dealerBadge}>
-            <Badge color="orange" variant="solid" size="1" radius="full">
-              D
-            </Badge>
-          </div>
-        )}
+        {isActive && <span className={styles.activeRing} aria-hidden="true" />}
       </div>
 
-      {/* Thought bubble tooltip */}
+      {/* Thought bubble — same shape & vocabulary as iteration 023. */}
       {bubbleMessage != null && (
         <div
           className={`${styles.tooltip} ${TOOLTIP_SIDE[player.position]} ${TYPE_CLASS[bubbleMessage.type]}`}
@@ -91,14 +83,10 @@ export function PlayerAvatar({
         </div>
       )}
 
-      {/* Name pill label */}
-      <Tooltip content={player.name} side="bottom">
-        <div className={`${styles.nameLabel} ${isActive ? styles.nameLabelActive : ""}`}>
-          <span className={styles.globeIcon}>🌐</span>
-          <span className={styles.name}>{player.name}</span>
-          {isActive && <span className={styles.timerDot} aria-hidden="true" />}
-        </div>
-      </Tooltip>
+      {/* Name label — handwritten under the token */}
+      <div className={styles.nameLabel}>
+        <span className={styles.name}>{player.name}</span>
+      </div>
     </div>
   );
 }

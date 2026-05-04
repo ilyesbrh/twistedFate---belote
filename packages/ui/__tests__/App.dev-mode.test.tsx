@@ -62,10 +62,14 @@ describe("App dev-mode gate", () => {
     setSearch("?screens");
     render(<App />);
 
-    // Lazy-loaded; await mount.
-    await waitFor(() => {
-      expect(screen.getByTestId("screen-viewer")).toBeInTheDocument();
-    });
+    // Lazy-loaded; await mount. Bump timeout — concurrent test workers can
+    // be slow to import the dev module bundle.
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("screen-viewer")).toBeInTheDocument();
+      },
+      { timeout: 5000 },
+    );
   });
 
   it("with ?screens but DEV false, does NOT render the screen viewer (production safety)", () => {

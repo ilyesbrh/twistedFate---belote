@@ -1,96 +1,124 @@
-# Iteration 27 Report: React + @pixi/react Foundation Setup
+# Iteration 027 Report — Simpler patterned board + avatar redesign
 
-**Date**: 2026-02-22
+**Date**: 2026-05-04
 **Status**: Complete
+**Test delta**: 715 → 715
 
 ## Goal
 
-Install React 19 and @pixi/react v8, configure TypeScript for JSX, and establish the `extend()` setup module — the foundation for the React/PixiJS migration.
+Two pieces of user feedback:
 
-## Scope
+1. "the game board sucks could you find a fit cool background instead
+   of the current low effort one… simpler with pattern."
+2. "the player avatar sections are not up to date, they look like
+   they are from another app… feel free to change them as you want."
 
-1. Add `react`, `react-dom`, `@pixi/react` as production dependencies
-2. Add `@types/react`, `@types/react-dom` as dev dependencies
-3. Configure `tsconfig.base.json` with `jsx: "react-jsx"`
-4. Add `*.tsx` to `tsconfig.json` and `tsconfig.build.json` include patterns
-5. Create `pixi-react-setup.ts` with `extend()` registering Container, Graphics, Text, Sprite
-6. Update ESLint config to handle `.tsx` files in story/test patterns
-7. Update `UI_MANIFESTO.md` technology table — React now adopted, not rejected
-8. Update barrel exports in `index.ts`
-9. Configure Vitest to inline `@pixi/react` (ESM resolution fix)
+Iteration 026's ornate wood+felt+compass composition was too busy.
+The avatars (pravatar photo + Radix VIP/level/dealer badges) clashed
+hard with the cream-paper aesthetic. This iteration replaces both.
 
-## PO Decisions Locked
+## What landed
 
-- React is now an accepted technology for the UI layer (reversing previous manifesto rejection)
-- `@pixi/react` v8 with its JSX pragma (`pixiContainer`, `pixiSprite`, etc.) eliminates the DOM impedance mismatch that justified the original rejection
-- Migration will proceed component-by-component with coexistence during transition
+### Game board → quiet diamond lattice
 
-## Tests Written (3 test cases, written before implementation)
+`packages/ui/public/table-paper.svg` rewritten from scratch (~30
+lines). Three elements:
 
-### `__tests__/pixi-react-setup.test.ts`
+- Warm muted base — radial gradient `#e9d9b4` → `#b09a64` (between
+  "aged linen" and "card-table felt").
+- Single repeating diamond-lattice pattern at ~18% opacity, with a
+  small intersection dot in each diamond center and at the four
+  edges of each tile. Reads as a vintage card-back motif without
+  competing with the cards.
+- Thin double-line frame inset 40 / 56 px from the edges. Outer
+  vignette so the centre stays brighter.
 
-- `exports initPixiReact function` — verifies module exports the function
-- `initPixiReact does not throw` — verifies extend() completes without error
-- `is idempotent — calling twice does not throw` — verifies safe repeated calls
+No wood, no felt, no compass, no ornament. Calm pattern, that's it.
 
-## Implementation Summary
+### Player avatar → paper name-tag with monogram
 
-### Files Created
+`packages/ui/src/components/PlayerAvatar/PlayerAvatar.tsx` and its
+module CSS rewritten. Drops:
 
-- `packages/ui/src/pixi-react-setup.ts` — `initPixiReact()` function that calls `extend({ Container, Graphics, Text, Sprite })` from `@pixi/react`
-- `packages/ui/__tests__/pixi-react-setup.test.ts` — 3 unit tests
+- `pravatar.cc` photo `<img>` (real-person headshots that screamed
+  "different app").
+- Radix `Badge` for VIP / level / dealer.
+- Radix `Tooltip`.
+- `<TimerRing />` (was a circular timer around the photo).
+- VIP indicator and level number — cruft.
 
-### Files Modified
+Replaces with a cream paper rounded-square name-tag token:
 
-- `packages/ui/package.json` — added react 19.2.4, react-dom 19.2.4, @pixi/react 8.0.5, @types/react 19.2.14, @types/react-dom 19.2.3
-- `tsconfig.base.json` — added `jsx: "react-jsx"`
-- `packages/ui/tsconfig.json` — added `src/**/*.tsx` and `__tests__/**/*.tsx` to include
-- `packages/ui/tsconfig.build.json` — added `src/**/*.tsx` to include, `src/**/*.stories.tsx` to exclude
-- `packages/ui/vitest.config.ts` — added `__tests__/**/*.test.tsx` to include, `@pixi/react` to server.deps.inline
-- `eslint.config.mjs` — added `.tsx` patterns to story and test file overrides
-- `packages/ui/src/index.ts` — added `initPixiReact` export
-- `docs/UI_MANIFESTO.md` — updated technology table, moved React from rejected to adopted
+- 2-letter monogram in serif Yeseva (e.g. ElenaP → "EL", Villy →
+  "VI", DilyanaBl → "DI", Vane_Bane → "VA"). Two letters so two
+  players sharing a first letter are distinguishable.
+- Handwritten Caveat name label below.
+- Mustard "D" stamp top-left when dealer.
+- Terracotta ★ stamp top-right when contract holder.
+- Terracotta pulsing ring around the token when active turn.
 
-### Key Functions
+Behavioural test `PlayerAvatarBubble.test.tsx` was checking bubble
+positions and type classes — unchanged, all 10 still pass.
 
-- `initPixiReact(): void` — registers PixiJS display objects with @pixi/react's internal catalogue; must be called before any React PixiJS rendering; idempotent
+`GameTable.module.css` — north avatar moved from `top: 24px` to
+`top: 90px` so the new square token clears the back-of-card stack
+that occluded the upper portion at the original position.
 
-## Technical Decisions
+### Plus
 
-| Decision                  | Choice                                     | Rationale                                                                                                                        |
-| ------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| JSX config location       | `tsconfig.base.json`                       | All packages benefit; even non-UI packages won't break with JSX enabled                                                          |
-| Vitest inline dep         | `@pixi/react` via `server.deps.inline`     | `react-reconciler` uses CJS-style imports without `.js` extensions, causing ESM resolution failures in Vitest's node environment |
-| Manifesto update approach | "Previously Rejected, Now Adopted" section | Preserves decision history and documents the rationale for reversal                                                              |
-| extend() wrapper          | Named export `initPixiReact()`             | Encapsulates the extend() call, makes the intent clear, allows future additions (layout, UI elements)                            |
+- **Flaky test fix** — `App.dev-mode.test.tsx` `waitFor` for the
+  lazy ScreenViewer was timing out in concurrent test workers.
+  Bumped timeout to 5s. Now stable.
+- **`.gitignore` consolidation** — replaced 47 individual
+  `.playwright-mcp/page-*.yml` lines with a single `.playwright-
+mcp/` rule. Added `.claude/settings.local.json` and
+  `packages/ui/e2e/screenshots/` for completeness.
 
-## Refactoring Performed
+## Files
 
-None — this is a greenfield addition.
+- `packages/ui/public/table-paper.svg` — full rewrite (~30 lines).
+- `packages/ui/src/components/PlayerAvatar/PlayerAvatar.tsx` — full
+  rewrite (no Radix deps).
+- `packages/ui/src/components/PlayerAvatar/PlayerAvatar.module.css` —
+  rewritten for the new token chrome.
+- `packages/ui/src/components/GameTable/GameTable.module.css` —
+  north-avatar `top` adjusted.
+- `packages/ui/__tests__/App.dev-mode.test.tsx` — `waitFor` timeout
+  bumped to 5s.
+- `.gitignore` — consolidated.
 
-## Risks Identified
+## Validation
 
-- `@pixi/react` v8 requires React 19 — locks the project to React 19+
-- `react-reconciler` ESM compatibility required Vitest workaround — may need similar workaround in other tooling (Playwright, Storybook)
+| Check                                 | Result                                                      |
+| ------------------------------------- | ----------------------------------------------------------- |
+| `pnpm test`                           | 35 files / 715 passing (no delta)                           |
+| `pnpm typecheck`                      | Clean                                                       |
+| `pnpm lint`                           | **188** (down from 189; Radix removal eliminated one error) |
+| `pnpm format:check` (iteration scope) | Clean                                                       |
 
-## Validation Results
+### Manual smoke (browser, dev on :5176 after `rm -rf .vite`)
 
-- `pnpm test`: **814/814 passing** (3 new)
-- `pnpm typecheck`: Clean
-- `pnpm lint`: Clean
-- `pnpm format:check`: Clean
+- `/` (menu) — unchanged from iteration 021/025.
+- Click Solo Match → StartScreen (cream paper modal, terracotta
+  PLAY GAME stamp).
+- PLAY GAME → in-game flow:
+  - Lattice board reads as quiet, vintage card-back motif. Doesn't
+    compete with the cards.
+  - North avatar "DI / DilyanaBl", West "VI / Villy", East "VA /
+    Vane_Bane", South "EL / ElenaP" — all distinguishable.
+  - Active player has terracotta pulsing ring.
+  - Cream BidPanel centred, ScorePanel pinned kraft note top-left,
+    ChatPanel ledger drawer right.
 
-## Next Iteration: 28 (Install @pixi/layout v3 + @pixi/ui v2)
+Screenshots: `iteration-027-lattice-board.png`,
+`iteration-028-live-game-v3.png`.
 
-**Scope**: Add `@pixi/layout` and `@pixi/ui` as dependencies, verify imports resolve, register layout elements with `extend()`, verify Yoga WASM bundling works with Vite.
+## Carryforward
 
-**Acceptance criteria**:
-
-1. `@pixi/layout` and `@pixi/ui` installed in `@belote/ui`
-2. Import resolution test passes (LayoutContainer, FancyButton constructible)
-3. `extend()` updated with layout elements
-4. All 4 checks pass
-
-## Iteration 29 Preview (React Bridge + useTheme Hook)
-
-Create the coexistence bridge (`renderReactIntoContainer`) and a `useTheme` hook. First `.tsx` files in the project. Proof-of-concept React component rendering into a PixiJS Container.
+- North-avatar / north-hand vertical alignment could use one more
+  pass — the square token still touches the card-stack boundary in
+  some viewports.
+- Mobile portrait verification with the new avatars (not yet
+  smoked at 390×844).
+- Pixel-diff regression suite remains the natural next move now
+  that the visual layer is settling.
