@@ -44,7 +44,12 @@ RUN pnpm --filter ui exec vite build
 FROM node:20-bookworm-slim AS runtime
 WORKDIR /app
 
-RUN corepack enable
+# Install pnpm globally via npm — *not* via corepack. corepack downloads
+# the pnpm binary lazily at first invocation into $HOME/.cache, which
+# fails crash-loop style for the unprivileged `belote` system user that
+# CMD eventually runs as (its $HOME has no write access path inside this
+# image). A globally npm-installed pnpm avoids the runtime download.
+RUN npm install -g pnpm@10 && pnpm --version
 
 ENV NODE_ENV=production
 ENV PORT=4100
