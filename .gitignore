@@ -34,6 +34,7 @@ storybook-static/
 
 # Playwright
 e2e/screenshots/
+e2e/diff/
 test-results/
 playwright-report/
 .playwright-mcp/

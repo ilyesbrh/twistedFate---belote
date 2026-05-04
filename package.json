@@ -20,13 +20,17 @@
     "build": "pnpm -r --filter './packages/*' run build",
     "screenshot": "node scripts/screenshot.mjs",
     "screenshot:landscape": "node scripts/screenshot.mjs landscape 844 390",
-    "screenshot:portrait": "node scripts/screenshot.mjs portrait 390 844"
+    "screenshot:portrait": "node scripts/screenshot.mjs portrait 390 844",
+    "visual": "node scripts/visual-diff.mjs",
+    "visual:update": "node scripts/visual-diff.mjs --update"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
     "eslint": "^9.39.0",
     "eslint-config-prettier": "^10.1.0",
+    "pixelmatch": "^7.2.0",
     "playwright": "^1.58.2",
+    "pngjs": "^7.0.0",
     "prettier": "^3.8.0",
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.56.0",

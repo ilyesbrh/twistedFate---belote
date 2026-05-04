@@ -1,90 +1,115 @@
-# Iteration 29 Report: useTheme Hook + TSX Pipeline Validation
+# Iteration 029 Report — Pixel-diff regression suite
 
-**Date**: 2026-02-22
+**Date**: 2026-05-04
 **Status**: Complete
+**Test delta**: 715 → 715 (visual suite is separate from vitest)
 
 ## Goal
 
-Create the `useTheme` hook, validate the `.tsx` pipeline end-to-end, and refine the coexistence strategy based on `@pixi/react` API constraints.
+Establish a visual regression suite to catch what fixtures miss. The
+915×412 BidPanel break shipped in iteration 028 escaped the fixture-
+level tests because fixtures render components in isolation, never
+in real composition / viewport. Pixel-diff covers that gap.
 
-## Scope
+## What landed
 
-1. Create `src/hooks/use-theme.ts` returning the frozen THEME object
-2. Write first `.tsx` test file to validate JSX compilation, pragma resolution, and functional component patterns
-3. Update barrel exports with `useTheme`
-4. Revise coexistence strategy: dropped `renderReactIntoContainer` bridge (see Technical Decisions)
+### Runner — `scripts/visual-diff.mjs`
 
-## PO Decisions Locked
+~150 lines. Uses `playwright` (already installed) for capture and
+`pixelmatch` + `pngjs` (newly added devDeps) for diffing. No
+`@playwright/test` (heavyweight test runner not needed for a
+6-case smoke).
 
-- **Bridge concept dropped**: `@pixi/react`'s `createRoot` takes a DOM element and owns the entire Application lifecycle — there is no API to render a React sub-tree into an existing PixiJS Container. Coexistence is at the file level (`.tsx` alongside `.ts`), not at runtime.
-- `useTheme` is a plain function (not a true React hook) until we add runtime theme switching. This keeps it usable in both React and non-React code.
+Workflow:
 
-## Tests Written (6 test cases, written before implementation)
+1. Iterate a manifest of `(label, route, viewport, setup?, target?)`
+   cases.
+2. Open a fresh browser context per case (deterministic state).
+3. Navigate, run optional `setup(page)` (e.g. clicks), wait, capture
+   PNG. If `target` is set, screenshot that locator only; else
+   full viewport.
+4. Compare against `e2e/baseline/<label>.png` with `pixelmatch`
+   (`threshold: 0.18`). Allow ≤0.001 (0.1%) of pixels to differ for
+   aliasing tolerance.
+5. On mismatch: write `<label>.diff.png` + `<label>.current.png` to
+   `e2e/diff/` (gitignored) and exit 1.
+6. `--update` mode rewrites baselines.
 
-### `__tests__/use-theme.test.ts`
+### Initial baselines (6)
 
-- `exports useTheme function` — verifies module exports
-- `returns the frozen THEME object` — verifies colors, typography, spacing, frozen
-- `returns the same object on repeated calls` — verifies referential identity
+| Label                              | Route      | Viewport | Notes                            |
+| ---------------------------------- | ---------- | -------- | -------------------------------- |
+| `menu-desktop`                     | `/`        | 1280×800 | Full menu                        |
+| `menu-portrait`                    | `/`        | 390×844  | Mobile-style menu                |
+| `fixture-lobby-full`               | `?screens` | 1280×800 | Host-full lobby, scoped to stage |
+| `fixture-mid-trick`                | `?screens` | 1280×800 | Mid-trick, scoped to stage       |
+| `fixture-bidding-south`            | `?screens` | 1280×800 | Bidding panel + table            |
+| `fixture-round-summary-takers-won` | `?screens` | 1280×800 | Modal                            |
 
-### `__tests__/tsx-pipeline.test.tsx`
+### npm scripts
 
-- `JSX compiles to valid React elements` — validates `react-jsx` pragma with `<div>`
-- `React.createElement produces valid elements` — validates createElement API
-- `functional component produces element with correct type` — validates custom component JSX
+- `pnpm visual` — diff against baselines, exit 1 on mismatch.
+- `pnpm visual:update` — rewrite baselines (manual blessing).
 
-## Implementation Summary
+### Configuration
 
-### Files Created
+- `pixelmatch` and `pngjs` added to devDependencies.
+- `.gitignore` — `e2e/diff/` ignored. `e2e/baseline/` committed.
 
-- `packages/ui/src/hooks/use-theme.ts` — `useTheme()` function returning frozen THEME
-- `packages/ui/__tests__/use-theme.test.ts` — 3 tests
-- `packages/ui/__tests__/tsx-pipeline.test.tsx` — 3 tests (first `.tsx` file in the project)
+## Files
 
-### Files Modified
+### New
 
-- `packages/ui/src/index.ts` — added `useTheme` export
-- Migration plan file — updated coexistence strategy
+- `scripts/visual-diff.mjs` — the runner.
+- `e2e/baseline/menu-desktop.png` — 1280×800 menu.
+- `e2e/baseline/menu-portrait.png` — 390×844 menu.
+- `e2e/baseline/fixture-lobby-full.png` — host-full lobby fixture.
+- `e2e/baseline/fixture-mid-trick.png` — mid-trick fixture.
+- `e2e/baseline/fixture-bidding-south.png` — bidding fixture.
+- `e2e/baseline/fixture-round-summary-takers-won.png` — round-
+  summary fixture.
 
-### Key Functions
+### Modified
 
-- `useTheme(): Readonly<Theme>` — returns the frozen THEME design tokens
+- `package.json` — added `visual` and `visual:update` scripts;
+  `pixelmatch` and `pngjs` devDeps.
+- `pnpm-lock.yaml` — corresponding lockfile entries.
+- `.gitignore` — `e2e/diff/` rule added.
 
-## Technical Decisions
+## Validation
 
-| Decision                             | Choice                                        | Rationale                                                                                                                  |
-| ------------------------------------ | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Drop renderReactIntoContainer bridge | File-level coexistence instead                | `@pixi/react` `createRoot` takes DOM elements, not PixiJS Containers; no API for React sub-trees in imperative scene graph |
-| useTheme as plain function           | Not a true React hook (no useState/useEffect) | THEME is static and frozen; when we need runtime theme switching, we'll wrap in React context                              |
-| TSX test assertions                  | `isValidElement` + `.type` only               | Avoids `element.props` (typed as `any`) which triggers strict `no-unsafe-member-access` lint errors                        |
+| Check                                 | Result                                                             |
+| ------------------------------------- | ------------------------------------------------------------------ |
+| `pnpm visual:update`                  | 6 baselines written                                                |
+| `pnpm visual`                         | **6 PASS** against the fresh baselines                             |
+| `pnpm test`                           | 715/715 (no delta)                                                 |
+| `pnpm typecheck`                      | Clean                                                              |
+| `pnpm lint`                           | 189 (visual-diff.mjs is excluded by the script-file lint baseline) |
+| `pnpm format:check` (iteration scope) | Clean                                                              |
 
-## Refactoring Performed
+## Mobile portrait smoke (separate verification — task B from
 
-None.
+the user's request)
 
-## Risks Identified
+Verified the live game flow at 390×844 portrait:
 
-None — this iteration is low-risk infrastructure.
+- Menu — cream paper, 5-card fan, mode tiles stacked, "SOON" stamp.
+- Solo Match → StartScreen → PLAY GAME → in-game.
+- Lattice board, ScorePanel kraft note top-left, BidPanel cream
+  notebook centered, monogram avatars on all four positions, hand
+  at bottom.
+- Two minor cosmetic notes (north avatar still close to card stack,
+  side-avatar name labels can clip on long names) — not blocking.
 
-## Validation Results
+Screenshot: `iteration-030-portrait-game.png`.
 
-- `pnpm test`: **825/825 passing** (6 new)
-- `pnpm typecheck`: Clean
-- `pnpm lint`: Clean
-- `pnpm format:check`: Clean
+## Carryforward
 
-## Next Iteration: 30 (TrumpIndicator → React)
-
-**Scope**: Rewrite TrumpIndicator as a React functional component (`.tsx`). First real component migration establishing the pattern for all subsequent components.
-
-**Acceptance criteria**:
-
-1. `src/components/hud/trump-indicator.tsx` renders suit badge using `<pixiGraphics>` + `<pixiText>`
-2. Props interface: `{ suit: Suit }`
-3. Tests: renders, updates on prop change, correct symbol/color from THEME
-4. Old `trump-indicator.ts` unchanged (coexistence)
-5. All 4 checks pass
-
-## Iteration 31 Preview (TurnIndicator → React)
-
-Rewrite TurnIndicator as a React functional component with dynamic pill-shaped background. Tests `useRef` + measurement pattern needed for dynamic sizing.
+- **Add baselines for landscape phone (915×412)** — would have
+  caught the iteration 028 BidPanel break automatically.
+- **Add baselines for mobile portrait (390×844)** — catches mobile
+  layout drifts.
+- **CI wiring** — once the repo has CI, run `pnpm visual` on every
+  PR. Diff PNG artifacts uploaded as build artifacts.
+- **Auto-update workflow** — when an intentional UI change lands,
+  `pnpm visual:update` is manual.
