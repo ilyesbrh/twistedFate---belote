@@ -1,115 +1,83 @@
-# Iteration 26 Report: Playable Card Highlighting
+# Iteration 026 Report — Layered wood + felt + paper game board
 
-**Date**: 2026-02-22
+**Date**: 2026-05-04
 **Status**: Complete
-**Commits**: `9794b10` (feat), `86c051f` (review fixes)
+**Test delta**: 715 → 715 (asset-only change)
 
 ## Goal
 
-Highlight which cards the human player can legally play during their turn, using `getValidPlays()` from `@belote/core`. Non-playable cards are visually dimmed and interaction-disabled.
+User feedback on iteration 024's cream-paper-only board: "I didn't
+like the board background, and I want option 1." Option 1 from the
+offered alternatives was **A1 — layered wood + felt + paper**: real
+card-table physicality with three distinct material layers visible
+simultaneously.
 
-## Scope
+## What landed
 
-1. Add `playable: boolean` to `HandCard` interface
-2. `markPlayableCards()` helper in `game-view.ts` — calls `getValidPlays()` during playing phase on human's turn
-3. `applyPlayableState()` in `HandDisplay` — dims non-playable cards (alpha 0.4, eventMode "none")
-4. Guard in `applyCardInteraction()` — skip non-playable cards
-5. Trick state guard — skip marking when trick is completed
-6. 7 new tests for playable card marking
+Single-file rewrite of `packages/ui/public/table-paper.svg` with
+three composed layers, outer to inner:
 
-## Tests Written (7 new → 764 total)
+1. **Walnut wood frame** spanning the full canvas: linear gradient
+   `#5a3418` → `#2a1408`, hand-tuned vertical wood-grain lines,
+   inner amber-bevel highlight at the felt edge.
+2. **Forest-felt surface**: rounded rectangle inset 56px from the
+   frame, radial gradient `#3a4f2c` → `#1c2814`, diagonal weave
+   overlay for cloth texture, top-inner highlight gradient, gold-
+   piping dashed border just inside, faint suit ornaments in the
+   four corners.
+3. **Cream paper playing mat** (1180×740, centred): cream radial +
+   diagonal grain, SVG drop-shadow filter so it visibly *floats*
+   above the felt, hand-drawn ornamental ink border (heavy outer +
+   dashed inner) softened by `feDisplacementMap`, corner flourishes.
+4. **Compass medallion** centred on the mat (concentric ink rings,
+   four cardinal suit pips ♠ N / ♥ E terracotta / ♦ S terracotta /
+   ♣ W) — sized so the trick cards land inside the inner ring.
 
-### game-view.test.ts (7 new tests)
+Outer felt vignette so the wood reads as the outermost frame and the
+mat as the focal point.
 
-- All cards playable during bidding phase
-- All cards playable when not human's turn
-- Marks only valid plays when human leads a trick (all valid when leading)
-- Marks non-followable cards as not playable (must follow suit)
-- All cards playable when no current trick (null)
-- All cards playable when current trick is completed (state guard)
-- All cards playable in idle view (no round)
+`GameTable.tsx` references the same SVG path — no JSX or CSS change
+needed.
 
-### game-controller.test.ts (1 updated)
+## Files
 
-- Hand card assertion updated to include `playable: true`
+### Modified
 
-## Implementation Summary
+- `packages/ui/public/table-paper.svg` — full rewrite from the
+  iteration 024 paper-only design to the layered wood + felt + paper
+  composition.
 
-### Files Modified
+## Validation
 
-- `packages/ui/src/game-view.ts` — Added `getValidPlays` import, `markPlayableCards()` helper
-- `packages/ui/src/components/hand/hand-display.ts` — Added `playable` to `HandCard`, `applyPlayableState()`, guarded `applyCardInteraction()`
-- `packages/ui/__tests__/game-view.test.ts` — 7 new tests
-- `packages/ui/__tests__/game-controller.test.ts` — Updated assertion
+| Check                                 | Result                            |
+| ------------------------------------- | --------------------------------- |
+| `pnpm test`                           | 35 files / 715 passing (no delta) |
+| `pnpm typecheck`                      | Clean                             |
+| `pnpm lint`                           | 189 (no delta)                    |
+| `pnpm format:check` (iteration scope) | Clean                             |
 
-### Key Code
+### Manual smoke (browser, dev on :5183)
 
-```typescript
-// HandCard with playable flag
-interface HandCard {
-  readonly suit: Suit;
-  readonly rank: Rank;
-  readonly playable: boolean;
-}
+After `rm -rf packages/ui/node_modules/.vite` to bust HMR cache (the
+recurring footgun documented in iterations 021/024/025):
 
-// Pure marking function
-function markPlayableCards(
-  hand: HandCard[], phase: GamePhase, isHumanTurn: boolean,
-  round: RoundSnapshot, humanPlayer: { readonly hand: readonly Card[] },
-): HandCard[] {
-  if (phase !== "playing" || !isHumanTurn || round.currentTrick?.state !== "in_progress")
-    return hand;
-  const validPlays = getValidPlays(round.currentTrick, 0 as PlayerPosition, humanPlayer.hand);
-  const validSet = new Set(validPlays.map((c) => `${c.suit}-${c.rank}`));
-  return hand.map((c) => ({ ...c, playable: validSet.has(`${c.suit}-${c.rank}`) }));
-}
+- `?screens` → `Playing — mid-trick`: wood frame visible at all four
+  edges; forest-green felt cloth in between; cream paper mat
+  centered with corner pin flourishes and the compass medallion;
+  trick cards (10♥ + K♥) land cleanly inside the inner medallion
+  ring; ChatPanel ledger drawer on the right; cream avatar pill at
+  the top — all harmonize against the layered board.
 
-// Visual dimming
-private applyPlayableState(cards: readonly HandCard[]): void {
-  const hasNonPlayable = cards.some((c) => !c.playable);
-  if (!hasNonPlayable) return;
-  for (const [i, sprite] of this.cardSprites.entries()) {
-    const card = cards[i];
-    if (card && !card.playable) {
-      sprite.alpha = 0.4;
-      sprite.eventMode = "none";
-    }
-  }
-}
+Screenshot: `docs/screenshots/iteration-026-layered-board.png`.
 
-// Interaction guard
-private applyCardInteraction(): void {
-  if (!this.cardTapCallback) return;
-  for (const [i, sprite] of this.cardSprites.entries()) {
-    const card = this.currentCards[i];
-    if (!card?.playable) continue;  // ← skip non-playable
-    sprite.eventMode = "static";
-    // ...
-  }
-}
-```
+## Carryforward
 
-## Review Fixes Applied (commit `86c051f`)
-
-| Finding                                                                    | Severity     | Fix                                                                                                |
-| -------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------- |
-| `applyCardInteraction` overwrites `eventMode="none"` on non-playable cards | **Critical** | Added `if (!card?.playable) continue` guard — non-playable cards skipped entirely                  |
-| No `currentTrick.state` guard                                              | Medium       | Changed condition to `round.currentTrick?.state !== "in_progress"` — completed tricks skip marking |
-| Dead `const trick` variable in test                                        | Medium       | Removed dead variable, consolidated to single trick, cleaned up comments                           |
-
-## Technical Decisions
-
-| Decision                   | Choice                               | Rationale                                                                                    |
-| -------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------- |
-| Marking in view mapper     | Not in controller or component       | Pure function, fully testable, no PixiJS dependency                                          |
-| suit+rank key matching     | `Set<string>` with `${suit}-${rank}` | Fast O(1) lookup; matches domain card identity for valid-play check                          |
-| Alpha 0.4 for non-playable | Visual dimming                       | Clear visual distinction without hiding cards entirely                                       |
-| `eventMode = "none"`       | Disable pointer events               | Prevents accidental taps on non-playable cards                                               |
-| Trick state guard          | Check `state === "in_progress"`      | `getValidPlays()` returns `[]` for completed tricks, which would mark all cards non-playable |
-
-## Validation Results
-
-- `pnpm test`: **764/764 passing**
-- `pnpm typecheck`: Clean
-- `pnpm lint`: Clean
-- `pnpm format:check`: Clean
+- **Pixel-diff regression suite** — the board is the most visually
+  layered surface in the app now and would benefit most from
+  Playwright screenshot-diff coverage.
+- **Mobile portrait verification** — didn't test the new layered
+  board at 390×844 yet. Worth a smoke pass.
+- **`table-bg.svg`** — old asset still on disk. Could be removed in
+  a small cleanup iteration.
+- **CLAUDE.md note about Vite HMR cache** — the issue has now bit me
+  four times (021/024/025/026). Codify the recipe.
