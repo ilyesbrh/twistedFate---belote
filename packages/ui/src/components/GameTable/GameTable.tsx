@@ -41,7 +41,7 @@ export function GameTableView({ state, onPlayAgain }: GameTableViewProps) {
   const active = state.activePosition;
   const showBid = state.phase === "bidding" && state.isMyTurn && state.biddingRound !== null;
 
-  const tableBg = `url('${import.meta.env.BASE_URL}table-bg.svg') center / cover no-repeat`;
+  const tableBg = `url('${import.meta.env.BASE_URL}table-paper.svg') center / cover no-repeat`;
 
   return (
     <div className={styles.table} style={{ background: tableBg }} data-testid="game-table">

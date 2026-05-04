@@ -1,61 +1,97 @@
-# Iteration 24 Report: Game Demo — Playable Harness Scene
+# Iteration 024 Report — Paper game board
 
-**Date**: 2026-02-21
+**Date**: 2026-05-04
 **Status**: Complete
-**Commit**: `6ed931b`
+**Test delta**: 715 → 715 (asset swap, no behaviour change)
 
 ## Goal
 
-Create a fully playable game demo in the dev harness, bootstrapping `GameSession` + `GameController` + `GameRenderer` into a complete game loop with human + 3 AI players.
+User feedback after iteration 023: "the game board is not yet up to
+my expectation… be bold." The chrome had moved to cream paper but
+the felt-green table itself was still a generic playing surface.
+Iteration 024 drops the felt entirely and replaces it with a hand-
+drawn paper game board so the whole app reads as a single board-game
+companion — menu, lobby, in-game, all on the same cream paper.
 
-## Scope
+## What landed
 
-1. `game-demo.scene.ts` — Harness scene that wires all layers together
-2. `GameRenderer implements InputSource` — Enables direct controller wiring without adapter
-3. Full game loop: deal → bid → play → score → next round
+A new SVG asset, `packages/ui/public/table-paper.svg`, designed as a
+paper game board:
 
-## Implementation Summary
+- Cream paper radial gradient + diagonal grain + paper-fiber speckle
+  (turbulence-based texture).
+- Hand-drawn ornamental ink border (heavy outer rectangle + dashed
+  inner frame) softened by an SVG displacement filter so the lines
+  read as inked rather than printed.
+- Four corner flourishes (curves + dots), echoed by four large faint
+  suit watermarks just inside each corner.
+- A center compass medallion: cream halo, four concentric ink rings
+  (some dashed, varying widths), and four ink suit pips at the
+  cardinal compass points — ♠ at north, ♥ at east (terracotta),
+  ♦ at south (terracotta), ♣ at west.
+- A subtle vignette so the paper doesn't read as flat.
 
-### Files Created
+`GameTable.tsx` swapped its `tableBg` URL from `table-bg.svg` to
+`table-paper.svg`. No CSS changes were needed.
 
-- `packages/ui/src/harness/game-demo.scene.ts` — Full playable demo scene
+## Vite cache caveat
 
-### Files Modified
+When testing this in the dev server, observed the same HMR caching
+issue noted in iteration 021's report: the running dev instance
+served stale CSS (still referencing iteration-016 tokens) until I
+killed it, deleted `packages/ui/node_modules/.vite`, and restarted.
+After that the new board, the iteration-023 chrome changes, and the
+new tokens all loaded correctly. Worth noting in `CLAUDE.md` if the
+issue recurs across other iterations.
 
-- `packages/ui/src/game-renderer.ts` — Implements `InputSource` interface (delegates to HandDisplay + BiddingPanel)
-- `packages/ui/src/harness/index.ts` — Registered game-demo scene
+## Files
 
-### Harness Scene Flow
+### New
 
-```
-1. Create PixiJS Application
-2. Create CardTextureAtlas
-3. Create GameSession with 4 players (human + 3 AI)
-4. Create GameRenderer with viewport + atlas
-5. Create GameController(session, renderer, names)
-6. controller.wireInput(renderer)  ← GameRenderer IS the InputSource
-7. controller.start()
-8. session.dispatch({ type: "start_round" })
-9. Auto-start next round on round_completed
-```
+- `packages/ui/public/table-paper.svg` — the new game board.
 
-### Key Design Decision
+### Modified
 
-`GameRenderer` implements `InputSource` directly rather than requiring an adapter. This is clean because:
+- `packages/ui/src/components/GameTable/GameTable.tsx` — single line
+  change: `table-bg.svg` → `table-paper.svg`.
 
-- GameRenderer already holds references to HandDisplay and BiddingPanel
-- It delegates `onCardTap()` → `handDisplay.onCardTap()`
-- It delegates `onSuitBid()` / `onPass()` → `biddingPanel.onSuitBid()` / `biddingPanel.onPass()`
-- No new class needed; single line to wire: `controller.wireInput(renderer)`
+### Not touched
 
-## Review Fixes Applied (commit `122f504`)
+- All chrome styled in iteration 023 — no further changes needed,
+  the paper-on-paper composition harmonizes automatically.
 
-- Auto-start round listener registered before first `start_round` dispatch to prevent stalling when round completes synchronously (all 4 AI players complete instantly).
+## Validation
 
-## Validation Results
+| Check                                 | Result                            |
+| ------------------------------------- | --------------------------------- |
+| `pnpm test`                           | 35 files / 715 passing (no delta) |
+| `pnpm typecheck`                      | Clean                             |
+| `pnpm lint`                           | 189 (no delta)                    |
+| `pnpm format:check` (iteration scope) | Clean                             |
 
-- `pnpm test`: **741/741 passing** (no new unit tests — this is a visual integration)
-- `pnpm dev`: Game demo playable in browser
-- `pnpm typecheck`: Clean
-- `pnpm lint`: Clean
-- `pnpm format:check`: Clean
+### Manual smoke
+
+Visited `?screens` → `Playing — mid-trick`. The trick cards (10♥
+over K♥) sit centered in the compass medallion, surrounded by the
+concentric ink rings and four cardinal suit pips. Cream paper grain
+visible across the surface. Corner flourishes and suit watermarks
+provide ornamentation without crowding the playing area. Cream
+ChatPanel ledger drawer on the right and ink-bordered avatar pill at
+the top harmonize seamlessly with the new board.
+
+Screenshot: `docs/screenshots/iteration-024-paper-board.png`.
+
+## Carryforward
+
+- **Pixel-diff regression suite** — visual baseline is now fully
+  settled. Wiring Playwright screenshot-diffs into CI is the natural
+  next step.
+- **`table-bg.svg`** stays on disk for historical reference / rollback
+  capability. Could be deleted in a small cleanup iteration.
+- **Card backs** still use the iteration-016 dark-pattern design
+  (`packages/ui/src/components/CardBack/`). They harmonize OK
+  against the cream board but could be redrawn with an ink-on-paper
+  pattern for fuller consistency. Optional polish.
+- **CLAUDE.md note about Vite cache** — if HMR caching keeps biting
+  in iterations that touch tokens or CSS-Module class hashes, codify
+  the "kill dev, rm `.vite`, restart" recipe in CLAUDE.md.
