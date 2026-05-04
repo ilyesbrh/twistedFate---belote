@@ -46,11 +46,17 @@
   z-index: 10;
 }
 
+/* Side hands and trick share the same vertical centerline (--table-mid)
+   so the table reads as symmetric. Adjusting one moves them together. */
+:where(.table) {
+  --table-mid: 50%;
+}
+
 /* West avatar overlays the west card strip */
 .westAvatar {
   position: absolute;
   left: 4px;
-  top: 54%;
+  top: var(--table-mid);
   transform: translateY(-50%);
   z-index: 12;
 }
@@ -58,7 +64,7 @@
 .westCards {
   position: absolute;
   left: 4px;
-  top: 54%;
+  top: var(--table-mid);
   transform: translateY(-50%);
   z-index: 8;
 }
@@ -67,7 +73,7 @@
 .eastAvatar {
   position: absolute;
   right: 4px;
-  top: 54%;
+  top: var(--table-mid);
   transform: translateY(-50%);
   z-index: 12;
 }
@@ -75,16 +81,16 @@
 .eastCards {
   position: absolute;
   right: 4px;
-  top: 54%;
+  top: var(--table-mid);
   transform: translateY(-50%);
   z-index: 8;
 }
 
 .trickArea {
   position: absolute;
-  top: 50%;
+  top: var(--table-mid);
   left: 50%;
-  transform: translate(-50%, -52%);
+  transform: translate(-50%, -50%);
   z-index: 8;
 }
 
@@ -172,32 +178,23 @@
     transform: translateX(-50%);
   }
 
-  /* West avatar and cards share the same anchor — respect notch inset */
+  /* Lift the centerline a touch in landscape phone — south hand needs
+     more breathing room. Side hands and trick follow --table-mid. */
+  .table {
+    --table-mid: 46%;
+  }
+
   .westAvatar {
     left: calc(env(safe-area-inset-left, 0px) + 2px);
-    top: 46%;
-    transform: translateY(-50%);
   }
   .westCards {
     left: calc(env(safe-area-inset-left, 0px) + 2px);
-    top: 46%;
-    transform: translateY(-50%);
   }
-
-  /* East avatar and cards share the same anchor — respect notch inset */
   .eastAvatar {
     right: calc(env(safe-area-inset-right, 0px) + 2px);
-    top: 46%;
-    transform: translateY(-50%);
   }
   .eastCards {
     right: calc(env(safe-area-inset-right, 0px) + 2px);
-    top: 46%;
-    transform: translateY(-50%);
-  }
-
-  .trickArea {
-    top: 46%;
   }
   .bidPanel {
     bottom: 70px;
@@ -220,36 +217,26 @@
    Mobile (≤ 600px)
    ═══════════════════════════════════════ */
 @media (max-width: 600px) {
+  .table {
+    --table-mid: 48%;
+  }
   .northAvatar {
     top: 10px;
   }
-
   .westAvatar {
     left: 3px;
-    top: 50%;
-    transform: translateY(-50%);
   }
   .westCards {
     left: 2px;
-    top: 50%;
   }
-
   .eastAvatar {
     right: 3px;
-    top: 50%;
-    transform: translateY(-50%);
   }
   .eastCards {
     right: 2px;
-    top: 50%;
   }
-
   .southAvatar {
     padding-bottom: 6px;
-  }
-
-  .trickArea {
-    top: 48%;
   }
 }
 
@@ -259,31 +246,19 @@
    hand more room at the bottom.
    ═══════════════════════════════════════ */
 @media (max-width: 600px) and (orientation: portrait) {
+  /* Portrait phone: shift centerline up to give the south fan more room. */
+  .table {
+    --table-mid: 44%;
+  }
   .northAvatar {
     top: calc(env(safe-area-inset-top, 0px) + 6px);
   }
-
   .northHand {
     top: calc(env(safe-area-inset-top, 0px) + 2px);
   }
-
-  /* Move side players up to ~44% so center shifts upward */
-  .westAvatar {
-    top: 44%;
-  }
-  .westCards {
-    top: 44%;
-  }
-
-  .eastAvatar {
-    top: 44%;
-  }
-  .eastCards {
-    top: 44%;
-  }
-
+  /* Trick still slightly above the side hands so it reads as the focal
+     point of a portrait viewport. */
   .trickArea {
-    top: 40%;
-    transform: translate(-50%, -50%);
+    top: calc(var(--table-mid) - 4%);
   }
 }
