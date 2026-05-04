@@ -50,13 +50,13 @@ Each game brings its own:
 
 Belote comes first. Each new game validates and strengthens the shared layer.
 
-| Game | Category | Complexity |
-|------|----------|------------|
-| **Belote** | Trick-taking (trump) | High — first game, proving ground |
-| **Coinche / Contrée** | Trick-taking (trump, bidding variant) | High — close cousin of Belote |
-| **Rami** | Set collection / melding | Medium |
-| **Uno** | Shedding | Low-Medium |
-| **Skyjo** | Open tableau / scoring | Low-Medium |
+| Game                  | Category                              | Complexity                        |
+| --------------------- | ------------------------------------- | --------------------------------- |
+| **Belote**            | Trick-taking (trump)                  | High — first game, proving ground |
+| **Coinche / Contrée** | Trick-taking (trump, bidding variant) | High — close cousin of Belote     |
+| **Rami**              | Set collection / melding              | Medium                            |
+| **Uno**               | Shedding                              | Low-Medium                        |
+| **Skyjo**             | Open tableau / scoring                | Low-Medium                        |
 
 ---
 
@@ -68,81 +68,81 @@ The engine architecture supports any game built around cards, turns, and a share
 
 Games where players play one card each per trick; highest card (or trump) wins.
 
-| Game | Players | Deck | Notes |
-|------|---------|------|-------|
-| Belote | 4 (2v2) | 32 | French classic, trump-based |
-| Coinche / Contrée | 4 (2v2) | 32 | Belote with auction bidding |
-| Tarot (French) | 3–5 | 78 | Tarot-specific deck, complex scoring |
-| Whist | 4 (2v2) | 52 | Classic trick-taker, no bidding |
-| Bridge | 4 (2v2) | 52 | Auction + play, high complexity |
-| Spades | 4 (2v2) | 52 | Spades always trump, bid tricks |
-| Hearts | 4 | 52 | Avoid points, no trump |
-| Euchre | 4 (2v2) | 24 | Fast trick-taker, jack-based trump |
-| Piquet | 2 | 32 | Historic 2-player trick game |
-| Manille | 4 (2v2) | 32 | 10 is highest, popular in southern France |
+| Game              | Players | Deck | Notes                                     |
+| ----------------- | ------- | ---- | ----------------------------------------- |
+| Belote            | 4 (2v2) | 32   | French classic, trump-based               |
+| Coinche / Contrée | 4 (2v2) | 32   | Belote with auction bidding               |
+| Tarot (French)    | 3–5     | 78   | Tarot-specific deck, complex scoring      |
+| Whist             | 4 (2v2) | 52   | Classic trick-taker, no bidding           |
+| Bridge            | 4 (2v2) | 52   | Auction + play, high complexity           |
+| Spades            | 4 (2v2) | 52   | Spades always trump, bid tricks           |
+| Hearts            | 4       | 52   | Avoid points, no trump                    |
+| Euchre            | 4 (2v2) | 24   | Fast trick-taker, jack-based trump        |
+| Piquet            | 2       | 32   | Historic 2-player trick game              |
+| Manille           | 4 (2v2) | 32   | 10 is highest, popular in southern France |
 
 ### Shedding
 
 Games where the goal is to empty your hand first.
 
-| Game | Players | Deck | Notes |
-|------|---------|------|-------|
-| Uno | 2–10 | 108 (special) | Color/number matching, action cards |
-| Crazy Eights | 2–7 | 52 | Uno ancestor, simpler rules |
-| Mau-Mau | 2–5 | 32 or 52 | European Uno variant |
-| President (Trou du cul) | 4–7 | 52 | Climbing game, social ranks |
+| Game                    | Players | Deck          | Notes                               |
+| ----------------------- | ------- | ------------- | ----------------------------------- |
+| Uno                     | 2–10    | 108 (special) | Color/number matching, action cards |
+| Crazy Eights            | 2–7     | 52            | Uno ancestor, simpler rules         |
+| Mau-Mau                 | 2–5     | 32 or 52      | European Uno variant                |
+| President (Trou du cul) | 4–7     | 52            | Climbing game, social ranks         |
 
 ### Set Collection / Melding
 
 Games where you form sets and runs from your hand.
 
-| Game | Players | Deck | Notes |
-|------|---------|------|-------|
-| Rami (Rummy) | 2–6 | 52+jokers | Form sets and sequences |
-| Gin Rummy | 2 | 52 | Fast 2-player rummy |
-| Canasta | 4 (2v2) | 2x52+jokers | Team melding, wild cards |
-| Phase 10 | 2–6 | 108 (special) | Complete 10 phases in order |
+| Game         | Players | Deck          | Notes                       |
+| ------------ | ------- | ------------- | --------------------------- |
+| Rami (Rummy) | 2–6     | 52+jokers     | Form sets and sequences     |
+| Gin Rummy    | 2       | 52            | Fast 2-player rummy         |
+| Canasta      | 4 (2v2) | 2x52+jokers   | Team melding, wild cards    |
+| Phase 10     | 2–6     | 108 (special) | Complete 10 phases in order |
 
 ### Fishing
 
 Games where you capture cards from the table by matching.
 
-| Game | Players | Deck | Notes |
-|------|---------|------|-------|
-| Scopa | 2–4 | 40 (Italian) | Capture cards summing to target |
-| Scopone | 4 (2v2) | 40 (Italian) | Team variant of Scopa |
+| Game    | Players | Deck         | Notes                           |
+| ------- | ------- | ------------ | ------------------------------- |
+| Scopa   | 2–4     | 40 (Italian) | Capture cards summing to target |
+| Scopone | 4 (2v2) | 40 (Italian) | Team variant of Scopa           |
 
 ### Tableau / Scoring
 
 Games where cards are laid out and points are tracked over rounds.
 
-| Game | Players | Deck | Notes |
-|------|---------|------|-------|
-| Skyjo | 2–8 | 150 (special) | Minimize your grid score |
-| 6 qui prend! (Take 5) | 2–10 | 104 (special) | Avoid taking rows of cards |
+| Game                  | Players | Deck          | Notes                      |
+| --------------------- | ------- | ------------- | -------------------------- |
+| Skyjo                 | 2–8     | 150 (special) | Minimize your grid score   |
+| 6 qui prend! (Take 5) | 2–10    | 104 (special) | Avoid taking rows of cards |
 
 ### Casino / Comparing
 
 Games where players bet or compare hands.
 
-| Game | Players | Deck | Notes |
-|------|---------|------|-------|
-| Poker (Texas Hold'em) | 2–10 | 52 | Community cards, betting rounds |
-| Blackjack | 1–7 vs dealer | 52+ | Reach 21 without busting |
-| Bataille (War) | 2 | 52 | Simple compare, good for kids |
+| Game                  | Players       | Deck | Notes                           |
+| --------------------- | ------------- | ---- | ------------------------------- |
+| Poker (Texas Hold'em) | 2–10          | 52   | Community cards, betting rounds |
+| Blackjack             | 1–7 vs dealer | 52+  | Reach 21 without busting        |
+| Bataille (War)        | 2             | 52   | Simple compare, good for kids   |
 
 ### Kids / Family
 
 Simple rules, short games — perfect for younger players and casual play.
 
-| Game | Players | Deck | Notes |
-|------|---------|------|-------|
-| Bataille (War) | 2 | 52 | Flip & compare, highest wins — pure luck |
-| عائلات / 7 Familles (Happy Families) | 2–6 | 42 (7 families x 6) | "Give me X from family Y" — collect complete families |
-| Go Fish | 2–6 | 52 | Ask for cards, collect sets of 4 |
-| Old Maid (Pouilleux) | 2–6 | 51 (one queen removed) | Don't get stuck with the odd card |
-| Snap | 2–4 | 52 | Match cards by speed — reflexes game |
-| Memory (Concentration) | 1–4 | 52 (face-down pairs) | Flip two, match pairs — memory game |
+| Game                                 | Players | Deck                   | Notes                                                 |
+| ------------------------------------ | ------- | ---------------------- | ----------------------------------------------------- |
+| Bataille (War)                       | 2       | 52                     | Flip & compare, highest wins — pure luck              |
+| عائلات / 7 Familles (Happy Families) | 2–6     | 42 (7 families x 6)    | "Give me X from family Y" — collect complete families |
+| Go Fish                              | 2–6     | 52                     | Ask for cards, collect sets of 4                      |
+| Old Maid (Pouilleux)                 | 2–6     | 51 (one queen removed) | Don't get stuck with the odd card                     |
+| Snap                                 | 2–4     | 52                     | Match cards by speed — reflexes game                  |
+| Memory (Concentration)               | 1–4     | 52 (face-down pairs)   | Flip two, match pairs — memory game                   |
 
 > This catalog is not a roadmap — it's a compatibility list. Games will be added based on demand and strategic value. The architecture must support all of them, but we ship one at a time.
 
@@ -168,13 +168,13 @@ A single-player campaign where you progress through a series of **AI personas** 
 
 **Example personas:**
 
-| Persona | Game | Style | Flavor |
-|---------|------|-------|--------|
-| Mami Zohra | Belote | Wise, patient | "Your grandfather used to play the same way... poorly." |
-| Le Requin | Coinche | Greedy, aggressive | Bets big, talks trash, goes all-in every round |
-| Petit Moussa | Rami | Playful, chaotic | Discards wildly, somehow wins, laughs the whole time |
-| La Prof | Belote | Safe, methodical | Lectures you on every mistake after the game |
-| Khal | Trick-taking | Trickster, silent | Says nothing. Plays perfectly. Terrifying. |
+| Persona      | Game         | Style              | Flavor                                                  |
+| ------------ | ------------ | ------------------ | ------------------------------------------------------- |
+| Mami Zohra   | Belote       | Wise, patient      | "Your grandfather used to play the same way... poorly." |
+| Le Requin    | Coinche      | Greedy, aggressive | Bets big, talks trash, goes all-in every round          |
+| Petit Moussa | Rami         | Playful, chaotic   | Discards wildly, somehow wins, laughs the whole time    |
+| La Prof      | Belote       | Safe, methodical   | Lectures you on every mistake after the game            |
+| Khal         | Trick-taking | Trickster, silent  | Says nothing. Plays perfectly. Terrifying.              |
 
 Each persona is **generated and driven by an LLM** — their play decisions, their dialogue, their reactions are all live, not scripted. Two playthroughs against the same persona feel different.
 
@@ -187,20 +187,20 @@ Each persona is **generated and driven by an LLM** — their play decisions, the
 
 ### LLM Partners & Opponents
 
-The current AI is a rule-based decision tree. The vision is to replace it with a **real LLM-powered player** — an AI that doesn't just follow rules, but actually *plays* the game.
+The current AI is a rule-based decision tree. The vision is to replace it with a **real LLM-powered player** — an AI that doesn't just follow rules, but actually _plays_ the game.
 
 **Personality selection** — before a game, the player picks who they're playing with (or against):
 
-| Personality | Play Style |
-|-------------|------------|
-| Greedy | Aggressive, always chases the big score, takes risks |
-| Safe | Conservative, minimizes losses, never overcommits |
-| Angry | Impulsive, targets the leading player, holds grudges |
-| Wise | Balanced, reads the table, makes optimal long-term moves |
-| Playful | Unpredictable, bluffs, tries flashy plays for fun |
-| Trickster | Deceptive, baits traps, plays mind games |
+| Personality | Play Style                                               |
+| ----------- | -------------------------------------------------------- |
+| Greedy      | Aggressive, always chases the big score, takes risks     |
+| Safe        | Conservative, minimizes losses, never overcommits        |
+| Angry       | Impulsive, targets the leading player, holds grudges     |
+| Wise        | Balanced, reads the table, makes optimal long-term moves |
+| Playful     | Unpredictable, bluffs, tries flashy plays for fun        |
+| Trickster   | Deceptive, baits traps, plays mind games                 |
 
-These are not difficulty levels — they are *characters*. A Greedy AI and a Wise AI can both be strong, but they feel completely different to play against.
+These are not difficulty levels — they are _characters_. A Greedy AI and a Wise AI can both be strong, but they feel completely different to play against.
 
 **Pattern awareness** — the AI learns your habits over time:
 
@@ -212,7 +212,7 @@ These are not difficulty levels — they are *characters*. A Greedy AI and a Wis
 
 **The result**: every player gets a unique experience. The AI you play against after 50 games is not the same AI you played against on day one. It knows you.
 
-This is the long-term differentiator: not just another card game app, but one where the AI opponents are genuinely interesting to play against — and they get better at playing *you* specifically.
+This is the long-term differentiator: not just another card game app, but one where the AI opponents are genuinely interesting to play against — and they get better at playing _you_ specifically.
 
 ---
 
@@ -229,13 +229,13 @@ TwistedFate is also a **multiplayer platform** in the style of Miniclip / 8 Ball
 
 ### Coin Economy
 
-| Source | Description |
-|--------|-------------|
-| **Daily rewards** | Free coins for logging in, completing challenges |
-| **Win matches** | Beat opponents to earn their stake |
-| **Purchase** | Buy coin packs with real money (IAP) |
-| **Story mode rewards** | Beat personas to earn bonus coins |
-| **Tournaments** | Entry fee + prize pool distributed to top finishers |
+| Source                 | Description                                         |
+| ---------------------- | --------------------------------------------------- |
+| **Daily rewards**      | Free coins for logging in, completing challenges    |
+| **Win matches**        | Beat opponents to earn their stake                  |
+| **Purchase**           | Buy coin packs with real money (IAP)                |
+| **Story mode rewards** | Beat personas to earn bonus coins                   |
+| **Tournaments**        | Entry fee + prize pool distributed to top finishers |
 
 ### Matchmaking & Lobbies
 
@@ -255,14 +255,14 @@ TwistedFate is also a **multiplayer platform** in the style of Miniclip / 8 Ball
 
 ### Revenue Model
 
-| Stream | Type | Description |
-|--------|------|-------------|
-| **Coin packs** | IAP | Buy coins with real money |
-| **Story mode** | Premium | Paid access to AI story campaigns |
-| **Cosmetics** | IAP | Card skins, table themes, emotes |
-| **Platform cut** | Per-match | Small % of every coin pot |
-| **Tournament entry** | Per-event | Fee to join premium tournaments |
-| **Ad-free** | Subscription | Remove ads for a monthly fee |
+| Stream               | Type         | Description                       |
+| -------------------- | ------------ | --------------------------------- |
+| **Coin packs**       | IAP          | Buy coins with real money         |
+| **Story mode**       | Premium      | Paid access to AI story campaigns |
+| **Cosmetics**        | IAP          | Card skins, table themes, emotes  |
+| **Platform cut**     | Per-match    | Small % of every coin pot         |
+| **Tournament entry** | Per-event    | Fee to join premium tournaments   |
+| **Ad-free**          | Subscription | Remove ads for a monthly fee      |
 
 > The core experience — playing card games online with friends — stays free. Monetization comes from convenience, cosmetics, and premium content. No pay-to-win.
 

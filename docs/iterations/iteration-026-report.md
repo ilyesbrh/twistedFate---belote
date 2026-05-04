@@ -26,7 +26,7 @@ three composed layers, outer to inner:
    piping dashed border just inside, faint suit ornaments in the
    four corners.
 3. **Cream paper playing mat** (1180×740, centred): cream radial +
-   diagonal grain, SVG drop-shadow filter so it visibly *floats*
+   diagonal grain, SVG drop-shadow filter so it visibly _floats_
    above the felt, hand-drawn ornamental ink border (heavy outer +
    dashed inner) softened by `feDisplacementMap`, corner flourishes.
 4. **Compass medallion** centred on the mat (concentric ink rings,

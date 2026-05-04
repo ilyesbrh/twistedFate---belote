@@ -4,26 +4,28 @@ const CACHE_NAME = "belote-v2";
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) =>
-      cache.addAll([
-        "./",
-        "./manifest.json",
-        "./belote-hero.svg",
-        "./icons/icon-192.png",
-        "./icons/icon-512.png",
-      ])
-    )
+    caches
+      .open(CACHE_NAME)
+      .then((cache) =>
+        cache.addAll([
+          "./",
+          "./manifest.json",
+          "./belote-hero.svg",
+          "./icons/icon-192.png",
+          "./icons/icon-512.png",
+        ]),
+      ),
   );
 });
 
 // Activate: clean up old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
-      )
-    )
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))),
+      ),
   );
   self.clients.claim();
 });
@@ -50,7 +52,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           return response;
         })
-        .catch(() => caches.match(request))
+        .catch(() => caches.match(request)),
     );
     return;
   }
@@ -66,6 +68,6 @@ self.addEventListener("fetch", (event) => {
         }
         return response;
       });
-    })
+    }),
   );
 });

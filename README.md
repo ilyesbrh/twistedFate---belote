@@ -158,14 +158,14 @@ twistedFate---belote/
 
 ### What lives in each package
 
-| Package             | Responsibility                                                               | Depends on                  |
-| ------------------- | ---------------------------------------------------------------------------- | --------------------------- |
-| `@belote/core`      | Pure rules: `Card`, `Bid`, `Trick`, `Round`, `Game`, AI strategy, `getValidPlays` | nothing                     |
-| `@belote/app`       | `GameSession`, command/event orchestration, `createPlaceBidCommand`, etc.    | `core`                      |
-| `@belote/animation` | Stand-alone, framework-independent animation sequence descriptions           | nothing                     |
-| `@belote/protocol`  | `ClientMessage` / `ServerMessage` discriminated unions + structural validators | nothing                     |
-| `@belote/server`    | `Room`, `RoomRegistry`, `MatchmakingQueue`, `Gateway`, Fastify + ws transport | `core`, `app`, `protocol`   |
-| `ui`                | React UI: menu, lobby, table, hand, bid panel, score panel, chat, etc.       | `core`, `app`, `protocol`   |
+| Package             | Responsibility                                                                    | Depends on                |
+| ------------------- | --------------------------------------------------------------------------------- | ------------------------- |
+| `@belote/core`      | Pure rules: `Card`, `Bid`, `Trick`, `Round`, `Game`, AI strategy, `getValidPlays` | nothing                   |
+| `@belote/app`       | `GameSession`, command/event orchestration, `createPlaceBidCommand`, etc.         | `core`                    |
+| `@belote/animation` | Stand-alone, framework-independent animation sequence descriptions                | nothing                   |
+| `@belote/protocol`  | `ClientMessage` / `ServerMessage` discriminated unions + structural validators    | nothing                   |
+| `@belote/server`    | `Room`, `RoomRegistry`, `MatchmakingQueue`, `Gateway`, Fastify + ws transport     | `core`, `app`, `protocol` |
+| `ui`                | React UI: menu, lobby, table, hand, bid panel, score panel, chat, etc.            | `core`, `app`, `protocol` |
 
 ## How it works
 
@@ -216,27 +216,27 @@ area, same belote announcements, same round summary popup.
 
 Root-level (run with `pnpm <script>`):
 
-| Script                | What it does                                       |
-| --------------------- | -------------------------------------------------- |
-| `test`                | All packages, single run                           |
-| `test:watch`          | Vitest watch mode                                  |
-| `test:coverage`       | Vitest with coverage                               |
-| `lint` / `lint:fix`   | ESLint over the whole workspace                    |
-| `format` / `format:check` | Prettier write / check                         |
-| `typecheck`           | `tsc --build` (project references)                 |
-| `build`               | Build every package in `./packages/*`              |
-| `screenshot:landscape` | Playwright screenshot of the UI at 844 × 390      |
-| `screenshot:portrait`  | Playwright screenshot of the UI at 390 × 844      |
+| Script                    | What it does                                 |
+| ------------------------- | -------------------------------------------- |
+| `test`                    | All packages, single run                     |
+| `test:watch`              | Vitest watch mode                            |
+| `test:coverage`           | Vitest with coverage                         |
+| `lint` / `lint:fix`       | ESLint over the whole workspace              |
+| `format` / `format:check` | Prettier write / check                       |
+| `typecheck`               | `tsc --build` (project references)           |
+| `build`                   | Build every package in `./packages/*`        |
+| `screenshot:landscape`    | Playwright screenshot of the UI at 844 × 390 |
+| `screenshot:portrait`     | Playwright screenshot of the UI at 390 × 844 |
 
 Per-package:
 
-| Command                                 | What it does                                  |
-| --------------------------------------- | --------------------------------------------- |
-| `pnpm --filter ui dev`                  | Start the Vite dev server for the UI          |
-| `pnpm --filter ui build`                | Production build for GitHub Pages             |
-| `pnpm --filter ui preview`              | Serve the production build locally            |
-| `pnpm --filter @belote/server dev`      | Start the WS server with `tsx watch`          |
-| `pnpm --filter @belote/server start`    | Start the WS server (no watch)                |
+| Command                              | What it does                         |
+| ------------------------------------ | ------------------------------------ |
+| `pnpm --filter ui dev`               | Start the Vite dev server for the UI |
+| `pnpm --filter ui build`             | Production build for GitHub Pages    |
+| `pnpm --filter ui preview`           | Serve the production build locally   |
+| `pnpm --filter @belote/server dev`   | Start the WS server with `tsx watch` |
+| `pnpm --filter @belote/server start` | Start the WS server (no watch)       |
 
 ## Tech stack
 
@@ -274,13 +274,13 @@ Browse `docs/iterations/` to see how every feature was built.
 
 Recent landed iterations:
 
-| # | Title | Highlights |
-| - | ----- | ---------- |
-| 012 | Coinchée rules + live contract UX + belote announcements | Coinche / surcoinche, live score panel, belote/rebelote |
-| 013 | Online multiplayer (Friends mode) end-to-end | New `@belote/protocol`, `@belote/server`; ws transport; reconnection; visual parity |
-| 014 | Random matchmaking (auto-pair 4 strangers) | Pure FIFO queue, `find_random` / `match_found` protocol, queue UI |
-| 015 | Menu UI device polish | Fluid typography, safe-area insets, 44×44 hit targets, a11y attributes, reduced-motion |
-| 016 | Board UI device polish | Same treatment for `ScorePanel`, `BidPanel`, `ChatButton`, `ChatPanel`, `GameOver`, `RoundSummary` |
+| #   | Title                                                    | Highlights                                                                                         |
+| --- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| 012 | Coinchée rules + live contract UX + belote announcements | Coinche / surcoinche, live score panel, belote/rebelote                                            |
+| 013 | Online multiplayer (Friends mode) end-to-end             | New `@belote/protocol`, `@belote/server`; ws transport; reconnection; visual parity                |
+| 014 | Random matchmaking (auto-pair 4 strangers)               | Pure FIFO queue, `find_random` / `match_found` protocol, queue UI                                  |
+| 015 | Menu UI device polish                                    | Fluid typography, safe-area insets, 44×44 hit targets, a11y attributes, reduced-motion             |
+| 016 | Board UI device polish                                   | Same treatment for `ScorePanel`, `BidPanel`, `ChatButton`, `ChatPanel`, `GameOver`, `RoundSummary` |
 
 Open backlog (rough priority order):
 
