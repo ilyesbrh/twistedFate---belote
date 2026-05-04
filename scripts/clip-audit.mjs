@@ -109,14 +109,45 @@ try {
             }
 
             // 2. Element extends beyond viewport (clipped offscreen).
-            // Allow tiny tolerance (<1px) for sub-pixel rendering.
+            // Allow tiny tolerance (<4px) for sub-pixel rendering.
             const overshootR = r.right - vw;
             const overshootB = r.bottom - vh;
             const overshootL = -r.left;
             const overshootT = -r.top;
             const maxOvershoot = Math.max(overshootR, overshootB, overshootL, overshootT);
             if (maxOvershoot > 4 && r.width < vw && r.height < vh) {
-              // Only complain if the element WOULD fit and is being pushed off.
+              // Filter known-intentional clipping:
+              //
+              // 1. Element is inside a parent that has overflow:hidden and
+              //    fits the viewport (parent deliberately clips child).
+              //    Catches MenuFelt's corner suit watermarks.
+              // 2. Element is inside a closed slide-in drawer (parent has
+              //    a transform that translates >=100% off-canvas).
+              //    Catches the closed ChatPanel.
+              let intentional = false;
+              for (let p = el.parentElement; p; p = p.parentElement) {
+                const ps = getComputedStyle(p);
+                if (
+                  ps.overflow === "hidden" ||
+                  ps.overflowX === "hidden" ||
+                  ps.overflowY === "hidden"
+                ) {
+                  const pr = p.getBoundingClientRect();
+                  if (pr.right <= vw + 1 && pr.bottom <= vh + 1 && pr.left >= -1 && pr.top >= -1) {
+                    intentional = true;
+                    break;
+                  }
+                }
+                if (ps.transform && ps.transform.startsWith("matrix(")) {
+                  const tx = Number(ps.transform.split(",")[4]);
+                  if (Number.isFinite(tx) && Math.abs(tx) >= 100) {
+                    intentional = true;
+                    break;
+                  }
+                }
+              }
+              if (intentional) continue;
+
               const tag = el.tagName.toLowerCase();
               const cls = (el.className || "").toString().slice(0, 60);
               const tid = el.getAttribute("data-testid") ?? "";

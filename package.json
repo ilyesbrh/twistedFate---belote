@@ -22,7 +22,8 @@
     "screenshot:landscape": "node scripts/screenshot.mjs landscape 844 390",
     "screenshot:portrait": "node scripts/screenshot.mjs portrait 390 844",
     "visual": "node scripts/visual-diff.mjs",
-    "visual:update": "node scripts/visual-diff.mjs --update"
+    "visual:update": "node scripts/visual-diff.mjs --update",
+    "audit:clip": "node scripts/clip-audit.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

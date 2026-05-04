@@ -48,6 +48,42 @@ catch compositional bugs (e.g. iteration 025 found `<InstallPrompt>`
 overlapping `<ScorePanel>`, which neither fixture would surface).
 Do an end-to-end Playwright smoke before declaring an iteration done.
 
+## Visual regression — `pnpm visual`
+
+Captures screenshots of 15 (route, viewport) cases via Playwright and
+diffs them with `pixelmatch` against committed PNGs in
+`e2e/baseline/`. Mismatches write `.diff.png` + `.current.png` to
+`e2e/diff/` (gitignored).
+
+```bash
+pnpm visual           # diff against baselines, exit 1 on mismatch
+pnpm visual:update    # rewrite baselines (manual blessing after intentional UI change)
+```
+
+Coverage: menu (5 viewports), in-game fixtures (10 fixtures × multiple
+viewports for the breakage-prone ones — 320×568, 390×844, 844×390,
+915×412). Live game flow not covered (AI bidding non-deterministic).
+
+## Clipping audit — `pnpm audit:clip`
+
+Walks every key live route × viewport and reports DOM elements that
+are visually clipped:
+
+- `truncated` — text inside an `overflow:hidden` ancestor with
+  `scrollWidth > clientWidth` (ellipsis cutting off content).
+- `offscreen` — bounding rect extends beyond the viewport.
+
+Filters known-intentional clipping: parent has `overflow:hidden` and
+fits the viewport (e.g. corner suit watermarks), or parent has a
+`translateX ≥ 100%` transform (e.g. closed `ChatPanel` drawer).
+
+```bash
+pnpm audit:clip --url=http://localhost:<port>/twistedFate-belote/
+```
+
+Saved my bacon in iteration 031 (south-hand clipping, north-card peek)
+and iteration 030 (chat-button oversized on portrait phones).
+
 ## Visual language (post iteration 026)
 
 - Surface: cream paper (`--paper-cream`, ink-stamp suit watermarks,
