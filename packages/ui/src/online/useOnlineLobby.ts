@@ -38,7 +38,6 @@ export interface OnlineLobbyState {
   readonly client: OnlineClient;
 }
 
-const WS_URL_DEFAULT = "ws://localhost:4100/ws";
 const STORAGE_KEY = "belote.online.session.v1";
 
 interface SavedSession {
@@ -46,9 +45,22 @@ interface SavedSession {
   playerToken: string;
 }
 
+/**
+ * Derive the WebSocket URL.
+ *  1. Explicit `VITE_WS_URL` build-time override wins (used in dev, CI tests).
+ *  2. In a browser: same host as the page, ws:// for http: or wss:// for
+ *     https:, path /ws — so a deployed app talks back to its own origin
+ *     instead of localhost:4100.
+ *  3. Fallback to dev default when neither applies (SSR / tests).
+ */
 function resolveWsUrl(): string {
   const env = import.meta.env as unknown as Record<string, string | undefined>;
-  return env["VITE_WS_URL"] ?? WS_URL_DEFAULT;
+  if (env["VITE_WS_URL"]) return env["VITE_WS_URL"];
+  if (typeof window !== "undefined" && window.location?.host) {
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${proto}//${window.location.host}/ws`;
+  }
+  return "ws://localhost:4100/ws";
 }
 
 /**
