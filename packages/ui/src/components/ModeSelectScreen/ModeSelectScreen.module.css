@@ -1,10 +1,5 @@
-/* Layout-only override on top of the shared MenuFelt root. The felt + suit
-   watermarks come from MenuFelt; this file owns the screen-specific
-   composition (hero, title, mode-tile grid, tile chrome). */
-
-.root {
-  /* MenuFelt already centres flex column; no extra layout overrides needed. */
-}
+/* Board-game aesthetic (iteration 021). Layout overrides on top of the
+   shared MenuFelt cream-paper surface. */
 
 .contentColumn {
   display: flex;
@@ -12,88 +7,102 @@
   align-items: center;
   gap: var(--menu-gap);
   width: 100%;
+  max-width: 560px;
+  text-align: center;
 }
 
-/* ── Hero strip: fan of four suit cards ──────────────────────────────────── */
+/* ── Hero: hand-drawn fan of five cards ──────────────────────────────────── */
 .hero {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: clamp(-6px, -0.6vw, -2px);
-  margin-bottom: clamp(4px, 1vh, 12px);
+  margin-bottom: clamp(8px, 1.6vh, 18px);
   perspective: 600px;
+  /* Slight floor shadow under the fan */
+  filter: drop-shadow(0 8px 16px rgba(42, 31, 18, 0.25));
 }
 
 .heroCard {
   width: var(--menu-hero-card-w);
-  height: calc(var(--menu-hero-card-w) * 1.4);
+  height: calc(var(--menu-hero-card-w) * 1.42);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(var(--menu-hero-card-w) * 0.55);
-  background: linear-gradient(180deg, #fdf6e3 0%, #f1e1bd 100%);
-  border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: linear-gradient(180deg, #fffbe9 0%, #f1e2b6 100%);
+  /* Hand-drawn-feel border: irregular two-tone */
+  border: 1.5px solid var(--ink-dark);
+  border-radius: 9px;
   box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  margin-inline: -8px;
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+    inset 0 -3px 0 rgba(42, 31, 18, 0.08),
+    0 4px 0 rgba(42, 31, 18, 0.08);
+  margin-inline: -14px;
   transform-origin: bottom center;
+  position: relative;
 }
 
 .heroCardRed {
-  color: var(--suit-red);
+  color: var(--accent-terracotta);
 }
 .heroCardBlack {
-  color: var(--suit-black);
+  color: var(--ink-dark);
+}
+
+.heroPip {
+  width: 60%;
+  height: 60%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.heroPip svg {
+  width: 100%;
+  height: 100%;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .heroCard {
-    animation: heroCardEnter 0.55s cubic-bezier(0.34, 1.45, 0.64, 1) backwards;
+    animation: heroCardEnter 0.6s cubic-bezier(0.34, 1.45, 0.64, 1) backwards;
   }
 }
 
 @keyframes heroCardEnter {
   from {
     opacity: 0;
-    transform: translateY(-12px) rotate(0) scale(0.85);
+    transform: translateY(-16px) rotate(0) scale(0.85);
   }
 }
 
 /* ── Title + subtitle ────────────────────────────────────────────────────── */
 .title {
   margin: 0;
-  font-size: var(--menu-title-size);
-  font-weight: 900;
+  font-family: var(--font-display);
+  font-size: clamp(56px, 12vw, 96px);
+  font-weight: 400; /* Yeseva One only ships one weight */
   letter-spacing: -1px;
-  background: linear-gradient(
-    180deg,
-    var(--gold-ramp-1) 0%,
-    var(--gold-ramp-2) 60%,
-    var(--gold-ramp-3) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 2px 14px rgba(247, 185, 74, 0.35));
-  line-height: 1;
+  color: var(--ink-dark);
+  line-height: 0.95;
+  /* Subtle ink-bleed shadow so the title feels printed, not crisp. */
+  text-shadow:
+    0 1px 0 rgba(42, 31, 18, 0.05),
+    0 0 18px rgba(168, 50, 50, 0.08);
 }
 
 .subtitle {
   margin: 0;
-  font-size: var(--menu-subtitle-size);
-  color: rgba(255, 255, 255, 0.55);
-  letter-spacing: 3px;
-  text-transform: uppercase;
+  font-family: var(--font-hand);
+  font-size: clamp(20px, 3.4vw, 28px);
+  color: var(--accent-terracotta);
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .title {
-    animation: titleEnter 0.55s ease-out 0.18s backwards;
+    animation: titleEnter 0.6s ease-out 0.2s backwards;
   }
   .subtitle {
-    animation: titleEnter 0.55s ease-out 0.32s backwards;
+    animation: titleEnter 0.6s ease-out 0.36s backwards;
   }
 }
 
@@ -101,18 +110,17 @@
   from {
     opacity: 0;
     transform: translateY(8px);
-    letter-spacing: 0;
   }
 }
 
 /* ── Mode tile grid ──────────────────────────────────────────────────────── */
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(140px, 240px));
-  gap: clamp(10px, 1.6vw, 14px);
-  margin-top: clamp(8px, 2vh, 18px);
+  grid-template-columns: repeat(2, minmax(160px, 240px));
+  gap: clamp(12px, 1.8vw, 16px);
+  margin-top: clamp(12px, 2.5vh, 24px);
   width: 100%;
-  max-width: 520px;
+  max-width: 540px;
 }
 
 @media (max-width: 480px) and (orientation: portrait) {
@@ -120,60 +128,54 @@
     grid-template-columns: 1fr;
     max-width: 360px;
   }
-  .title {
-    letter-spacing: 0;
-  }
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
   .contentColumn {
     gap: var(--menu-gap-tight);
   }
-  .grid {
-    grid-template-columns: repeat(2, minmax(140px, 220px));
-    gap: 10px;
-    margin-top: 4px;
-  }
   .title {
-    font-size: clamp(24px, 6vh, 36px);
+    font-size: clamp(32px, 7vh, 48px);
   }
   .subtitle {
-    letter-spacing: 2px;
+    font-size: clamp(14px, 2.8vh, 18px);
   }
   .hero {
     margin-bottom: 0;
   }
   .heroCard {
-    width: clamp(28px, 4.5vh, 42px);
-    height: calc(clamp(28px, 4.5vh, 42px) * 1.4);
+    width: clamp(38px, 6.5vh, 60px);
+    height: calc(clamp(38px, 6.5vh, 60px) * 1.42);
   }
-  .btn {
-    padding: 12px 14px;
+  .grid {
+    grid-template-columns: repeat(2, minmax(160px, 220px));
+    gap: 10px;
+    margin-top: 4px;
   }
 }
 
-/* ── Mode tile chrome ────────────────────────────────────────────────────── */
+/* ── Mode tiles: chunky cream cards with ink border ──────────────────────── */
 .btn {
   position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-rows: auto auto;
   align-items: center;
-  column-gap: 12px;
+  column-gap: 14px;
   row-gap: 2px;
-  padding: 14px 16px;
-  border-radius: var(--menu-radius);
-  border: 1px solid var(--menu-tile-border);
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 2px solid var(--ink-dark);
   background: linear-gradient(180deg, var(--menu-tile-bg-1) 0%, var(--menu-tile-bg-2) 100%);
-  color: #fff;
-  font-family: inherit;
+  color: var(--ink-dark);
+  font-family: var(--font-body);
   cursor: pointer;
   text-align: left;
   box-shadow: var(--menu-tile-shadow);
   transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    border-color 0.18s ease;
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .iconSlot {
@@ -183,7 +185,7 @@
   justify-content: center;
   width: var(--menu-icon-size);
   height: var(--menu-icon-size);
-  color: var(--gold-ramp-1);
+  color: var(--accent-teal);
 }
 
 .iconSlot svg {
@@ -194,55 +196,81 @@
 .btnLabel {
   grid-row: 1;
   grid-column: 2;
-  font-size: clamp(14px, 1.6vw, 17px);
-  font-weight: 800;
-  letter-spacing: 0.2px;
+  font-family: var(--font-display);
+  font-size: clamp(17px, 2vw, 21px);
+  font-weight: 400;
+  color: var(--ink-dark);
+  line-height: 1.05;
 }
 
 .btnSubtitle {
   grid-row: 2;
   grid-column: 2;
-  font-size: clamp(10px, 1vw, 11px);
-  color: rgba(255, 255, 255, 0.55);
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
+  font-family: var(--font-hand);
+  font-size: clamp(13px, 1.4vw, 16px);
+  color: var(--ink-medium);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: 0.3px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .btn:hover:not(.btnDisabled) {
-    transform: translateY(-3px) rotate(-0.6deg);
-    border-color: var(--menu-tile-border-hover);
+    transform: translateY(-2px);
+    border-color: var(--accent-terracotta);
     box-shadow: var(--menu-tile-shadow-hover);
   }
   .btn:active:not(.btnDisabled) {
-    transform: translateY(-1px) rotate(0deg);
+    transform: translateY(1px);
+    box-shadow:
+      0 1px 0 rgba(42, 31, 18, 0.18),
+      0 4px 10px rgba(42, 31, 18, 0.14);
   }
 }
 
 .btnDisabled {
-  opacity: 0.55;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .btnDisabled .iconSlot {
-  color: rgba(255, 213, 102, 0.5);
+  color: var(--ink-faint);
 }
 
-/* "Coming soon" pill on the ranked tile. Anchored top-right. */
+/* "soon" stamp on the ranked tile — top-right diagonal stamp. */
 .comingPill {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(247, 185, 74, 0.16);
-  border: 1px solid rgba(247, 185, 74, 0.4);
-  color: var(--gold-ramp-1);
-  font-size: 9px;
+  top: -10px;
+  right: -10px;
+  padding: 4px 12px;
+  border: 2px solid var(--accent-terracotta);
+  border-radius: 4px;
+  background: var(--paper-cream);
+  color: var(--accent-terracotta);
+  font-family: var(--font-hand);
+  font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 1.4px;
   pointer-events: none;
+  transform: rotate(8deg);
+  box-shadow: 0 2px 0 rgba(42, 31, 18, 0.14);
+}
+
+/* Decorative corner ornament on each tile. */
+.cornerPip {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+.cornerPip svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(180deg);
 }
 
 /* ── Reduced-motion safety net ───────────────────────────────────────────── */

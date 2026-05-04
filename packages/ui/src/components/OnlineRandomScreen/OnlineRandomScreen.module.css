@@ -1,10 +1,6 @@
 /* Background + watermarks come from the shared MenuFelt wrapper. This file
-   owns the screen-specific layout (back button, title, form, queued
-   spinner + paper-card progress badge). */
-
-.root {
-  /* MenuFelt provides flex column centred. */
-}
+   owns screen-specific layout: back button, title, form, queued spinner +
+   paper-card progress badge. */
 
 .contentColumn {
   display: flex;
@@ -12,67 +8,74 @@
   align-items: center;
   gap: var(--menu-gap-tight);
   width: 100%;
+  max-width: 560px;
+  padding-top: 60px; /* clear the absolute-positioned back button */
 }
 
 .back {
   position: absolute;
   top: var(--safe-top);
   left: var(--safe-left);
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.7);
+  background: var(--paper-cream);
+  border: 1.5px solid var(--ink-dark);
+  color: var(--ink-dark);
   padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
-  font-family: inherit;
-  font-size: clamp(12px, 1.4vw, 14px);
+  font-family: var(--font-hand);
+  font-size: clamp(15px, 1.6vw, 18px);
+  font-weight: 700;
   min-height: var(--touch-min);
   z-index: 2;
+  box-shadow: 0 2px 0 rgba(42, 31, 18, 0.16);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
 }
 .back:hover {
-  border-color: rgba(255, 255, 255, 0.5);
-  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 rgba(42, 31, 18, 0.22);
 }
 .back:active {
-  transform: scale(0.97);
+  transform: translateY(1px);
+  box-shadow: 0 0 0 rgba(42, 31, 18, 0.16);
 }
 
 .title {
   margin: 0;
-  font-size: var(--menu-heading-size);
-  font-weight: 800;
-  background: linear-gradient(
-    180deg,
-    var(--gold-ramp-1) 0%,
-    var(--gold-ramp-2) 60%,
-    var(--gold-ramp-3) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 2px 10px rgba(247, 185, 74, 0.28));
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.5vw, 38px);
+  font-weight: 400;
+  color: var(--ink-dark);
   line-height: 1;
+  text-align: center;
+  text-shadow: 0 0 20px rgba(168, 50, 50, 0.06);
 }
 
 .status {
   margin: 0;
-  font-size: clamp(10px, 1vw, 12px);
-  color: rgba(255, 255, 255, 0.45);
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  font-family: var(--font-hand);
+  font-size: clamp(14px, 1.6vw, 18px);
+  color: var(--accent-teal);
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .error {
-  color: #f87171;
-  font-size: var(--menu-body-size);
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--accent-terracotta);
+  font-family: var(--font-hand);
+  font-size: clamp(15px, 1.8vw, 18px);
+  font-weight: 700;
+  background: var(--paper-cream);
+  border: 1.5px solid var(--accent-terracotta);
   padding: 8px 14px;
   border-radius: 8px;
   margin: 0;
   max-width: min(420px, 100%);
+  box-shadow: 0 2px 0 rgba(168, 50, 50, 0.18);
 }
 
+/* ── Idle form ───────────────────────────────────────────────────────────── */
 .form {
   display: flex;
   flex-direction: column;
@@ -81,117 +84,167 @@
   max-width: 360px;
 }
 .input {
-  background: rgba(8, 16, 32, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #fff;
-  font-family: inherit;
-  font-size: 16px; /* iOS safari: <16 triggers auto-zoom */
+  background: #fdf6df;
+  border: 1.5px solid var(--ink-dark);
+  color: var(--ink-dark);
+  font-family: var(--font-body);
+  font-size: 16px;
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 8px;
   outline: none;
   min-height: var(--touch-min);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.input::placeholder {
+  color: var(--ink-medium);
+  font-style: italic;
 }
 .input:focus {
-  border-color: rgba(247, 185, 74, 0.55);
+  border-color: var(--accent-terracotta);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 0 0 3px rgba(168, 50, 50, 0.18);
 }
 
+/* ── Buttons (same chunky stamp-press feel as lobby) ─────────────────────── */
 .primaryBtn,
 .secondaryBtn {
-  border: none;
-  font-family: inherit;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 400;
   border-radius: 10px;
   padding: 12px 18px;
   cursor: pointer;
-  font-size: var(--menu-cta-size);
+  font-size: clamp(16px, 1.7vw, 19px);
   min-height: var(--touch-min);
+  letter-spacing: 0.4px;
+  border: 2px solid var(--ink-dark);
   transition:
     transform 0.12s ease,
-    opacity 0.12s ease,
-    box-shadow 0.12s ease;
+    box-shadow 0.12s ease,
+    background 0.12s ease;
 }
 .primaryBtn {
-  background: linear-gradient(180deg, var(--gold-ramp-1) 0%, var(--gold-ramp-2) 100%);
-  color: #2a1700;
+  background: linear-gradient(180deg, #d24545 0%, var(--accent-terracotta) 100%);
+  color: #fffbe9;
   width: 100%;
-  box-shadow: 0 4px 14px rgba(247, 185, 74, 0.28);
+  box-shadow:
+    0 3px 0 rgba(42, 31, 18, 0.24),
+    0 6px 16px rgba(168, 50, 50, 0.22);
 }
 .primaryBtn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(247, 185, 74, 0.38);
+  box-shadow:
+    0 5px 0 rgba(42, 31, 18, 0.28),
+    0 12px 22px rgba(168, 50, 50, 0.3);
+}
+.primaryBtn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow:
+    0 0 0 rgba(42, 31, 18, 0.2),
+    0 4px 10px rgba(168, 50, 50, 0.2);
 }
 .primaryBtn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 .secondaryBtn {
   background: linear-gradient(180deg, var(--menu-tile-bg-1) 0%, var(--menu-tile-bg-2) 100%);
-  color: #fff;
-  border: 1px solid var(--menu-tile-border);
+  color: var(--ink-dark);
   margin-top: 8px;
   min-width: 160px;
+  box-shadow:
+    0 3px 0 rgba(42, 31, 18, 0.18),
+    0 6px 14px rgba(42, 31, 18, 0.16);
 }
 .secondaryBtn:hover {
-  border-color: var(--menu-tile-border-hover);
+  transform: translateY(-2px);
+  border-color: var(--accent-teal);
+  box-shadow:
+    0 5px 0 rgba(42, 31, 18, 0.22),
+    0 10px 20px rgba(42, 31, 18, 0.2);
 }
 
+/* ── Queued state: spinner + paper progress card ─────────────────────────── */
 .queued {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(8px, 1.6vh, 14px);
+  gap: clamp(10px, 2vh, 16px);
   width: 100%;
   max-width: 360px;
 }
 .searching {
   margin: 0;
-  font-size: var(--menu-body-size);
-  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-hand);
+  font-size: clamp(18px, 2vw, 22px);
+  color: var(--ink-dark);
+  font-weight: 500;
 }
 
-/* ── Progress paper-card badge ─────────────────────────────────────────────
-   Mirrors the room-code card style on the lobby screen. The big "N/4"
-   number reads like the front face of a card. */
 .progressCard {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: clamp(12px, 1.8vh, 18px) clamp(28px, 6vw, 40px);
-  background: linear-gradient(180deg, #fdf6e3 0%, #f1e1bd 100%);
-  border: 1px solid rgba(0, 0, 0, 0.18);
-  border-radius: 12px;
+  padding: clamp(14px, 2vh, 22px) clamp(32px, 7vw, 48px);
+  background: linear-gradient(180deg, #fffbe9 0%, #f1e2b6 100%);
+  border: 2px solid var(--ink-dark);
+  border-radius: 10px;
+  position: relative;
   box-shadow:
-    0 6px 22px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    0 4px 0 rgba(42, 31, 18, 0.2),
+    0 10px 22px rgba(42, 31, 18, 0.18);
 }
-.progress {
-  margin: 0;
-  font-size: clamp(32px, 8vw, 48px);
-  font-weight: 900;
-  color: #2a1700;
-  letter-spacing: 2px;
-  font-family: ui-serif, Georgia, "Times New Roman", serif;
+.progressCard::before,
+.progressCard::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  width: 4px;
+  height: 4px;
+  background: var(--ink-dark);
+  border-radius: 50%;
+  opacity: 0.55;
 }
-.progressLabel {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: rgba(60, 32, 0, 0.55);
+.progressCard::before {
+  left: 8px;
+}
+.progressCard::after {
+  right: 8px;
 }
 
+.progress {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(40px, 10vw, 60px);
+  font-weight: 400;
+  color: var(--ink-dark);
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.progressLabel {
+  font-family: var(--font-hand);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  color: var(--accent-terracotta);
+  font-weight: 700;
+}
+
+/* ── Spinner: ink ring with terracotta accent ────────────────────────────── */
 .spinner {
-  width: 42px;
-  height: 42px;
-  border: 4px solid rgba(247, 185, 74, 0.18);
-  border-top-color: var(--gold-ramp-1);
+  width: 48px;
+  height: 48px;
+  border: 4px dashed var(--ink-faint);
+  border-top-color: var(--accent-terracotta);
+  border-right-color: var(--accent-terracotta);
   border-radius: 50%;
 }
 @media (prefers-reduced-motion: no-preference) {
   .spinner {
-    animation: spin 0.9s linear infinite;
+    animation: spin 1.4s linear infinite;
   }
 }
 @keyframes spin {
@@ -207,11 +260,11 @@
     padding-top: 38px;
   }
   .progress {
-    font-size: 32px;
+    font-size: 36px;
   }
   .spinner {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-width: 3px;
   }
 }

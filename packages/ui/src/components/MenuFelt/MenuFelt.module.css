@@ -5,31 +5,40 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* Cream paper with subtle grain texture (board-game / Wingspan).
+     Layer 1: hand-painted-feeling diagonal grain via repeating gradient.
+     Layer 2: warm radial highlight at the page top (where light "hits").
+     Layer 3: solid cream base. */
   background:
-    repeating-linear-gradient(135deg, var(--menu-felt-overlay) 0 2px, transparent 2px 6px),
-    radial-gradient(
-      ellipse at 50% 22%,
-      var(--menu-felt-deep) 0%,
-      var(--menu-felt-mid) 45%,
-      var(--menu-felt-base) 100%
+    repeating-linear-gradient(
+      28deg,
+      transparent 0 7px,
+      var(--paper-grain) 7px 8px,
+      transparent 8px 18px
     ),
-    var(--menu-felt-base);
-  color: var(--text-light, #e5e7eb);
-  font-family: var(--font, "Inter", system-ui, sans-serif);
+    radial-gradient(
+      ellipse at 50% 18%,
+      #f8efd6 0%,
+      var(--paper-cream) 50%,
+      var(--paper-cream-deep) 100%
+    ),
+    var(--paper-cream);
+  color: var(--ink-dark);
+  font-family: var(--font-body);
   gap: var(--menu-gap);
   padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
   z-index: 100;
   overflow: hidden;
 }
 
-/* All direct children of MenuFelt that aren't the watermark layer should
-   sit above the decoration. */
+/* All direct children that aren't the watermark layer should sit above
+   the decoration. */
 .root > *:not(.watermarks) {
   position: relative;
   z-index: 1;
 }
 
-/* ── Suit watermarks (decorative, corner-anchored) ───────────────────────── */
+/* ── Suit watermarks — ink stamps, corner-anchored ───────────────────────── */
 .watermarks {
   position: absolute;
   inset: 0;
@@ -40,30 +49,34 @@
 
 .watermark {
   position: absolute;
-  font-size: clamp(120px, 22vw, 220px);
+  font-size: clamp(140px, 26vw, 260px);
   line-height: 1;
-  color: #fff;
+  color: var(--ink-dark);
   opacity: var(--menu-suit-watermark-opacity);
-  font-family: serif;
+  font-family: var(--font-display);
+  /* Slight blur + offset feels like an ink stamp absorbing into paper */
+  filter: blur(0.4px);
 }
 
 .watermarkTL {
-  top: -28px;
-  left: -22px;
-  transform: rotate(-12deg);
+  top: -34px;
+  left: -28px;
+  transform: rotate(-14deg);
 }
 .watermarkTR {
-  top: -22px;
-  right: -28px;
-  transform: rotate(14deg);
+  top: -28px;
+  right: -34px;
+  transform: rotate(16deg);
+  color: var(--accent-terracotta);
 }
 .watermarkBL {
-  bottom: -36px;
-  left: -28px;
-  transform: rotate(8deg);
+  bottom: -42px;
+  left: -34px;
+  transform: rotate(10deg);
+  color: var(--accent-terracotta);
 }
 .watermarkBR {
-  bottom: -28px;
-  right: -22px;
-  transform: rotate(-10deg);
+  bottom: -34px;
+  right: -28px;
+  transform: rotate(-12deg);
 }

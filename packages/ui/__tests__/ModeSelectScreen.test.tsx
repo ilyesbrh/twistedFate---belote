@@ -80,11 +80,11 @@ describe("ModeSelectScreen", () => {
     }
   });
 
-  it("ranked tile shows a 'Coming soon' pill (not just a disabled state)", () => {
+  it("ranked tile shows a 'soon' pill (not just a disabled state)", () => {
     render(<ModeSelectScreen onSelect={vi.fn()} />);
     const pill = screen.getByTestId("mode-pill-ranked");
     expect(pill).toBeInTheDocument();
-    expect(pill).toHaveTextContent(/coming soon/i);
+    expect(pill).toHaveTextContent(/soon/i);
   });
 
   it("decorative icons are aria-hidden so they don't pollute the accessible name", () => {
