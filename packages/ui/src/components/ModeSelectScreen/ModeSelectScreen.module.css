@@ -128,6 +128,12 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(160px, 240px));
+  /* The two 240px-max columns + gap top out at ~496px, but the grid
+     itself stretches to 540px (width: 100%, max-width: 540). Without
+     `justify-content: center` the tracks left-align and leave a dead
+     band on the right — exactly the asymmetry that read as "not
+     centered" on mobile. */
+  justify-content: center;
   gap: clamp(12px, 1.8vw, 16px);
   margin-top: clamp(12px, 2.5vh, 24px);
   width: 100%;
