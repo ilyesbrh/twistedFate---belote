@@ -91,3 +91,66 @@ export async function verifyUserPassword(
   const ok = await verifyPassword(password, row.password_hash);
   return ok ? rowToUser(row) : null;
 }
+
+const NICKNAME_MAX = 32;
+
+export interface UserPatch {
+  readonly nickname?: string;
+  readonly avatarUrl?: string | null;
+}
+
+export function updateUser(db: Db, id: string, patch: UserPatch): User | null {
+  if (patch.nickname !== undefined) {
+    if (patch.nickname.trim().length === 0 || patch.nickname.length > NICKNAME_MAX) {
+      throw new Error("updateUser: invalid nickname");
+    }
+  }
+  const existing = db.prepare("SELECT * FROM users WHERE id = ?").get(id) as UserRow | undefined;
+  if (!existing) return null;
+  const nextNickname = patch.nickname?.trim() ?? existing.nickname;
+  const nextAvatar = patch.avatarUrl === undefined ? existing.avatar_url : patch.avatarUrl;
+  const now = Date.now();
+  db.prepare("UPDATE users SET nickname = ?, avatar_url = ?, updated_at = ? WHERE id = ?").run(
+    nextNickname,
+    nextAvatar,
+    now,
+    id,
+  );
+  return {
+    id,
+    email: existing.email,
+    nickname: nextNickname,
+    avatarUrl: nextAvatar,
+    createdAt: existing.created_at,
+    updatedAt: now,
+  };
+}
+
+export interface UserStats {
+  readonly total: number;
+  readonly wins: number;
+  readonly losses: number;
+  /** Wins / total, in [0, 1]; 0 when total is 0. */
+  readonly winRate: number;
+}
+
+export function getUserStats(db: Db, userId: string): UserStats {
+  const rows = db
+    .prepare(
+      `SELECT m.winner_team AS winner, s.seat AS seat
+       FROM matches m
+       JOIN match_seats s ON s.match_id = m.id
+       WHERE s.user_id = ?`,
+    )
+    .all(userId) as { winner: 0 | 1; seat: 0 | 1 | 2 | 3 }[];
+  let total = 0;
+  let wins = 0;
+  for (const r of rows) {
+    total += 1;
+    const myTeam: 0 | 1 = r.seat % 2 === 0 ? 0 : 1;
+    if (myTeam === r.winner) wins += 1;
+  }
+  const losses = total - wins;
+  const winRate = total === 0 ? 0 : wins / total;
+  return { total, wins, losses, winRate };
+}

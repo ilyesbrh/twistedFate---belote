@@ -7,12 +7,22 @@ import { LoginScreen } from "./components/LoginScreen/LoginScreen.js";
 import { ModeSelectScreen, type Mode } from "./components/ModeSelectScreen/ModeSelectScreen.js";
 import { OnlineLobby } from "./components/OnlineLobby/OnlineLobby.js";
 import { OnlineRandomScreen } from "./components/OnlineRandomScreen/OnlineRandomScreen.js";
+import { ProfileScreen } from "./components/ProfileScreen/ProfileScreen.js";
 import { SignupScreen } from "./components/SignupScreen/SignupScreen.js";
 import { useAuth } from "./auth/useAuth.js";
 import { useOnlineLobby } from "./online/useOnlineLobby.js";
 import { useOnlineGameSession } from "./online/useOnlineGameSession.js";
 import { useMatchHistory } from "./online/useMatchHistory.js";
 import { useFriends } from "./online/useFriends.js";
+import {
+  apiGetProfile,
+  apiUpdateMyProfile,
+  type ProfilePatch,
+  type PublicProfile,
+  type SelfProfile,
+} from "./online/api/profile.js";
+import { AuthApiError } from "./auth/api.js";
+import { authErrorMessage } from "./auth/messages.js";
 
 const ScreenViewerHost = lazy(() => import("./dev/ScreenViewerHost.js"));
 
@@ -117,6 +127,25 @@ export default function App(): ReactElement {
                 }
               : undefined
           }
+          onViewProfile={
+            auth.identity?.kind === "user"
+              ? () => {
+                  setScreen("profile");
+                }
+              : undefined
+          }
+        />
+      )}
+
+      {screen === "profile" && auth.identity?.kind === "user" && (
+        <ProfileScreenContainer
+          userId={auth.identity.id}
+          onIdentityChanged={() => {
+            void auth.refresh();
+          }}
+          onBack={() => {
+            setScreen("menu");
+          }}
         />
       )}
 
@@ -217,6 +246,65 @@ export default function App(): ReactElement {
         />
       )}
     </>
+  );
+}
+
+function ProfileScreenContainer({
+  userId,
+  onBack,
+  onIdentityChanged,
+}: {
+  userId: string;
+  onBack: () => void;
+  onIdentityChanged: () => void;
+}): ReactElement {
+  const [profile, setProfile] = useState<PublicProfile | SelfProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    apiGetProfile(userId)
+      .then((p) => {
+        if (!cancelled) setProfile(p);
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        const code = e instanceof AuthApiError ? e.code : "unknown";
+        setError(authErrorMessage(code));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const onSave = (patch: ProfilePatch): void => {
+    setError(null);
+    apiUpdateMyProfile(patch)
+      .then((p) => {
+        setProfile(p);
+        onIdentityChanged();
+      })
+      .catch((e: unknown) => {
+        const code = e instanceof AuthApiError ? e.code : "unknown";
+        setError(authErrorMessage(code));
+      });
+  };
+
+  return (
+    <ProfileScreen
+      profile={profile}
+      isSelf
+      loading={loading}
+      error={error}
+      onSave={onSave}
+      onBack={onBack}
+    />
   );
 }
 

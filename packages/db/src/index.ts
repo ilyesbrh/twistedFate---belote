@@ -16,8 +16,15 @@ export { runMigrations } from "./migrations/runMigrations.js";
 
 export { hashPassword, verifyPassword } from "./hash.js";
 
-export { createUser, findUserByEmail, findUserById, verifyUserPassword } from "./queries/users.js";
-export type { User, NewUser } from "./queries/users.js";
+export {
+  createUser,
+  findUserByEmail,
+  findUserById,
+  verifyUserPassword,
+  updateUser,
+  getUserStats,
+} from "./queries/users.js";
+export type { User, NewUser, UserPatch, UserStats } from "./queries/users.js";
 
 export { createGuest, findGuestById, upgradeGuestToUser } from "./queries/guests.js";
 export type { Guest } from "./queries/guests.js";

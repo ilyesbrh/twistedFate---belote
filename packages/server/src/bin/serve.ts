@@ -21,6 +21,7 @@ import { sessionPlugin } from "../auth/sessionPlugin.js";
 import { registerAuthRoutes } from "../auth/routes.js";
 import { registerMatchRoutes } from "../match-history/routes.js";
 import { registerFriendsRoutes } from "../friends/routes.js";
+import { registerProfileRoutes } from "../profiles/routes.js";
 
 const port = Number(process.env["PORT"] ?? 4100);
 const host = process.env["HOST"] ?? "0.0.0.0";
@@ -39,6 +40,7 @@ await fastify.register(sessionPlugin, { db });
 registerAuthRoutes(fastify, { db });
 registerMatchRoutes(fastify, { db });
 registerFriendsRoutes(fastify, { db });
+registerProfileRoutes(fastify, { db });
 
 // Health endpoint (useful for sanity checks and container probes).
 fastify.get("/health", async () => ({ ok: true }));

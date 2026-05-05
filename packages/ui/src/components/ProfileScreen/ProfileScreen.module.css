@@ -1,0 +1,214 @@
+.root {
+  width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+  font-family: var(--font-body, "Lora", serif);
+  color: var(--ink-dark, #2a1f12);
+}
+
+.card {
+  width: 100%;
+  max-width: 560px;
+  background: var(--paper-cream, #fffbe9);
+  border: 2px solid var(--ink-dark, #2a1f12);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 var(--ink-dark, #2a1f12);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display, "Yeseva One", serif);
+  font-size: 28px;
+}
+
+.backBtn {
+  font: inherit;
+  font-size: 14px;
+  background: transparent;
+  border: 1.5px solid var(--ink-dark, #2a1f12);
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.identity {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--accent-mustard, #d6b143);
+  border: 2px solid var(--ink-dark, #2a1f12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, "Yeseva One", serif);
+  font-size: 28px;
+  color: var(--ink-dark, #2a1f12);
+  overflow: hidden;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nameBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nickname {
+  font-family: var(--font-display, "Yeseva One", serif);
+  font-size: 24px;
+}
+
+.email {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.editBtn {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--ink-dark, #2a1f12);
+  border-radius: 6px;
+  background: var(--paper-cream, #fffbe9);
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.editBtn:hover {
+  background: rgba(194, 80, 44, 0.1);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.statBox {
+  background: #fff;
+  border: 1.5px solid var(--ink-dark, #2a1f12);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+
+.statValue {
+  font-family: var(--font-display, "Yeseva One", serif);
+  font-size: 28px;
+  color: var(--accent-terracotta, #c2502c);
+  display: block;
+  line-height: 1;
+}
+
+.statLabel {
+  font-family: var(--font-handwritten, "Caveat", cursive);
+  font-size: 18px;
+  opacity: 0.7;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1.5px dashed var(--ink-dark, #2a1f12);
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+}
+
+.input {
+  font: inherit;
+  padding: 10px 12px;
+  border: 1.5px solid var(--ink-dark, #2a1f12);
+  border-radius: 6px;
+  min-height: 40px;
+}
+
+.formActions {
+  display: flex;
+  gap: 8px;
+}
+
+.primary {
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 16px;
+  background: var(--accent-terracotta, #c2502c);
+  color: #fffbe9;
+  border: 1.5px solid var(--ink-dark, #2a1f12);
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.cancel {
+  font: inherit;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1.5px solid var(--ink-dark, #2a1f12);
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.error {
+  background: #fde6df;
+  border: 1.5px solid var(--accent-terracotta, #c2502c);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #6b2817;
+}
+
+.loading {
+  text-align: center;
+  padding: 24px;
+  opacity: 0.7;
+}
+
+.joined {
+  text-align: center;
+  font-size: 13px;
+  opacity: 0.6;
+  margin-top: -4px;
+}
