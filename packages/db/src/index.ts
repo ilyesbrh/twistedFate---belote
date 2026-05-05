@@ -32,3 +32,15 @@ export type { Session, ResolvedSession } from "./queries/sessions.js";
 
 export { recordMatch, listUserMatches, listGuestMatches } from "./queries/matches.js";
 export type { MatchRow, MatchSeat, RecordMatchInput, Team } from "./queries/matches.js";
+
+export {
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  cancelFriendRequest,
+  removeFriend,
+  listFriends,
+  listIncomingRequests,
+  listOutgoingRequests,
+} from "./queries/friends.js";
+export type { FriendSummary, FriendRequestSummary } from "./queries/friends.js";

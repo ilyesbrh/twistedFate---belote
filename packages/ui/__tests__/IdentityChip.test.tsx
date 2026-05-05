@@ -104,6 +104,40 @@ describe("IdentityChip", () => {
     expect(onViewHistory).toHaveBeenCalledTimes(1);
   });
 
+  it("user dropdown shows a 'Friends' item when onViewFriends is provided", async () => {
+    const user = userEvent.setup();
+    const onViewFriends = vi.fn();
+    render(
+      <IdentityChip
+        identity={USER}
+        onSignIn={vi.fn()}
+        onSignUp={vi.fn()}
+        onSignOut={vi.fn()}
+        onViewFriends={onViewFriends}
+      />,
+    );
+    await user.click(screen.getByTestId("identity-chip"));
+    const friendsItem = screen.getByTestId("identity-action-friends");
+    expect(friendsItem).toBeInTheDocument();
+    await user.click(friendsItem);
+    expect(onViewFriends).toHaveBeenCalledTimes(1);
+  });
+
+  it("guest dropdown does not show 'Friends' even when handler is provided", async () => {
+    const user = userEvent.setup();
+    render(
+      <IdentityChip
+        identity={GUEST}
+        onSignIn={vi.fn()}
+        onSignUp={vi.fn()}
+        onSignOut={vi.fn()}
+        onViewFriends={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByTestId("identity-chip"));
+    expect(screen.queryByTestId("identity-action-friends")).not.toBeInTheDocument();
+  });
+
   it("guest dropdown does not show 'View history' even when handler is provided", async () => {
     const user = userEvent.setup();
     render(

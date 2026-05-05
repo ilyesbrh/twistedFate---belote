@@ -9,6 +9,8 @@ export interface IdentityChipProps {
   readonly onSignOut: () => void;
   /** Optional — if provided, shows a "View history" item for users. */
   readonly onViewHistory?: () => void;
+  /** Optional — if provided, shows a "Friends" item for users. */
+  readonly onViewFriends?: () => void;
 }
 
 /**
@@ -17,7 +19,7 @@ export interface IdentityChipProps {
  * the parent's auth preflight is in flight (`identity === null`).
  */
 export function IdentityChip(props: IdentityChipProps): ReactElement | null {
-  const { identity, onSignIn, onSignUp, onSignOut, onViewHistory } = props;
+  const { identity, onSignIn, onSignUp, onSignOut, onViewHistory, onViewFriends } = props;
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
@@ -95,6 +97,20 @@ export function IdentityChip(props: IdentityChipProps): ReactElement | null {
             </>
           ) : (
             <>
+              {onViewFriends && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  data-testid="identity-action-friends"
+                  className={styles.menuItem}
+                  onClick={() => {
+                    close();
+                    onViewFriends();
+                  }}
+                >
+                  Friends
+                </button>
+              )}
               {onViewHistory && (
                 <button
                   type="button"

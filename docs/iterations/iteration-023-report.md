@@ -1,107 +1,106 @@
-# Iteration 023 Report — In-game UI chrome alignment
+# Iteration 023 Report — Friends (schema, routes, panel UI)
 
-**Date**: 2026-05-04
+**Date**: 2026-05-05
 **Status**: Complete
-**Test delta**: 715 → 715 (CSS-only, no behaviour change)
+**Test delta**: 854 → 889 (+35)
+
+> Overwrites the pre-reset 023 report (in-game UI chrome alignment)
+> per the numbering-reset convention.
 
 ## Goal
 
-Walk from menu (cream paper) into a round (felt-green table) without
-the chrome looking like two different apps. Felt stays as the
-card-room metaphor; chrome rebuilds on top in cream paper + ink +
-terracotta. Felt-green ramp tuned warmer (olive) to harmonize.
+Friend graph on top of the auth foundation. After 023 a logged-in
+user can search by email, send a friend request, accept incoming
+ones, see their list, remove a friend.
 
 ## TDD trail
 
-CSS-only across 8 module files + 1 token tweak. Every existing test
-covers data-testids / aria contracts unchanged. Full suite stayed at
-715/715 after each batch of edits.
+1. **`db/__tests__/friends.test.ts`** (14) → impl
+   `db/migrations/0003_friendships.sql` + `db/queries/friends.ts`.
+   Reject + cancel both DELETE the row; re-sending after reject
+   succeeds; accept flips status to `accepted`; `listFriends`
+   unions both directions and joins `users`.
+2. **`server/__tests__/friends-routes.test.ts`** (11) → impl
+   `server/src/friends/routes.ts`. 401 for guests on every route.
+   401/404/409 sequencing on requests; 403 when non-addressee
+   tries to accept.
+3. **`ui/__tests__/FriendsScreen.test.tsx`** (8) → impl
+   `FriendsScreen.tsx` + CSS. Loading / empty / friends / incoming /
+   outgoing sections; add-friend form; back navigation.
+4. **`ui/__tests__/IdentityChip.test.tsx`** (+2) → "Friends" menu
+   item visible only to users when `onViewFriends` is provided.
+5. **App + ModeSelect + useFriends** wiring — new
+   `screen === "friends"` state. Container component owns the data
+   hook and forwards to the presentational screen.
 
-## Files
+## Files added
 
-### Modified
+```
+packages/db/
+  src/migrations/0003_friendships.sql
+  src/queries/friends.ts
+  __tests__/friends.test.ts
 
-- `packages/ui/src/styles/tokens.css` — felt-green ramp tuned to
-  warmer olive: `#4a6936` (center) → `#1a2a13` (edge). Was
-  `#3d9b58` → `#133d1f` (saturated bright green).
-- `packages/ui/src/components/ScorePanel/ScorePanel.module.css` —
-  cream paper top-left card with ink border, serif Yeseva
-  numerals, handwritten teal team labels, terracotta target +
-  contract values, sage/terracotta level badges.
-- `packages/ui/src/components/BidPanel/BidPanel.module.css` —
-  cream paper notebook; suit/value buttons are ink-bordered cream
-  cards, selected = thicker terracotta border + cream gradient. Pass
-  is neutral cream stamp, Bid is terracotta stamp, Coinche is
-  sage/teal stamp — different tones for different actions.
-- `packages/ui/src/components/ChatButton/ChatButton.module.css` —
-  cream paper round button with ink border + chunky drop-shadow,
-  terracotta unread badge with ink outline.
-- `packages/ui/src/components/ChatPanel/ChatPanel.module.css` —
-  paper-ledger sliding drawer with horizontal-rule grain (every
-  35px), cream header with ink border, message-type colours
-  (sage trick-win, terracotta contract / cancelled), terracotta
-  send button stamp.
-- `packages/ui/src/components/RoundSummary/RoundSummary.module.css`
-  — paper-card modal with corner pin dots, serif Yeseva scores,
-  handwritten labels, sage/terracotta result-met / -failed badges,
-  terracotta "NEXT ROUND" stamp.
-- `packages/ui/src/components/GameOver/GameOver.module.css` —
-  paper-card modal with corner pin dots, score bars in teal-deep
-  (NS) and terracotta (EW) on cream tracks, mustard "you won"
-  pill, terracotta "PLAY AGAIN" stamp.
-- `packages/ui/src/components/PlayerAvatar/PlayerAvatar.module.css`
-  — cream pill name labels with ink border, terracotta active-pulse
-  dot, all four thought-bubble variants on cream paper with type-
-  specific text colours (ink-dark, sage trick-win, terracotta
-  contract/cancelled).
+packages/server/
+  src/friends/routes.ts
+  __tests__/friends-routes.test.ts
+
+packages/ui/
+  src/components/FriendsScreen/FriendsScreen.tsx + .module.css
+  src/online/api/friends.ts
+  src/online/useFriends.ts
+  __tests__/FriendsScreen.test.tsx
+```
+
+## Files modified
+
+- `packages/db/src/index.ts` — re-exports the friend surface.
+- `packages/server/src/bin/serve.ts` — `registerFriendsRoutes`.
+- `packages/ui/src/components/IdentityChip/IdentityChip.tsx` —
+  optional `onViewFriends` prop, "Friends" menu item for users.
+- `packages/ui/src/components/ModeSelectScreen/ModeSelectScreen.tsx`
+  — forwards `onViewFriends` to the chip.
+- `packages/ui/src/App.tsx` — `screen === "friends"` state and a
+  `FriendsScreenContainer`.
+- `packages/ui/__tests__/IdentityChip.test.tsx` — +2 cases.
+
+## Trade-offs
+
+- **No online-presence indicator** in this iteration. Adding it
+  cleanly requires a server→client push channel (the existing WS),
+  which is invasive enough to justify its own iteration.
+- **No "invite to current room" button** on each friend; same
+  reason — needs a deep-link or WS-push, deferred to 024.
+- **Friend search by email only.** Username search would be nicer
+  but we don't have unique usernames yet; emails are the only
+  stable handle a user knows.
+- **Rate-limit deferred.** No bursty caller in this code path
+  today; no backstop friend-request spam vector. Worth doing
+  before any kind of public sign-up rollout.
 
 ## Validation
 
-| Check                                 | Result                            |
-| ------------------------------------- | --------------------------------- |
-| `pnpm test`                           | 35 files / 715 passing (no delta) |
-| `pnpm typecheck`                      | Clean                             |
-| `pnpm lint`                           | 189 errors (no delta)             |
-| `pnpm format:check` (iteration scope) | Clean                             |
+- `pnpm test` — **889 / 889 green** (was 854; +35 = 14 db + 11 server + 8 UI screen + 2 chip).
+- `pnpm typecheck` — clean.
+- `pnpm format:check` — clean.
+- `pnpm lint` — **182 problems vs 188 baseline → delta-clean (−6)**.
+- `pnpm --filter ui exec vite build` — clean (375 modules, 349 kB JS gzipped to 109 kB).
 
-### Manual smoke (screen viewer fixtures)
+## Browser smoke (deferred to live URL)
 
-Verified in the screen viewer at `?screens` — clicked through
-representative fixtures across every restyled component:
+After deploy:
 
-- `GameTableView "Playing — mid-trick"` — olive felt, ink-bordered
-  cream avatar pills, paper-ledger ChatPanel.
-- `GameTableView "Bidding — south (your) turn"` — paper-notebook
-  BidPanel with ink-bordered suit + value buttons, terracotta Bid
-  button.
-- `RoundSummary "Takers won simple contract (110 ♠)"` — paper-card
-  modal with ROUND 3 / COMPLETE badges, sage CONTRACT MET pill,
-  serif scores, terracotta NEXT ROUND stamp.
-- `GameOver "NS wins (you won)"` — paper-card with terracotta
-  GAME OVER stamp, gold trophy, big serif NS WINS! in teal,
-  teal/terracotta score bars, mustard "you won this game" pill,
-  terracotta PLAY AGAIN stamp.
+1. Sign up as Alice in browser A. Sign up as Bob in browser B.
+2. Alice → IdentityChip → "Friends". Empty list with "Add by email".
+3. Type `bob@x.com` → Add. See "Sent request" row.
+4. Bob → IdentityChip → "Friends". See "Incoming" row from Alice.
+5. Bob clicks Accept. Both see each other under "Friends".
+6. Alice clicks Remove on Bob. Both panels empty again.
 
-Screenshots:
+## Carryforward to iteration 024
 
-- `docs/screenshots/iteration-023-mid-trick.png`
-- `docs/screenshots/iteration-023-bidding.png`
-- `docs/screenshots/iteration-023-round-summary.png`
-- `docs/screenshots/iteration-023-game-over.png`
-
-## Carryforward
-
-- **Pixel-diff regression suite** is now extra valuable: the
-  visual language is settled across menu + lobby + random + in-game
-  chrome. Wiring Playwright screenshot diffs into CI would catch
-  visual regressions cheaply now that the baseline is stable.
-- **Radix Theme defaults** still bleed through in the level / VIP /
-  dealer badges (Radix `Badge` defaults) and the avatar `Tooltip`.
-  Could be Radix-theme-overridden if they ever feel jarring; not
-  pressing.
-- **`belote-hero.svg`** (used by `StartScreen`) is still on the
-  iteration-016 visual track — its card-fan is already cream paper
-  so it doesn't clash, but it could be hand-tuned to the new
-  vocabulary if/when that component gets touched.
-- **Card faces / backs** untouched (real card graphics from
-  `public/cards/`); no need.
+- **Profile page** (`GET/PATCH /api/users/:id`, public + edit-own).
+- **Online presence** + "invite to room" — gateway publishes
+  per-user online status over the WS; FriendsScreen subscribes.
+- **Match-detail page** (round-by-round) — uses identity from 020
+  - history from 022.

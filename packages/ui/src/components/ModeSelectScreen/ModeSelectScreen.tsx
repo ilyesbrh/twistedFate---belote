@@ -14,6 +14,7 @@ interface ModeSelectScreenProps {
   onSignUp?: () => void;
   onSignOut?: () => void;
   onViewHistory?: () => void;
+  onViewFriends?: () => void;
 }
 
 interface ModeButton {
@@ -67,6 +68,7 @@ export function ModeSelectScreen({
   onSignUp,
   onSignOut,
   onViewHistory,
+  onViewFriends,
 }: ModeSelectScreenProps): ReactElement {
   const showChip = identity !== undefined && onSignIn && onSignUp && onSignOut;
   return (
@@ -79,6 +81,7 @@ export function ModeSelectScreen({
             onSignUp={onSignUp}
             onSignOut={onSignOut}
             onViewHistory={onViewHistory}
+            onViewFriends={onViewFriends}
           />
         </div>
       )}
