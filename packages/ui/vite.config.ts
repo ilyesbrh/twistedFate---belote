@@ -10,6 +10,12 @@ const basePath = process.env["VITE_BASE_PATH"] ?? "/twistedFate-belote/";
 export default defineConfig({
   plugins: [react()],
   base: basePath,
+  server: {
+    proxy: {
+      "/api": "http://localhost:4100",
+      "/ws": { target: "ws://localhost:4100", ws: true },
+    },
+  },
   test: {
     name: "ui",
     include: ["__tests__/**/*.test.ts", "__tests__/**/*.test.tsx"],

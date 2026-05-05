@@ -135,6 +135,7 @@ export function IdentityChip(props: IdentityChipProps): ReactElement | null {
                   {
                     "--rot": `${String(layout.rot)}deg`,
                     "--tx": `${String(layout.tx)}px`,
+                    "--ty": `${String(layout.ty)}px`,
                     "--delay": `${String(i * 50)}ms`,
                   } as React.CSSProperties
                 }
@@ -167,17 +168,19 @@ export function IdentityChip(props: IdentityChipProps): ReactElement | null {
         <span className={styles.kindTag} aria-hidden="true">
           {identity.kind === "user" ? "Playing as" : "Guest"}
         </span>
-        <span className={styles.signatureText} data-testid="identity-chip-label">
-          {identity.nickname}
+        <span className={styles.nameWrap}>
+          <span className={styles.signatureText} data-testid="identity-chip-label">
+            {identity.nickname}
+          </span>
+          <svg
+            className={styles.underline}
+            viewBox="0 0 200 14"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <path d="M2 8 Q 30 2, 60 8 T 120 8 T 198 6" />
+          </svg>
         </span>
-        <svg
-          className={styles.underline}
-          viewBox="0 0 200 14"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path d="M2 8 Q 30 2, 60 8 T 120 8 T 198 6" />
-        </svg>
       </button>
     </div>
   );
@@ -187,12 +190,14 @@ export function IdentityChip(props: IdentityChipProps): ReactElement | null {
  * Compute rotation + horizontal offset for the i-th card in a fan of `total` cards.
  * Cards spread over ±18° with a horizontal sweep so they overlap like a real hand.
  */
-function layoutFor(i: number, total: number): { rot: number; tx: number } {
-  if (total <= 1) return { rot: 0, tx: 0 };
-  const center = (total - 1) / 2;
-  const norm = (i - center) / center; // -1 … +1
-  const rot = norm * 18;
-  // Horizontal spread: each card shifts right by ~28% of its own width per step.
-  const tx = norm * 60;
-  return { rot, tx };
+function layoutFor(
+  i: number,
+  total: number,
+): { rot: number; tx: number; ty: number } {
+  if (total <= 1) return { rot: 0, tx: 10, ty: 0 };
+  // Fan rightward from the anchor — first card offset enough to clear signature.
+  const rot = -6 + i * 6;
+  const tx = i * 90;
+  const ty = i * 10;
+  return { rot, tx, ty };
 }

@@ -74,7 +74,7 @@ export function ModeSelectScreen({
 }: ModeSelectScreenProps): ReactElement {
   const showChip = identity !== undefined && onSignIn && onSignUp && onSignOut;
   return (
-    <MenuFelt className={styles.root}>
+    <>
       {showChip && (
         <div className={styles.identityChipSlot}>
           <IdentityChip
@@ -88,6 +88,7 @@ export function ModeSelectScreen({
           />
         </div>
       )}
+    <MenuFelt className={styles.root}>
       <div data-testid="mode-select-screen" className={styles.contentColumn}>
         <HeroIllustration />
         <h1 className={styles.title}>Belote</h1>
@@ -128,6 +129,7 @@ export function ModeSelectScreen({
         </div>
       </div>
     </MenuFelt>
+    </>
   );
 }
 

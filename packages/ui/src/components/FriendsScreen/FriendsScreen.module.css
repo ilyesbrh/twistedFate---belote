@@ -1,12 +1,7 @@
 .root {
-  width: 100%;
-  min-height: 100dvh;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 24px 16px;
   font-family: var(--font-body, "Lora", serif);
   color: var(--ink-dark, #2a1f12);
+  padding: 24px 16px;
 }
 
 .card {
@@ -38,12 +33,28 @@
 .backBtn {
   font: inherit;
   font-size: 14px;
-  background: transparent;
-  border: 1.5px solid var(--ink-dark, #2a1f12);
-  border-radius: 6px;
-  padding: 8px 12px;
+  font-weight: 700;
+  color: var(--ink-dark, #2a1f12);
+  background: var(--paper-cream, #fffbe9);
+  border: 2px solid var(--ink-dark, #2a1f12);
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 var(--ink-dark, #2a1f12);
+  padding: 10px 14px;
   cursor: pointer;
-  min-height: 40px;
+  min-height: 44px;
+  letter-spacing: 0.3px;
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+
+.backBtn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink-dark, #2a1f12);
+  color: var(--accent-terracotta, #c2502c);
+}
+
+.backBtn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink-dark, #2a1f12);
 }
 
 .section {
@@ -93,16 +104,26 @@
 .actionBtn {
   font: inherit;
   font-size: 13px;
-  padding: 8px 12px;
-  border: 1.5px solid var(--ink-dark, #2a1f12);
-  border-radius: 6px;
+  font-weight: 700;
+  color: var(--ink-dark, #2a1f12);
+  padding: 8px 14px;
+  border: 2px solid var(--ink-dark, #2a1f12);
+  border-radius: 8px;
+  box-shadow: 2px 2px 0 var(--ink-dark, #2a1f12);
   cursor: pointer;
   background: var(--paper-cream, #fffbe9);
-  min-height: 36px;
+  min-height: 40px;
+  transition: transform 80ms ease, box-shadow 80ms ease;
 }
 
 .actionBtn:hover:not(:disabled) {
-  background: rgba(194, 80, 44, 0.12);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--ink-dark, #2a1f12);
+}
+
+.actionBtn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--ink-dark, #2a1f12);
 }
 
 .actionPrimary {
@@ -112,6 +133,8 @@
 
 .actionPrimary:hover:not(:disabled) {
   background: #a44324;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--ink-dark, #2a1f12);
 }
 
 .empty {
@@ -134,10 +157,19 @@
 
 .addInput {
   font: inherit;
-  padding: 10px 12px;
+  font-size: 16px;
+  padding: 12px 14px;
+  background: #fff;
+  color: var(--ink-dark, #2a1f12);
   border: 1.5px solid var(--ink-dark, #2a1f12);
   border-radius: 6px;
-  min-height: 40px;
+  outline: none;
+  min-height: 48px;
+}
+
+.addInput:focus-visible {
+  border-color: var(--accent-terracotta, #c2502c);
+  box-shadow: 0 0 0 3px rgba(194, 80, 44, 0.18);
 }
 
 .error {

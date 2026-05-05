@@ -54,6 +54,13 @@
   margin-bottom: -2px;
 }
 
+/* Wrapper keeps the underline scoped to the nickname width. */
+.nameWrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
 /* The handwritten name itself. */
 .signatureText {
   font-family: var(--font-hand);
@@ -93,40 +100,80 @@
   }
 }
 
+/* Ink-fresh wiggle — signature looks freshly scribbled, inviting a tap. */
+.signature {
+  animation: inkWiggle 400ms ease-in-out 1.2s 2;
+}
+
+@keyframes inkWiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  25% { transform: rotate(-5deg) translateY(-1px); }
+  75% { transform: rotate(-1deg) translateY(1px); }
+}
+
+/* Tiny floating hint that fades out after a few seconds. */
+.signature::after {
+  content: "▼";
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--accent-terracotta);
+  opacity: 0;
+  animation: hintBounce 1s ease-in-out 2s 3 forwards;
+}
+
+@keyframes hintBounce {
+  0%, 100% { opacity: 0; transform: translateX(-50%) translateY(0); }
+  20% { opacity: 0.8; }
+  50% { opacity: 0.8; transform: translateX(-50%) translateY(4px); }
+  80% { opacity: 0.4; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .underline path {
     stroke-dasharray: none;
     stroke-dashoffset: 0;
     animation: none;
   }
+  .signature {
+    animation: none;
+  }
+  .signature::after {
+    animation: none;
+    display: none;
+  }
 }
 
-/* ── The fan of action cards above the signature ──────────────────────── */
+/* ── The fan of action cards below the signature ─────────────────────── */
 .fan {
   position: absolute;
-  bottom: 100%;
+  top: 100%;
   left: 0;
   /* Each card positions absolutely off this anchor. The anchor itself
      has zero size — pointer events on cards only. */
   width: 0;
   height: 0;
   pointer-events: none;
-  /* Push the fan a bit above the signature line. */
-  margin-bottom: 8px;
+  /* Push the fan a bit below the signature line. */
+  margin-top: 8px;
 }
 
 .actionCard {
   pointer-events: auto;
   position: absolute;
-  bottom: 0;
-  /* CSS variables set per-card inline: --rot for rotation, --tx for x-shift. */
+  top: 0;
+  left: 0;
+  /* CSS variables set per-card inline: --rot, --tx, --ty. */
   --rot: 0deg;
   --tx: 0px;
-  transform-origin: 50% 100%;
-  transform: translate(calc(-50% + var(--tx)), 0) rotate(var(--rot));
+  --ty: 0px;
+  transform-origin: 50% 0%;
+  transform: translate(var(--tx), var(--ty)) rotate(var(--rot));
 
-  width: clamp(80px, 18vw, 104px);
-  height: clamp(108px, 24vw, 140px);
+  width: clamp(88px, 20vw, 110px);
+  height: clamp(112px, 25vw, 140px);
   background: linear-gradient(180deg, #fbf5e3 0%, #f1e6c4 100%);
   border: 2px solid var(--ink-dark);
   border-radius: 9px;
@@ -153,7 +200,7 @@
 }
 
 .actionCard:hover {
-  transform: translate(calc(-50% + var(--tx)), -10px) rotate(var(--rot));
+  transform: translate(calc(var(--tx) + 6px), var(--ty)) rotate(var(--rot)) scale(1.06);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.55),
     3px 4px 0 rgba(42, 31, 18, 0.18),
@@ -167,7 +214,7 @@
 
 @keyframes fanIn {
   from {
-    transform: translate(-50%, 24px) rotate(calc(var(--rot) * 0.2)) scale(0.7);
+    transform: translate(var(--tx), calc(var(--ty) - 20px)) rotate(calc(var(--rot) * 0.2)) scale(0.7);
     opacity: 0;
   }
 }
@@ -186,11 +233,13 @@
 
 .actionLabel {
   font-family: var(--font-hand);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   text-align: center;
-  line-height: 1;
+  line-height: 1.1;
   letter-spacing: 0.3px;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Compact landscape phones — shrink the signature so it doesn't crowd. */
@@ -202,8 +251,8 @@
     font-size: 9px;
   }
   .actionCard {
-    width: 76px;
-    height: 96px;
+    width: 82px;
+    height: 104px;
   }
   .actionLabel {
     font-size: 14px;
