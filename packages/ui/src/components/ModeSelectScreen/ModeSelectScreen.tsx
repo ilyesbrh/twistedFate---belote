@@ -88,47 +88,47 @@ export function ModeSelectScreen({
           />
         </div>
       )}
-    <MenuFelt className={styles.root}>
-      <div data-testid="mode-select-screen" className={styles.contentColumn}>
-        <HeroIllustration />
-        <h1 className={styles.title}>Belote</h1>
-        <p className={styles.subtitle}>— Coinchée —</p>
-        <div className={styles.grid}>
-          {MODES.map((m) => (
-            <button
-              key={m.id}
-              className={`${styles.btn} ${m.disabled ? styles.btnDisabled : ""}`}
-              onClick={() => {
-                if (!m.disabled) onSelect(m.id);
-              }}
-              disabled={m.disabled}
-              aria-label={m.ariaLabel}
-              data-touch="primary"
-              data-testid={`mode-btn-${m.id}`}
-            >
-              <span
-                className={styles.iconSlot}
-                data-testid={`mode-icon-${m.id}`}
-                aria-hidden="true"
+      <MenuFelt className={styles.root}>
+        <div data-testid="mode-select-screen" className={styles.contentColumn}>
+          <HeroIllustration />
+          <h1 className={styles.title}>Belote</h1>
+          <p className={styles.subtitle}>— Coinchée —</p>
+          <div className={styles.grid}>
+            {MODES.map((m) => (
+              <button
+                key={m.id}
+                className={`${styles.btn} ${m.disabled ? styles.btnDisabled : ""}`}
+                onClick={() => {
+                  if (!m.disabled) onSelect(m.id);
+                }}
+                disabled={m.disabled}
+                aria-label={m.ariaLabel}
+                data-touch="primary"
+                data-testid={`mode-btn-${m.id}`}
               >
-                {m.icon}
-              </span>
-              <span className={styles.btnLabel}>{m.label}</span>
-              <span className={styles.btnSubtitle}>{m.subtitle}</span>
-              {m.disabled && (
-                <span className={styles.comingPill} data-testid={`mode-pill-${m.id}`}>
-                  soon
+                <span
+                  className={styles.iconSlot}
+                  data-testid={`mode-icon-${m.id}`}
+                  aria-hidden="true"
+                >
+                  {m.icon}
                 </span>
-              )}
-              {/* Decorative corner pip — hand-drawn ornament. */}
-              <span className={styles.cornerPip} aria-hidden="true">
-                <CornerOrnament />
-              </span>
-            </button>
-          ))}
+                <span className={styles.btnLabel}>{m.label}</span>
+                <span className={styles.btnSubtitle}>{m.subtitle}</span>
+                {m.disabled && (
+                  <span className={styles.comingPill} data-testid={`mode-pill-${m.id}`}>
+                    soon
+                  </span>
+                )}
+                {/* Decorative corner pip — hand-drawn ornament. */}
+                <span className={styles.cornerPip} aria-hidden="true">
+                  <CornerOrnament />
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-    </MenuFelt>
+      </MenuFelt>
     </>
   );
 }

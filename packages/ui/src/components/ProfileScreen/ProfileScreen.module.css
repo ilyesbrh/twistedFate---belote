@@ -42,7 +42,9 @@
   cursor: pointer;
   min-height: 44px;
   letter-spacing: 0.3px;
-  transition: transform 80ms ease, box-shadow 80ms ease;
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease;
 }
 
 .backBtn:hover {
@@ -113,7 +115,9 @@
   cursor: pointer;
   min-height: 44px;
   letter-spacing: 0.3px;
-  transition: transform 80ms ease, box-shadow 80ms ease;
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease;
 }
 
 .editBtn:hover {
@@ -215,7 +219,9 @@
   letter-spacing: 0.3px;
   text-transform: uppercase;
   min-height: 50px;
-  transition: transform 80ms ease, box-shadow 80ms ease;
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease;
 }
 
 .primary:hover:not(:disabled) {

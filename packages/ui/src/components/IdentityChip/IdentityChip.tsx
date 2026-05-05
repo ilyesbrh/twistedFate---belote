@@ -190,10 +190,7 @@ export function IdentityChip(props: IdentityChipProps): ReactElement | null {
  * Compute rotation + horizontal offset for the i-th card in a fan of `total` cards.
  * Cards spread over ±18° with a horizontal sweep so they overlap like a real hand.
  */
-function layoutFor(
-  i: number,
-  total: number,
-): { rot: number; tx: number; ty: number } {
+function layoutFor(i: number, total: number): { rot: number; tx: number; ty: number } {
   if (total <= 1) return { rot: 0, tx: 10, ty: 0 };
   // Fan rightward from the anchor — first card offset enough to clear signature.
   const rot = -6 + i * 6;

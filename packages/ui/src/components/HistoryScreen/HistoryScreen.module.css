@@ -44,7 +44,9 @@
   cursor: pointer;
   min-height: 44px;
   letter-spacing: 0.3px;
-  transition: transform 80ms ease, box-shadow 80ms ease;
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease;
 }
 
 .backBtn:hover {
