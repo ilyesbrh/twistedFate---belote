@@ -63,7 +63,7 @@ if (staticRoot) {
 await fastify.listen({ port, host });
 
 const wss = new WebSocketServer({ server: fastify.server, path: "/ws" });
-new Gateway(wss);
+new Gateway(wss, { db });
 
 fastify.log.info(`WebSocket ready at ws://${host}:${String(port)}/ws`);
 

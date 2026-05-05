@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { PlayerSummary, Seat, ServerMessage } from "@belote/protocol";
+import type { Identity, PlayerSummary, Seat, ServerMessage } from "@belote/protocol";
 import { OnlineClient, type OnlineStatus } from "./OnlineClient.js";
+import { ensureSession } from "./ensureSession.js";
 
 export type LobbyPhase =
   | "idle"
@@ -23,6 +24,13 @@ export interface OnlineLobbyState {
   readonly queuePosition: number | null;
   /** Total clients currently in the matchmaking queue. */
   readonly queueSize: number;
+  /**
+   * Resolved identity for this connection. `null` until the pre-WS
+   * `ensureSession()` resolves; remains `null` if both /me and the guest
+   * mint failed (anonymous fallback). When `hello_ack.identity` arrives
+   * over the wire it overrides the preflight value.
+   */
+  readonly identity: Identity | null;
   createRoom(nickname: string): void;
   joinRoom(nickname: string, code: string): void;
   /** Enter the random-matchmaking queue. */
@@ -130,9 +138,31 @@ export function useOnlineLobby(): OnlineLobbyState {
   const [error, setError] = useState<string | null>(null);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
   const [queueSize, setQueueSize] = useState<number>(0);
+  const [identity, setIdentity] = useState<Identity | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const rejoinAttemptedRef = useRef(false);
 
+  // Pre-WS: ensure the cookie is set so the upgrade carries identity.
+  // Best-effort — on failure we still connect (anonymous fallback).
   useEffect(() => {
+    let cancelled = false;
+    ensureSession()
+      .then((id) => {
+        if (!cancelled) setIdentity(id);
+      })
+      .catch(() => {
+        // swallow — degrade to anonymous; gateway will omit `identity` in hello_ack
+      })
+      .finally(() => {
+        if (!cancelled) setSessionChecked(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!sessionChecked) return;
     client.connect();
     const offStatus = client.onStatus((s) => {
       setStatus(s);
@@ -148,6 +178,11 @@ export function useOnlineLobby(): OnlineLobbyState {
     });
     const offMsg = client.onMessage((msg: ServerMessage) => {
       switch (msg.type) {
+        case "hello_ack":
+          // Server-resolved identity wins over the preflight value (e.g. the
+          // cookie expired between /me and the WS upgrade).
+          if (msg.identity) setIdentity(msg.identity);
+          return;
         case "room_created":
           setCode(msg.code);
           setSeat(msg.seat);
@@ -216,7 +251,7 @@ export function useOnlineLobby(): OnlineLobbyState {
       offStatus();
       offMsg();
     };
-  }, [client]);
+  }, [client, sessionChecked]);
 
   const api = useMemo<OnlineLobbyState>(
     () => ({
@@ -229,6 +264,7 @@ export function useOnlineLobby(): OnlineLobbyState {
       error,
       queuePosition,
       queueSize,
+      identity,
       client,
       createRoom(nickname: string) {
         setError(null);
@@ -259,7 +295,19 @@ export function useOnlineLobby(): OnlineLobbyState {
         clearSavedSessionStorage();
       },
     }),
-    [status, phase, code, seat, playerToken, players, error, queuePosition, queueSize, client],
+    [
+      status,
+      phase,
+      code,
+      seat,
+      playerToken,
+      players,
+      error,
+      queuePosition,
+      queueSize,
+      identity,
+      client,
+    ],
   );
 
   return api;

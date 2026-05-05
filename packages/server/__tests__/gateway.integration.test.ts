@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { WebSocketServer, WebSocket } from "ws";
 import { createServer } from "http";
-import { Gateway } from "../src/gateway.js";
+import { Gateway, type GatewayConfig } from "../src/gateway.js";
 import type { ClientMessage, ServerMessage } from "@belote/protocol";
 
 type HttpServer = ReturnType<typeof createServer>;
@@ -13,10 +13,16 @@ interface Harness {
   gateway: Gateway;
 }
 
-async function startServer(codeGenerator?: () => string): Promise<Harness> {
+async function startServer(
+  codeGeneratorOrConfig?: (() => string) | GatewayConfig,
+): Promise<Harness> {
   const httpServer = createServer();
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
-  const gateway = new Gateway(wss, codeGenerator ? { codeGenerator } : {});
+  const config: GatewayConfig =
+    typeof codeGeneratorOrConfig === "function"
+      ? { codeGenerator: codeGeneratorOrConfig }
+      : (codeGeneratorOrConfig ?? {});
+  const gateway = new Gateway(wss, config);
   await new Promise<void>((resolve) => {
     httpServer.listen(0, () => {
       resolve();
@@ -44,8 +50,9 @@ class TestClient {
   private _cursor = 0;
   private readonly _listeners: Array<(msg: ServerMessage) => void> = [];
 
-  constructor(port: number) {
-    this.ws = new WebSocket(`ws://127.0.0.1:${String(port)}/ws`);
+  constructor(port: number, options?: { cookie?: string }) {
+    const wsOpts = options?.cookie ? { headers: { cookie: options.cookie } } : undefined;
+    this.ws = new WebSocket(`ws://127.0.0.1:${String(port)}/ws`, wsOpts);
     this.ws.on("message", (data) => {
       const msg = JSON.parse(data.toString()) as ServerMessage;
       this.inbox.push(msg);
@@ -301,3 +308,90 @@ function makeCodeGenerator(codes: string[]): () => string {
   const fallback = "QQQQ";
   return () => codes[i++] ?? fallback;
 }
+
+describe("Gateway — identity from session cookie", () => {
+  it("hello_ack carries no identity when no db is configured (back-compat)", async () => {
+    const h = await startServer();
+    try {
+      const c = new TestClient(h.port);
+      await c.open();
+      const ack = await c.waitFor("hello_ack");
+      expect(ack.identity).toBeUndefined();
+      c.close();
+    } finally {
+      await stopServer(h);
+    }
+  });
+
+  it("hello_ack carries no identity when cookie is missing", async () => {
+    const { openDb, runMigrations } = await import("@belote/db");
+    const db = openDb({ filename: ":memory:" });
+    runMigrations(db);
+    const h = await startServer({ db });
+    try {
+      const c = new TestClient(h.port);
+      await c.open();
+      const ack = await c.waitFor("hello_ack");
+      expect(ack.identity).toBeUndefined();
+      c.close();
+    } finally {
+      await stopServer(h);
+    }
+  });
+
+  it("hello_ack carries user identity when a valid user-cookie is present", async () => {
+    const { openDb, runMigrations, createUser, createSession } = await import("@belote/db");
+    const db = openDb({ filename: ":memory:" });
+    runMigrations(db);
+    const user = await createUser(db, {
+      email: "alice@example.com",
+      password: "hunter22-pw",
+      nickname: "Alice",
+    });
+    const { token } = createSession(db, { userId: user.id, ttlMs: 60_000 });
+    const h = await startServer({ db });
+    try {
+      const c = new TestClient(h.port, { cookie: `belote.sid=${token}` });
+      await c.open();
+      const ack = await c.waitFor("hello_ack");
+      expect(ack.identity).toEqual({ kind: "user", id: user.id, nickname: "Alice" });
+      c.close();
+    } finally {
+      await stopServer(h);
+    }
+  });
+
+  it("hello_ack carries guest identity when a valid guest-cookie is present", async () => {
+    const { openDb, runMigrations, createGuest, createSession } = await import("@belote/db");
+    const db = openDb({ filename: ":memory:" });
+    runMigrations(db);
+    const guest = createGuest(db, { nickname: "Visitor" });
+    const { token } = createSession(db, { guestId: guest.id, ttlMs: 60_000 });
+    const h = await startServer({ db });
+    try {
+      const c = new TestClient(h.port, { cookie: `belote.sid=${token}` });
+      await c.open();
+      const ack = await c.waitFor("hello_ack");
+      expect(ack.identity).toEqual({ kind: "guest", id: guest.id, nickname: "Visitor" });
+      c.close();
+    } finally {
+      await stopServer(h);
+    }
+  });
+
+  it("hello_ack omits identity when the cookie token is invalid", async () => {
+    const { openDb, runMigrations } = await import("@belote/db");
+    const db = openDb({ filename: ":memory:" });
+    runMigrations(db);
+    const h = await startServer({ db });
+    try {
+      const c = new TestClient(h.port, { cookie: "belote.sid=not-a-real-token" });
+      await c.open();
+      const ack = await c.waitFor("hello_ack");
+      expect(ack.identity).toBeUndefined();
+      c.close();
+    } finally {
+      await stopServer(h);
+    }
+  });
+});

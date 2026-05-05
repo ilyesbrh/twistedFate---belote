@@ -1,130 +1,103 @@
-# Iteration 020 Report — Online sub-screens visual alignment
+# Iteration 020 Report — WS identity wiring + pre-WS guest flow
 
-**Date**: 2026-05-04
+**Date**: 2026-05-05
 **Status**: Complete
-**Test delta**: 709 → 715 (+6)
+**Test delta**: 769 → 786 (+17)
+
+> Overwrites the pre-reset 020 report (Online sub-screens visual
+> alignment) per the numbering-reset convention noted in CLAUDE.md.
 
 ## Goal
 
-Bring `OnlineLobby` (Friends mode) and `OnlineRandomScreen` (Random
-matchmaking) into the same dark-felt visual language landed by
-iteration 019, so navigating from menu → online flows feels
-continuous.
+Wire the cookie machinery shipped in 019 through to the long-lived WS
+connection so the gateway can attribute every connection to a user or
+a guest. Surface the resolved identity to the lobby hook so future
+iterations (match history, profile, friends, UI sweep) can read it
+without further plumbing.
+
+No UI presentation of the identity yet — that's the eventual UI sweep.
 
 ## TDD trail
 
-1. **Wrote `MenuFelt.test.tsx`** (red — module didn't exist).
-   Implemented `MenuFelt` (TSX + module CSS) lifting the felt
-   background composition + corner suit watermarks out of
-   `ModeSelectScreen`. Tests green.
-2. **Refactored `ModeSelectScreen`** to use `<MenuFelt>` as the
-   wrapper. Removed the local `<SuitWatermarks>` helper and the
-   felt-related rules from its module CSS. All 12 existing
-   ModeSelectScreen tests stayed green.
-3. **Extended `OnlineLobby.test.tsx` and `OnlineRandomScreen.test.tsx`**
-   with: `menu-felt` + `menu-felt-watermarks` testids must be
-   present, plus `room-code-card` / `random-progress-card` testids on
-   the new paper-card badges. Confirmed red (4 failures).
-4. **Wrapped both screens in `<MenuFelt>`** and tagged the
-   paper-card markup. Tests green.
-5. **Reworked the two module CSS files** — dropped the inline radial
-   backgrounds, switched titles to the gold-ramp gradient, gave the
-   room-code block + queue-progress block a cream-paper card-face
-   treatment with serif numerals, upgraded primary buttons to the
-   menu's gold-ramp tile chrome, thickened the spinner.
+1. **`messages.test.ts`** (6 new cases) — `hello_ack` accepts an
+   optional `identity`; the `Identity` shape rejects unknown `kind`,
+   missing `id` / `nickname`, non-string `avatarUrl`. → impl added the
+   `Identity` type + `isIdentity` validator + extended the `hello_ack`
+   branch in `parseServerMessage`.
+2. **`ensureSession.test.ts`** (6 cases) — 200 from `/me` returns user
+   identity; 401 falls back to `POST /api/auth/guest`; both fail →
+   throws; network error → throws; both calls use `credentials:
+"include"`. → impl `ensureSession.ts` (≈55 LOC).
+3. **`gateway.integration.test.ts`** (5 new cases) — no-db harness
+   omits identity (back-compat); db harness without cookie omits
+   identity; db harness with valid user cookie carries user identity;
+   db harness with valid guest cookie carries guest identity; tampered
+   cookie omits identity. → impl gateway: optional `db` config,
+   `_resolveIdentity(request)` reads `belote.sid` from the upgrade
+   `IncomingMessage`, attaches `userId` / `guestId` to
+   `ClientContext`, sends identity in `hello_ack`.
+4. **`useOnlineLobby.ts`** integration (no new direct hook tests —
+   relies on the unit tests above for `ensureSession` and the gateway
+   integration test for the wire side). The hook now runs
+   `ensureSession()` in a preflight effect; once resolved, the
+   subsequent effect connects the WS. On `hello_ack` with `identity`,
+   the wire value overrides the preflight value.
 
-## Architecture note
+## Files changed
 
-`<MenuFelt>` is now the single source of truth for the menu-surface
-visual language. Three screens compose it:
+```
+packages/protocol/
+  src/index.ts                  (Identity type, hello_ack.identity, isIdentity validator)
+  __tests__/messages.test.ts    (+6 cases)
 
-```text
-ModeSelectScreen ──┐
-OnlineLobby      ──┼──► <MenuFelt> (felt bg + watermarks + container)
-OnlineRandomScreen ┘
+packages/server/
+  src/gateway.ts                (db option, parseCookieHeader, _resolveIdentity, identity in hello_ack)
+  src/bin/serve.ts              (Gateway constructed with { db })
+  __tests__/gateway.integration.test.ts  (+5 cases, TestClient now accepts cookie option)
+
+packages/ui/
+  src/online/ensureSession.ts            (new — preflight /me → guest fallback)
+  src/online/useOnlineLobby.ts           (preflight effect, identity state, hello_ack handler)
+  __tests__/ensureSession.test.ts        (new, 6 cases)
+  __tests__/OnlineLobby.test.tsx         (stub state grows `identity: null`)
 ```
 
-`MenuFelt.module.css` carries the felt-related rules; each consuming
-screen's module CSS owns only its layout overrides + screen-specific
-chrome (mode-tile grid, room-code paper card, progress badge, etc.).
-
-## Files
-
-### New (shared)
-
-- `packages/ui/src/components/MenuFelt/MenuFelt.tsx` — wrapper
-  component.
-- `packages/ui/src/components/MenuFelt/MenuFelt.module.css` — felt
-  background + corner watermarks.
-
-### Modified
-
-- `packages/ui/src/components/ModeSelectScreen/ModeSelectScreen.tsx`
-  — switched to `<MenuFelt>` wrapping, removed local
-  `<SuitWatermarks>` helper.
-- `packages/ui/src/components/ModeSelectScreen/ModeSelectScreen.module.css`
-  — dropped felt + watermark rules (lifted to MenuFelt). Kept all
-  hero / title / mode-tile chrome.
-- `packages/ui/src/components/OnlineLobby/OnlineLobby.tsx` — wrapped
-  in `<MenuFelt>`; added `data-testid="room-code-card"`.
-- `packages/ui/src/components/OnlineLobby/OnlineLobby.module.css` —
-  full rewrite: gold-ramp title, paper-card room code, gold-ramp
-  primary buttons, tile chrome on player rows.
-- `packages/ui/src/components/OnlineRandomScreen/OnlineRandomScreen.tsx`
-  — wrapped in `<MenuFelt>`; wrapped progress in a paper-card badge.
-- `packages/ui/src/components/OnlineRandomScreen/OnlineRandomScreen.module.css`
-  — full rewrite: gold-ramp title, paper-card progress badge with
-  serif numerals, thicker gold spinner, gold-ramp primary button.
-
-### Tests (extended)
-
-- `packages/ui/__tests__/MenuFelt.test.tsx` — 2 new tests.
-- `packages/ui/__tests__/OnlineLobby.test.tsx` — +2 tests
-  (MenuFelt presence, room-code paper card).
-- `packages/ui/__tests__/OnlineRandomScreen.test.tsx` — +2 tests
-  (MenuFelt presence, progress paper card).
-
-### Fixtures (unchanged)
-
-The screen-viewer fixtures from iteration 017 picked up the new
-visuals automatically via the existing OnlineLobby /
-OnlineRandomScreen fixtures. No fixture file changes; the registry
-sweep test verified all 57 fixtures still render.
+No schema changes, no migration. Identity attribution happens entirely
+through 019's existing `belote.sid` cookie.
 
 ## Validation
 
-| Check                                 | Result                                                                |
-| ------------------------------------- | --------------------------------------------------------------------- |
-| `pnpm test`                           | 35 files / 715 tests passing (+6 over baseline 709)                   |
-| `pnpm typecheck`                      | Clean                                                                 |
-| `pnpm lint`                           | 189 errors (was 188; +1 — the new MenuFelt test file's parsing error) |
-| `pnpm format:check` (iteration scope) | Clean                                                                 |
+- `pnpm test` — **786 / 786 green** (was 769; +17 = 6 protocol + 5 gateway + 6 ensureSession).
+- `pnpm typecheck` — clean.
+- `pnpm format:check` — clean.
+- `pnpm lint` — **176 problems vs 188 baseline → delta-clean (−12)**.
 
-### Manual smoke (browser, dev on :5176)
+## Trade-offs
 
-- `?screens` → `OnlineLobby host-full` fixture: dark felt + corner
-  watermarks visible, gold gradient "Play with Friends" title,
-  paper-card "ABCD" room code with serif numerals, all four seats
-  green-tinted, gold "Start game" CTA.
-- `?screens` → `OnlineRandomScreen queued 3/4`: dark felt, gold
-  "Random match" title, gold spinner ring, paper-card "3/4 PLAYERS"
-  badge.
-- `/` (root menu) — unaffected by the MenuFelt refactor; identical
-  to iteration 019 output.
+- **No direct test for `useOnlineLobby` integration.** The hook's
+  responsibility is to glue `ensureSession` and `OnlineClient`
+  together; testing it requires mocking `fetch` + `WebSocket`, which
+  is heavy ceremony for thin glue. Coverage comes from
+  `ensureSession.test.ts` (preflight branch) + the gateway integration
+  test (wire side). If the glue ever gets non-trivial, add a hook
+  test then.
+- **Pre-WS preflight runs on every page load** — one round-trip even
+  if the cookie is fresh. Acceptable for now; can be cached behind
+  `sessionStorage` if the cost ever shows.
+- **`ensureSession` failure swallowed**, hook degrades to anonymous
+  WS. Preserves today's transient-nickname play if the auth routes
+  break; downside is the user wouldn't see the failure. Surface it
+  via `error` state when the UI sweep needs it.
+- **The legacy `hello { nickname }` client message stays.** Removing
+  it would break the anonymous-fallback path. UI sweep iteration
+  (023) is the right time to retire it.
 
-Screenshots in `docs/screenshots/iteration-020-online-{lobby,random}.png`.
+## Carryforward to iteration 021
 
-## Carryforward
-
-- **Iteration 021** — natural fit for the pixel-diff regression
-  suite (Playwright). Menu / lobby / random / random-queued surfaces
-  are now visually stable and the screen viewer gives fixture-level
-  coverage.
-- The InstallPrompt overlay is still visible at the top of every
-  menu screen and clips into the chrome. Worth a small dedicated
-  iteration to reformat it (smaller chip, dismissible, or move into
-  a settings affordance).
-- If `MenuFelt` accumulates more shared chrome (back button, gold
-  title helper, paper-card badge), extract those into named
-  sub-components under `MenuFelt/` rather than copy-pasting CSS
-  across the three screens.
+- The gateway's `ClientContext` now carries `userId`/`guestId`. Match
+  history (021) reads these at game-end and persists rows to a new
+  `matches` / `match_seats` schema.
+- Guest IDs that get later upgraded via `upgradeGuestToUser` will
+  preserve match attribution (the schema-design intent in 019).
+- `ensureSession` is reusable: any future component that needs the
+  identity before opening some other socket / channel can call it.

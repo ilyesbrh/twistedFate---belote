@@ -44,10 +44,26 @@ export type ClientMessage =
   | { readonly type: "find_random"; readonly nickname: string }
   | { readonly type: "cancel_random" };
 
+/**
+ * Resolved identity attached to a connection. Sent by the server in
+ * `hello_ack` when the upgrade carried a session cookie. Optional —
+ * anonymous (legacy) connections still work and receive `hello_ack`
+ * without an `identity` field.
+ *
+ * `email` is intentionally excluded here — it's PII; clients that
+ * need it can fetch from `/api/auth/me`.
+ */
+export interface Identity {
+  readonly kind: "user" | "guest";
+  readonly id: string;
+  readonly nickname: string;
+  readonly avatarUrl?: string;
+}
+
 // ── Server → Client ──
 
 export type ServerMessage =
-  | { readonly type: "hello_ack"; readonly clientId: string }
+  | { readonly type: "hello_ack"; readonly clientId: string; readonly identity?: Identity }
   | {
       readonly type: "room_created";
       readonly code: string;
@@ -106,6 +122,18 @@ function isBidValue(v: unknown): v is BidValueWire {
 
 function isSeat(v: unknown): v is Seat {
   return v === 0 || v === 1 || v === 2 || v === 3;
+}
+
+function isIdentity(v: unknown): v is Identity {
+  if (!isObject(v)) return false;
+  const kind = v["kind"];
+  if (kind !== "user" && kind !== "guest") return false;
+  if (typeof v["id"] !== "string" || v["id"].length === 0) return false;
+  if (typeof v["nickname"] !== "string" || v["nickname"].length === 0) return false;
+  if ("avatarUrl" in v && v["avatarUrl"] !== undefined && typeof v["avatarUrl"] !== "string") {
+    return false;
+  }
+  return true;
 }
 
 function isWireBid(v: unknown): v is WireBid {
@@ -174,8 +202,13 @@ export function isServerMessage(v: unknown): v is ServerMessage {
   if (!isObject(v)) return false;
   const t = v["type"];
   switch (t) {
-    case "hello_ack":
-      return typeof v["clientId"] === "string";
+    case "hello_ack": {
+      if (typeof v["clientId"] !== "string") return false;
+      if ("identity" in v && v["identity"] !== undefined && !isIdentity(v["identity"])) {
+        return false;
+      }
+      return true;
+    }
     case "room_created": {
       const code = v["code"];
       return (

@@ -15,6 +15,7 @@ function makeLobby(overrides: Partial<OnlineLobbyState> = {}): OnlineLobbyState 
     error: null,
     queuePosition: null,
     queueSize: 0,
+    identity: null,
     createRoom: vi.fn(),
     joinRoom: vi.fn(),
     findRandom: vi.fn(),

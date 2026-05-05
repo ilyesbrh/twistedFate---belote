@@ -1,14 +1,21 @@
+import type { IncomingMessage } from "node:http";
 import type { WebSocket } from "ws";
 import { WebSocketServer } from "ws";
-import type { ClientMessage, ServerMessage, Seat } from "@belote/protocol";
+import type { ClientMessage, Identity, ServerMessage, Seat } from "@belote/protocol";
 import { parseClientMessage } from "@belote/protocol";
+import { findGuestById, findSessionByToken, findUserById, type Db } from "@belote/db";
 import { Room, type Broadcaster } from "./room.js";
 import { RoomRegistry } from "./registry.js";
 import { MatchmakingQueue } from "./matchmakingQueue.js";
+import { SESSION_COOKIE } from "./auth/cookie.js";
 
 interface ClientContext {
   readonly clientId: string;
   readonly ws: WebSocket;
+  /** Resolved authenticated user id, if the upgrade carried a user-bound session cookie. */
+  userId: string | null;
+  /** Resolved guest id, if the upgrade carried a guest-bound session cookie. */
+  guestId: string | null;
   nickname: string;
   room: Room | null;
   seat: Seat | null;
@@ -16,6 +23,25 @@ interface ClientContext {
 
 export interface GatewayConfig {
   readonly codeGenerator?: () => string;
+  /**
+   * If provided, the gateway resolves the `belote.sid` cookie on every WS
+   * upgrade and attaches `userId`/`guestId` to its per-client context.
+   * Without a `db`, all connections are treated as anonymous (legacy).
+   */
+  readonly db?: Db;
+}
+
+/** Tiny `name=value; ...` header parser. */
+function parseCookieHeader(header: string | undefined, name: string): string | null {
+  if (!header) return null;
+  for (const pair of header.split(";")) {
+    const eq = pair.indexOf("=");
+    if (eq < 0) continue;
+    const k = pair.slice(0, eq).trim();
+    if (k !== name) continue;
+    return pair.slice(eq + 1).trim();
+  }
+  return null;
 }
 
 /**
@@ -33,12 +59,15 @@ export class Gateway {
   private _clientCounter = 0;
   private readonly _queue = new MatchmakingQueue();
 
+  private readonly _db: Db | null;
+
   constructor(wss: WebSocketServer, config: GatewayConfig = {}) {
     this._wss = wss;
     this._registry = new RoomRegistry({ codeGenerator: config.codeGenerator });
+    this._db = config.db ?? null;
 
-    this._wss.on("connection", (ws) => {
-      this._handleConnection(ws);
+    this._wss.on("connection", (ws, request) => {
+      this._handleConnection(ws, request);
     });
   }
 
@@ -52,18 +81,46 @@ export class Gateway {
 
   // ── Internals ──
 
-  private _handleConnection(ws: WebSocket): void {
+  private _resolveIdentity(request: IncomingMessage): Identity | null {
+    if (!this._db) return null;
+    const token = parseCookieHeader(request.headers["cookie"], SESSION_COOKIE);
+    if (!token) return null;
+    const session = findSessionByToken(this._db, token);
+    if (!session) return null;
+    if (session.userId) {
+      const user = findUserById(this._db, session.userId);
+      if (!user) return null;
+      const identity: Identity = user.avatarUrl
+        ? { kind: "user", id: user.id, nickname: user.nickname, avatarUrl: user.avatarUrl }
+        : { kind: "user", id: user.id, nickname: user.nickname };
+      return identity;
+    }
+    if (session.guestId) {
+      const guest = findGuestById(this._db, session.guestId);
+      if (!guest) return null;
+      return { kind: "guest", id: guest.id, nickname: guest.nickname };
+    }
+    return null;
+  }
+
+  private _handleConnection(ws: WebSocket, request: IncomingMessage): void {
     this._clientCounter += 1;
     const clientId = `c_${String(this._clientCounter)}_${String(Date.now())}`;
+    const identity = this._resolveIdentity(request);
     const ctx: ClientContext = {
       clientId,
       ws,
-      nickname: "",
+      userId: identity?.kind === "user" ? identity.id : null,
+      guestId: identity?.kind === "guest" ? identity.id : null,
+      nickname: identity?.nickname ?? "",
       room: null,
       seat: null,
     };
     this._clients.set(clientId, ctx);
-    send(ws, { type: "hello_ack", clientId });
+    send(
+      ws,
+      identity ? { type: "hello_ack", clientId, identity } : { type: "hello_ack", clientId },
+    );
 
     ws.on("message", (data) => {
       let raw: unknown;

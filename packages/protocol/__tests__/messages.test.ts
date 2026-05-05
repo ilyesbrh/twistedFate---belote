@@ -154,3 +154,66 @@ describe("server message validation", () => {
     expect(isServerMessage({ type: "room_created", code: "ABCD", seat: 0 })).toBe(false);
   });
 });
+
+describe("hello_ack identity (optional)", () => {
+  it("accepts hello_ack without identity (back-compat)", () => {
+    expect(isServerMessage({ type: "hello_ack", clientId: "c1" })).toBe(true);
+  });
+
+  it("accepts hello_ack with a user identity", () => {
+    const msg: ServerMessage = {
+      type: "hello_ack",
+      clientId: "c1",
+      identity: { kind: "user", id: "u_123", nickname: "Alice", avatarUrl: "/a.png" },
+    };
+    expect(isServerMessage(msg)).toBe(true);
+    expect(parseServerMessage(msg)).toEqual(msg);
+  });
+
+  it("accepts hello_ack with a guest identity (no avatarUrl)", () => {
+    const msg: ServerMessage = {
+      type: "hello_ack",
+      clientId: "c1",
+      identity: { kind: "guest", id: "g_123", nickname: "Guest-abcd" },
+    };
+    expect(isServerMessage(msg)).toBe(true);
+    expect(parseServerMessage(msg)).toEqual(msg);
+  });
+
+  it("rejects an identity with an unknown kind", () => {
+    expect(
+      isServerMessage({
+        type: "hello_ack",
+        clientId: "c1",
+        identity: { kind: "robot", id: "x", nickname: "n" },
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects an identity missing required fields", () => {
+    expect(
+      isServerMessage({
+        type: "hello_ack",
+        clientId: "c1",
+        identity: { kind: "user", nickname: "Alice" }, // no id
+      }),
+    ).toBe(false);
+    expect(
+      isServerMessage({
+        type: "hello_ack",
+        clientId: "c1",
+        identity: { kind: "user", id: "u" }, // no nickname
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects an identity with a non-string avatarUrl", () => {
+    expect(
+      isServerMessage({
+        type: "hello_ack",
+        clientId: "c1",
+        identity: { kind: "user", id: "u", nickname: "n", avatarUrl: 42 },
+      }),
+    ).toBe(false);
+  });
+});
