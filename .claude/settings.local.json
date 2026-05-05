@@ -1,5 +1,11 @@
 {
   "permissions": {
-    "allow": ["Bash(dir:*)"]
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(pnpm test *)",
+      "Bash(ssh root@95.111.229.105:*)",
+      "Bash(scp * root@95.111.229.105:*)",
+      "Bash(ssh -i * deploy@95.111.229.105:*)"
+    ]
   }
 }
