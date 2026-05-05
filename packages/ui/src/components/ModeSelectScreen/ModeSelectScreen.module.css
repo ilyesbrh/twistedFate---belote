@@ -1,6 +1,20 @@
 /* Board-game aesthetic (iteration 021). Layout overrides on top of the
    shared MenuFelt cream-paper surface. */
 
+.identityChipSlot {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 30;
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .identityChipSlot {
+    top: 6px;
+    right: 6px;
+  }
+}
+
 .contentColumn {
   display: flex;
   flex-direction: column;

@@ -16,5 +16,8 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./__tests__/setup.ts"],
     css: { modules: { classNameStrategy: "non-scoped" } },
+    // Bump default 5s — under heavy parallel load 833+ tests can starve
+    // single-test budgets even when individual tests are fast in isolation.
+    testTimeout: 15000,
   },
 });

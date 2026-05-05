@@ -1,4 +1,6 @@
 import type { ReactElement } from "react";
+import type { Identity } from "@belote/protocol";
+import { IdentityChip } from "../IdentityChip/IdentityChip.js";
 import { MenuFelt } from "../MenuFelt/MenuFelt.js";
 import styles from "./ModeSelectScreen.module.css";
 
@@ -6,6 +8,11 @@ export type Mode = "ai" | "friends" | "random" | "ranked";
 
 interface ModeSelectScreenProps {
   onSelect: (mode: Mode) => void;
+  /** Optional auth-aware chrome. When omitted, the identity chip is not rendered. */
+  identity?: Identity | null;
+  onSignIn?: () => void;
+  onSignUp?: () => void;
+  onSignOut?: () => void;
 }
 
 interface ModeButton {
@@ -52,9 +59,26 @@ const MODES: ModeButton[] = [
   },
 ];
 
-export function ModeSelectScreen({ onSelect }: ModeSelectScreenProps): ReactElement {
+export function ModeSelectScreen({
+  onSelect,
+  identity,
+  onSignIn,
+  onSignUp,
+  onSignOut,
+}: ModeSelectScreenProps): ReactElement {
+  const showChip = identity !== undefined && onSignIn && onSignUp && onSignOut;
   return (
     <MenuFelt className={styles.root}>
+      {showChip && (
+        <div className={styles.identityChipSlot}>
+          <IdentityChip
+            identity={identity ?? null}
+            onSignIn={onSignIn}
+            onSignUp={onSignUp}
+            onSignOut={onSignOut}
+          />
+        </div>
+      )}
       <div data-testid="mode-select-screen" className={styles.contentColumn}>
         <HeroIllustration />
         <h1 className={styles.title}>Belote</h1>

@@ -1,9 +1,12 @@
 import { type ReactElement, Suspense, lazy, useEffect, useState } from "react";
 import { GameTable, GameTableView } from "./components/GameTable/GameTable.js";
 import { InstallPrompt } from "./components/InstallPrompt/InstallPrompt.js";
+import { LoginScreen } from "./components/LoginScreen/LoginScreen.js";
 import { ModeSelectScreen, type Mode } from "./components/ModeSelectScreen/ModeSelectScreen.js";
 import { OnlineLobby } from "./components/OnlineLobby/OnlineLobby.js";
 import { OnlineRandomScreen } from "./components/OnlineRandomScreen/OnlineRandomScreen.js";
+import { SignupScreen } from "./components/SignupScreen/SignupScreen.js";
+import { useAuth } from "./auth/useAuth.js";
 import { useOnlineLobby } from "./online/useOnlineLobby.js";
 import { useOnlineGameSession } from "./online/useOnlineGameSession.js";
 
@@ -21,7 +24,7 @@ const CARD_SRCS = SUITS.flatMap((s) =>
   RANKS.map((r) => `${import.meta.env.BASE_URL}cards/${r}_of_${s}.png`),
 );
 
-type Screen = "menu" | "ai" | "online" | "random";
+type Screen = "menu" | "ai" | "online" | "random" | "login" | "signup";
 
 /** Auto-jump into the online flow if a saved session is present in the URL. */
 function initialScreen(): Screen {
@@ -36,6 +39,8 @@ function initialScreen(): Screen {
 export default function App(): ReactElement {
   const [screen, setScreen] = useState<Screen>(initialScreen);
   const [gameKey, setGameKey] = useState(0);
+  const [authPending, setAuthPending] = useState(false);
+  const auth = useAuth();
 
   if (shouldRenderDevScreens()) {
     return (
@@ -44,6 +49,23 @@ export default function App(): ReactElement {
       </Suspense>
     );
   }
+
+  // Block rendering while the auth preflight is in flight. Prevents the
+  // online lobby from opening a WS before the cookie is minted.
+  if (auth.status === "loading") {
+    return null;
+  }
+
+  const handleSignIn = (): void => {
+    setScreen("login");
+  };
+  const handleSignUp = (): void => {
+    setScreen("signup");
+  };
+  const handleSignOut = async (): Promise<void> => {
+    await auth.logout();
+    setScreen("menu");
+  };
 
   return (
     <>
@@ -70,6 +92,66 @@ export default function App(): ReactElement {
             if (mode === "ai") setScreen("ai");
             else if (mode === "friends") setScreen("online");
             else if (mode === "random") setScreen("random");
+          }}
+          identity={auth.identity}
+          onSignIn={handleSignIn}
+          onSignUp={handleSignUp}
+          onSignOut={() => {
+            void handleSignOut();
+          }}
+        />
+      )}
+
+      {screen === "login" && (
+        <LoginScreen
+          error={auth.error}
+          loading={authPending}
+          onSubmit={(input) => {
+            setAuthPending(true);
+            auth
+              .login(input)
+              .then(() => {
+                setScreen("menu");
+              })
+              .catch(() => {
+                // error is already on auth.error
+              })
+              .finally(() => {
+                setAuthPending(false);
+              });
+          }}
+          onGotoSignup={() => {
+            setScreen("signup");
+          }}
+          onCancel={() => {
+            setScreen("menu");
+          }}
+        />
+      )}
+
+      {screen === "signup" && (
+        <SignupScreen
+          error={auth.error}
+          loading={authPending}
+          onSubmit={(input) => {
+            setAuthPending(true);
+            auth
+              .signup(input)
+              .then(() => {
+                setScreen("menu");
+              })
+              .catch(() => {
+                // error is already on auth.error
+              })
+              .finally(() => {
+                setAuthPending(false);
+              });
+          }}
+          onGotoLogin={() => {
+            setScreen("login");
+          }}
+          onCancel={() => {
+            setScreen("menu");
           }}
         />
       )}

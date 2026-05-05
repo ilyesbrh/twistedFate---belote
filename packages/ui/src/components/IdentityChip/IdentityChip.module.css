@@ -1,0 +1,114 @@
+.root {
+  position: relative;
+  font-family: var(--font-body, "Lora", serif);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  min-height: 40px;
+  background: var(--paper-cream, #fffbe9);
+  color: var(--ink-dark, #2a1f12);
+  border: 1.5px solid var(--ink-dark, #2a1f12);
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 var(--ink-dark, #2a1f12);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 100ms ease,
+    box-shadow 100ms ease;
+}
+
+.chip:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--ink-dark, #2a1f12);
+}
+
+.chip:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--ink-dark, #2a1f12);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--accent-terracotta, #c2502c);
+  outline-offset: 2px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-sage, #6b8e6f);
+  flex-shrink: 0;
+}
+
+.chip[data-kind="user"] .dot {
+  background: var(--accent-terracotta, #c2502c);
+}
+
+.label {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caret {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: var(--paper-cream, #fffbe9);
+  border: 1.5px solid var(--ink-dark, #2a1f12);
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 var(--ink-dark, #2a1f12);
+  padding: 6px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menuItem {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font: inherit;
+  color: var(--ink-dark, #2a1f12);
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 44px;
+}
+
+.menuItem:hover {
+  background: rgba(194, 80, 44, 0.12);
+}
+
+.menuItem:focus-visible {
+  outline: 2px solid var(--accent-terracotta, #c2502c);
+  outline-offset: -2px;
+}
+
+@media (max-width: 480px) {
+  .chip {
+    padding: 6px 10px;
+    min-height: 36px;
+    font-size: 13px;
+  }
+  .label {
+    max-width: 90px;
+  }
+}
