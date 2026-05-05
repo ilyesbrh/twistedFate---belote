@@ -7,7 +7,7 @@
 #                   under a subpath.
 
 # ── Stage 1: build everything ────────────────────────────────────────────────
-FROM node:20-bookworm-slim AS build
+FROM node:24-bookworm-slim AS build
 WORKDIR /app
 
 # Enable corepack so the matching pnpm version (per package.json engines) is
@@ -20,6 +20,7 @@ COPY tsconfig.base.json tsconfig.json ./
 COPY packages/animation/package.json ./packages/animation/
 COPY packages/app/package.json ./packages/app/
 COPY packages/core/package.json ./packages/core/
+COPY packages/db/package.json ./packages/db/
 COPY packages/protocol/package.json ./packages/protocol/
 COPY packages/server/package.json ./packages/server/
 COPY packages/ui/package.json ./packages/ui/
@@ -41,7 +42,7 @@ ENV VITE_BASE_PATH=${VITE_BASE_PATH}
 RUN pnpm --filter ui exec vite build
 
 # ── Stage 2: slim runtime ────────────────────────────────────────────────────
-FROM node:20-bookworm-slim AS runtime
+FROM node:24-bookworm-slim AS runtime
 WORKDIR /app
 
 # Install pnpm globally via npm — *not* via corepack. corepack downloads
@@ -55,6 +56,7 @@ ENV NODE_ENV=production
 ENV PORT=4100
 ENV HOST=0.0.0.0
 ENV STATIC_ROOT=/app/packages/ui/dist
+ENV DB_PATH=/data/belote.db
 
 # Bring in the workspace skeleton + production deps. We ship sources for the
 # server (since it's tsx-run) and the built UI dist. Other workspace packages
@@ -64,6 +66,7 @@ COPY --from=build /app/tsconfig.base.json /app/tsconfig.json ./
 COPY --from=build /app/packages/server ./packages/server
 COPY --from=build /app/packages/core ./packages/core
 COPY --from=build /app/packages/app ./packages/app
+COPY --from=build /app/packages/db ./packages/db
 COPY --from=build /app/packages/protocol ./packages/protocol
 COPY --from=build /app/packages/animation ./packages/animation
 COPY --from=build /app/packages/ui/package.json ./packages/ui/
@@ -76,8 +79,11 @@ RUN pnpm install --frozen-lockfile
 
 EXPOSE 4100
 
-# Use a non-root user for the runtime.
-RUN useradd --system --uid 1001 belote && chown -R belote:belote /app
+# Use a non-root user for the runtime. /data is the SQLite mount point.
+RUN useradd --system --uid 1001 belote \
+  && mkdir -p /data \
+  && chown -R belote:belote /app /data
+VOLUME ["/data"]
 USER belote
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \

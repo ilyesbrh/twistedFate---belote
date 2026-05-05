@@ -15,6 +15,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: "4100"
+      DB_PATH: /data/belote.db
+    volumes:
+      - belote_data:/data
     healthcheck:
       test:
         [
@@ -32,3 +35,6 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+
+volumes:
+  belote_data:

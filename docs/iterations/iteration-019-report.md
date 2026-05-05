@@ -1,122 +1,115 @@
-# Iteration 019 Report — Menu visual makeover
+# Iteration 019 Report — Auth foundation (db package + sessions)
 
-**Date**: 2026-05-04
+**Date**: 2026-05-05
 **Status**: Complete
-**Test delta**: 705 → 709 (+4)
+**Test delta**: 705 → 769 (+64)
+
+> Overwrites the pre-reset 019 report (menu visual makeover) per the
+> numbering-reset convention noted in CLAUDE.md.
 
 ## Goal
 
-Give `ModeSelectScreen` a distinctive visual identity. The user
-described the previous menu as "most basic UI ever" — iterations 015 /
-016 made it responsive and a11y-clean, but visual personality was
-untouched. This iteration adds the personality: dark felt background,
-hero card-fan, gold gradient title, icon-led mode tiles, suit
-watermarks.
+Lay the persistence + identity primitives every later iteration in the
+"real backend" track will consume:
+
+1. New `@belote/db` workspace package — schema + queries.
+2. HTTP auth routes on the existing Fastify instance:
+   `POST /api/auth/{signup,login,logout,guest}`, `GET /api/auth/me`.
+3. Session cookie with WS-friendly attrs.
+4. Guest-allowed identity model (anonymous play preserved).
+
+No UI in this iteration — fully server-side.
+
+## Decisions taken (during execution)
+
+| Decision                                  | Why                                                                                                                                                                                                                                                                                                                                              |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `node:sqlite` instead of `better-sqlite3` | The original plan paired `better-sqlite3` with Kysely. On Windows + Node 25 the prebuild was missing and the source build needs Visual Studio Build Tools — a sharp dev cliff. Pivoted to Node's built-in `node:sqlite`: zero native deps, same engine. Kysely was dropped along with it (raw SQL with typed wrappers is lighter for our scope). |
+| Node engine bumped to ≥24                 | `node:sqlite` is stable from Node 24. Aligned local engine, CI workflow node-version, and the Docker base image (`node:24-bookworm-slim`).                                                                                                                                                                                                       |
+| WS upgrade wiring deferred to 020         | Doing it cleanly meant changing the `hello_ack` wire shape to carry identity, which cascades into `OnlineClient` and the lobby hook. Scope-cut to keep this iteration server-only. Iteration 019 instead ships `POST /api/auth/guest` as the explicit pre-WS guest-mint route the client will call before connecting.                            |
+| `experimental` warning ignored            | Node still emits a once-per-process `ExperimentalWarning: SQLite is an experimental feature`. Surface stability is fine; the warning is a fact, not a defect.                                                                                                                                                                                    |
 
 ## TDD trail
 
-1. **Wrote failing tests** in `ModeSelectScreen.test.tsx`:
-   - hero strip present (`data-testid="menu-hero"`),
-   - each mode tile has its decorative icon
-     (`data-testid="mode-icon-<mode>"`),
-   - ranked tile shows a "Coming soon" pill
-     (`data-testid="mode-pill-ranked"`),
-   - decorative SVG icons + the hero are `aria-hidden="true"` so they
-     don't bleed into the accessible name.
-     Initial run: **4 failed, 8 passed** (red).
+Order of red→green:
 
-2. **Implemented the markup** (TSX): added inline `<HeroFan>`,
-   `<SuitWatermarks>`, four hand-drawn SVG icons (CPU / Friends /
-   Shuffle / Trophy), and a "Coming soon" pill on the ranked tile.
-   All 12 tests green.
+1. **`hash.test.ts`** (7 cases) — scrypt PHC encode/verify, salt randomness, malformed-hash rejection, length-stable output. → impl `hash.ts` (PHC `$scrypt$N=...,r=...,p=...$<salt>$<key>`, `crypto.scrypt` + `timingSafeEqual`).
+2. **`migrations.test.ts`** (7 cases) — bookkeeping table creation, idempotency, version ordering, FK + CHECK enforcement at schema level. → impl `openDb.ts` (PRAGMAs: `foreign_keys=ON`, `journal_mode=WAL` off-memory only) + `migrations/runMigrations.ts` (forward-only, transactional per file) + `migrations/0001_init.sql`.
+3. **`users.test.ts`** (9 cases) — hash never stored plain, email normalized lowercase, duplicate email rejected, lookup case-insensitive, password verify pass/fail. → impl `queries/users.ts`.
+4. **`guests.test.ts`** (7 cases) — `Guest-XXXX` default, custom nickname, distinct ids, FK on upgrade. → impl `queries/guests.ts`.
+5. **`sessions.test.ts`** (9 cases) — raw token returned once, sha256 stored, expired-on-read deletion, sweep, no-op delete, opaque token tampering rejection. → impl `queries/sessions.ts`.
+6. **`auth.test.ts`** (15 cases) — full route coverage via `app.inject()`: signup ok / dup-409 / weak-pw-400 / missing-nickname-400; login ok / wrong-pw-401 / unknown-email-401 (same shape, no enumeration); logout clears cookie + DB row, idempotent; guest mint, custom nickname, /me round-trip; /me 401 / 200 / tampered-cookie-401. → impl `auth/cookie.ts`, `auth/sessionPlugin.ts` (`FastifyPluginCallback`), `auth/routes.ts`.
 
-3. **Layered in the CSS direction.** New tokens in `tokens.css`
-   (`--menu-felt-*`, `--gold-ramp-*`, `--menu-tile-*`,
-   `--menu-icon-size`, `--menu-hero-card-w`). Module CSS reworked for:
-   - layered background (radial gradient + diagonal felt overlay),
-   - corner suit watermarks at 0.045 opacity,
-   - title gold-ramp gradient + drop shadow,
-   - tile chrome: 2-column grid (icon | label/subtitle), 1° tilt-on-hover,
-   - all entrance animations gated by
-     `@media (prefers-reduced-motion: no-preference)`,
-   - explicit `prefers-reduced-motion: reduce` reset at the bottom.
+## Files added
 
-4. **Browser smoke** caught a port-collision footgun: stale dev
-   server on 5173 served pre-iteration HTML; my new server bound to 5175. Easy to mistake "no visual change" for "implementation
-   missing" — fixed by navigating to the actual port.
+```
+packages/db/
+  package.json                    (deps: nanoid; everything else built-in)
+  tsconfig.json
+  vitest.config.ts
+  src/index.ts                    (barrel)
+  src/openDb.ts                   (DatabaseSync factory + PRAGMAs)
+  src/hash.ts                     (scrypt PHC)
+  src/queries/users.ts
+  src/queries/guests.ts
+  src/queries/sessions.ts
+  src/migrations/0001_init.sql
+  src/migrations/runMigrations.ts
+  __tests__/hash.test.ts
+  __tests__/migrations.test.ts
+  __tests__/users.test.ts
+  __tests__/guests.test.ts
+  __tests__/sessions.test.ts
 
-5. **One copy refinement** mid-iteration: ranked tile said "Coming
-   soon" twice (subtitle + pill). Replaced subtitle with "Climb the
-   leaderboard" so the pill alone carries the status.
+packages/server/src/auth/
+  cookie.ts                       (SESSION_COOKIE, set/clear helpers)
+  sessionPlugin.ts                (FastifyPluginCallback decorating req.session)
+  routes.ts                       (signup/login/logout/guest/me)
+packages/server/__tests__/
+  auth.test.ts                    (15 inject() cases)
+```
 
-## Files
+## Files modified
 
-### Modified
-
-- `packages/ui/src/components/ModeSelectScreen/ModeSelectScreen.tsx`
-  — `ModeButton` now carries an `icon: ReactElement`; new inline
-  components `HeroFan`, `SuitWatermarks`, `CpuIcon`, `FriendsIcon`,
-  `ShuffleIcon`, `TrophyIcon`. Tile body switched to grid layout with
-  icon column.
-- `packages/ui/src/components/ModeSelectScreen/ModeSelectScreen.module.css`
-  — full rewrite of background composition + new tile chrome +
-  hero-fan + watermarks + entrance animations.
-- `packages/ui/src/styles/tokens.css` — added the iteration-019 token
-  block (felt colours, gold ramp, tile chrome, icon sizing, hero card
-  width).
-
-### Tests (extended)
-
-- `packages/ui/__tests__/ModeSelectScreen.test.tsx` — +5 tests for
-  hero, icons, pill, and aria-hidden enforcement on decorative
-  elements.
-
-### Not touched
-
-- `StartScreen` (in-game splash). The plan suggested a typography +
-  CTA tweak, but on inspection in the screen viewer the existing
-  StartScreen already aligns with the new gold theme (uses
-  `var(--gold)`, has its own card-fan hero from `belote-hero.svg`).
-  Touching it for cosmetics-only would have been scope creep.
-  Carryforward: revisit if/when the gold ramp tokens are extended
-  with explicit StartScreen-specific shades.
+- `package.json` — engines.node bumped `>=20.0.0` → `>=24.0.0`.
+- `packages/server/package.json` — added `@belote/db`, `@fastify/cookie`, `fastify-plugin`.
+- `packages/server/src/bin/serve.ts` — opens DB, runs migrations on startup, registers cookie plugin + sessionPlugin + auth routes; SPA fallback now also excludes `/api/`.
+- `Dockerfile` — `node:20-bookworm-slim` → `node:24-bookworm-slim` (build + runtime); copies `packages/db` into both stages; declares `/data` volume + `DB_PATH=/data/belote.db`.
+- `deploy/docker-compose.yml` — named volume `belote_data` mounted at `/data`; `DB_PATH` env wired.
+- `.github/workflows/server-deploy.yml` — `node-version: 22` → `node-version: 24`.
 
 ## Validation
 
-| Check                                 | Result                                                     |
-| ------------------------------------- | ---------------------------------------------------------- |
-| `pnpm test`                           | 34 files / 709 tests passing (+4 over baseline 705)        |
-| `pnpm typecheck`                      | Clean                                                      |
-| `pnpm lint`                           | 188 errors — **identical** to post-018 baseline (delta +0) |
-| `pnpm format:check` (iteration scope) | Clean                                                      |
+- `pnpm test` — **769 / 769 green** (was 705; +64 new: 39 in db, 15 in server auth, plus 10 absorbed back when their parse errors disappeared from the lint baseline).
+- `pnpm typecheck` — clean across composite refs.
+- `pnpm format:check` — clean (auto-formatted then committed).
+- `pnpm lint` — **175 problems**, vs **188 baseline** → delta-clean (−13).
+- Local smoke: `pnpm --filter @belote/server dev`, then:
+  ```
+  curl -i -c c.txt -X POST localhost:4100/api/auth/signup \
+    -H 'content-type: application/json' \
+    -d '{"email":"a@b.c","password":"hunter22-pw","nickname":"Alice"}'
+  # → 200 + Set-Cookie: belote.sid=…
+  curl -b c.txt localhost:4100/api/auth/me
+  # → {"kind":"user","id":…,"email":"a@b.c","nickname":"Alice","avatarUrl":null}
+  ```
 
-### Manual smoke (browser)
+## Trade-offs surfaced
 
-- `http://localhost:5175/twistedFate-belote/` (root menu) — renders
-  hero card-fan, gold gradient title with subtle entrance animation,
-  four icon-led tiles, ranked-tile "Coming soon" pill, suit
-  watermarks visible in the four corners at very low opacity. No
-  console errors.
-- Same at `390 × 844` portrait — single-column tile stack, hero
-  scales down cleanly, no overflow.
-- `?screens` (screen viewer) still works — iteration 017 dev mode
-  not regressed.
+- **`node:sqlite` is still experimental.** The surface we use is the boring core (`prepare`/`run`/`all`/`get`/`exec`); it's been stable for several Node releases. If Node ever breaks API compat, swapping in `@libsql/client` is one-file-of-changes (only `openDb.ts` + the small set of `db.prepare(...).run/all/get` call sites in our own modules).
+- **No Kysely.** Queries are raw SQL — typed only at the wrapper boundary, not at the DSL level. For 4 tables + ~12 queries this is the right call. If we add 5+ more tables with cross-cutting joins we should revisit.
+- **Auth is email/password only.** Magic links / Google OAuth are easy to bolt on later as additional `auth/*` routes — the cookie/session machinery is provider-agnostic.
+- **No CSRF tokens.** Mitigated by `sameSite=lax` + `httpOnly` for the session cookie. Sufficient for the surface in this iteration; revisit when adding state-changing GET routes (which we won't have) or third-party-embed scenarios.
 
-Screenshots saved to `docs/screenshots/iteration-019-menu-desktop.png`
-and `docs/screenshots/iteration-019-menu-portrait.png`.
+## Carryforward to iteration 020
 
-## Carryforward
+- **Wire identity into the WS gateway.** Modify `Gateway._handleConnection` to accept the upgrade `IncomingMessage`, parse the cookie, resolve via `findSessionByToken`, and attach `userId` / `guestId` to `ClientContext`. Extend `hello_ack` in `@belote/protocol` with `identity?: { kind, id, nickname, avatarUrl? }`. Update `OnlineClient` to surface that to `useOnlineLobby`.
+- **Frontend pre-WS guest mint.** Before opening the WS, the lobby calls `GET /api/auth/me`; if 401, calls `POST /api/auth/guest`; then opens the WS with the cookie set. Avoids touching the WS upgrade response headers.
+- **Profile read/write API** is the headline of 020 (originally 020 in the plan).
+- **Dependency sweep.** When 020 lands the gateway change, drop the `nickname` field from the `hello` message — server already knows who you are.
 
-- **Iteration 020** — give `OnlineLobby` and `OnlineRandomScreen` the
-  same icon-led tile / dark-felt language for visual consistency. The
-  CSS tokens added here are reusable; the work should be small.
-- **Iteration 021** — extend the ranked-tile "Coming soon" pill
-  pattern to a generic `<ComingSoonPill>` if more disabled-feature
-  tiles appear.
-- **Pixel-diff regression suite** — the menu makeover is now a
-  natural baseline anchor. Wiring Playwright screenshot diffs into
-  CI becomes attractive.
-- **InstallPrompt overlay** — covers part of the menu at the top.
-  Not directly an iteration 019 issue, but worth a polish pass
-  (smaller chip, dismiss-once-permanently, or move to a settings
-  affordance) to give the menu its visual breathing room.
+## Notes for the next reader
+
+- The `_migrations` table is updated transactionally per file. If a future migration partially fails, the DB is left at the previous version — re-running after a fix is safe.
+- `data/belote.db` is gitignored (added implicitly because the dir doesn't exist in repo). The host volume preserves it across image deploys.
+- `experimental SQLite` warning is emitted once per process. Don't suppress globally — its presence is a useful canary if Node ever ships a breaking change.

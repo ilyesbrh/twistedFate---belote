@@ -49,3 +49,10 @@ temp/
 
 # Legacy iteration screenshots from the deleted/rebuilt UI track
 packages/ui/e2e/screenshots/
+
+# Local SQLite database (created at runtime; mounted as a docker volume in prod)
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm

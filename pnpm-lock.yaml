@@ -49,6 +49,12 @@ importers:
 
   packages/core: {}
 
+  packages/db:
+    dependencies:
+      nanoid:
+        specifier: ^5.0.9
+        version: 5.1.11
+
   packages/protocol: {}
 
   packages/server:
@@ -59,15 +65,24 @@ importers:
       '@belote/core':
         specifier: workspace:*
         version: link:../core
+      '@belote/db':
+        specifier: workspace:*
+        version: link:../db
       '@belote/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@fastify/cookie':
+        specifier: ^11.0.2
+        version: 11.0.2
       '@fastify/static':
         specifier: ^8.0.4
         version: 8.3.0
       fastify:
         specifier: ^5.2.1
         version: 5.8.5
+      fastify-plugin:
+        specifier: ^5.0.1
+        version: 5.1.0
       ws:
         specifier: ^8.18.0
         version: 8.20.0
@@ -500,6 +515,9 @@ packages:
 
   '@fastify/ajv-compiler@4.0.5':
     resolution: {integrity: sha512-KoWKW+MhvfTRWL4qrhUwAAZoaChluo0m0vbiJlGMt2GXvL4LVPQEjt8kSpHI3IBq5Rez8fg+XeH3cneztq+C7A==}
+
+  '@fastify/cookie@11.0.2':
+    resolution: {integrity: sha512-GWdwdGlgJxyvNv+QcKiGNevSspMQXncjMZ1J8IvuDQk0jvkzgWWZFNC2En3s+nHndZBGV8IbLwOI/sxCZw/mzA==}
 
   '@fastify/error@4.2.0':
     resolution: {integrity: sha512-RSo3sVDXfHskiBZKBPRgnQTtIqpi/7zhJOEmAxCiBcM7d0uwdGdxLlsCaLzGs8v8NnxIRlfG0N51p5yFaOentQ==}
@@ -2221,6 +2239,11 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
+  nanoid@5.1.11:
+    resolution: {integrity: sha512-v+KEsUv2ps74PaSKv0gHTxTCgMXOIfBEbaqa6w6ISIGC7ZsvHN4N9oJ8d4cmf0n5oTzQz2SLmThbQWhjd/8eKg==}
+    engines: {node: ^18 || >=20}
+    hasBin: true
+
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
@@ -3066,6 +3089,11 @@ snapshots:
       ajv: 8.18.0
       ajv-formats: 3.0.1(ajv@8.18.0)
       fast-uri: 3.1.0
+
+  '@fastify/cookie@11.0.2':
+    dependencies:
+      cookie: 1.1.1
+      fastify-plugin: 5.1.0
 
   '@fastify/error@4.2.0': {}
 
@@ -4852,6 +4880,8 @@ snapshots:
   ms@2.1.3: {}
 
   nanoid@3.3.11: {}
+
+  nanoid@5.1.11: {}
 
   natural-compare@1.4.0: {}
 
