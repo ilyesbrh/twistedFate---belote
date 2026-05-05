@@ -1,114 +1,214 @@
+/* Iteration 025: signature corner + fanned action cards.
+   Replaces the cream-pill+dropdown of iteration 021. */
+
 .root {
   position: relative;
-  font-family: var(--font-body, "Lora", serif);
+  font-family: var(--font-hand, "Caveat", cursive);
+  /* Cards fan upward; this anchor sits below them. */
+  display: inline-block;
 }
 
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  min-height: 40px;
-  background: var(--paper-cream, #fffbe9);
-  color: var(--ink-dark, #2a1f12);
-  border: 1.5px solid var(--ink-dark, #2a1f12);
-  border-radius: 999px;
-  box-shadow: 2px 2px 0 var(--ink-dark, #2a1f12);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    transform 100ms ease,
-    box-shadow 100ms ease;
-}
-
-.chip:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 var(--ink-dark, #2a1f12);
-}
-
-.chip:active {
-  transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0 var(--ink-dark, #2a1f12);
-}
-
-.chip:focus-visible {
-  outline: 2px solid var(--accent-terracotta, #c2502c);
-  outline-offset: 2px;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent-sage, #6b8e6f);
-  flex-shrink: 0;
-}
-
-.chip[data-kind="user"] .dot {
-  background: var(--accent-terracotta, #c2502c);
-}
-
-.label {
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.caret {
-  font-size: 10px;
-  opacity: 0.7;
-}
-
-.menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  min-width: 160px;
-  background: var(--paper-cream, #fffbe9);
-  border: 1.5px solid var(--ink-dark, #2a1f12);
-  border-radius: 8px;
-  box-shadow: 3px 3px 0 var(--ink-dark, #2a1f12);
-  padding: 6px;
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.menuItem {
-  display: block;
-  width: 100%;
-  padding: 10px 12px;
+/* ── The signature itself ─────────────────────────────────────────────── */
+.signature {
+  position: relative;
   background: transparent;
   border: none;
-  border-radius: 6px;
-  font: inherit;
-  color: var(--ink-dark, #2a1f12);
-  text-align: left;
+  padding: 6px 4px 12px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  min-height: 44px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  color: var(--ink-dark);
+  transform: rotate(-3deg);
+  transform-origin: bottom left;
+  transition:
+    transform 140ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 140ms ease;
+  z-index: 2;
 }
 
-.menuItem:hover {
-  background: rgba(194, 80, 44, 0.12);
+.signature:hover {
+  transform: rotate(-3deg) translateY(-2px);
+  color: var(--accent-terracotta);
 }
 
-.menuItem:focus-visible {
-  outline: 2px solid var(--accent-terracotta, #c2502c);
-  outline-offset: -2px;
+.signature[aria-expanded="true"] {
+  transform: rotate(-3deg) translateY(-4px) scale(1.03);
+  color: var(--accent-terracotta);
 }
 
-@media (max-width: 480px) {
-  .chip {
-    padding: 6px 10px;
-    min-height: 36px;
-    font-size: 13px;
+.signature:focus-visible {
+  outline: 2px dashed var(--accent-terracotta);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* Tiny "playing as" tag above the name — sets context without clutter. */
+.kindTag {
+  font-family: var(--font-body);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  opacity: 0.55;
+  margin-bottom: -2px;
+}
+
+/* The handwritten name itself. */
+.signatureText {
+  font-family: var(--font-hand);
+  font-size: clamp(28px, 5.5vw, 40px);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  /* Subtle ink-bleed shadow */
+  text-shadow: 0 1px 0 rgba(42, 31, 18, 0.06);
+}
+
+/* Hand-drawn squiggly underline (SVG path). */
+.underline {
+  width: 100%;
+  height: 14px;
+  margin-top: 2px;
+  color: var(--accent-terracotta);
+  overflow: visible;
+  display: block;
+}
+
+.underline path {
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  fill: none;
+  /* Animate the underline drawing in on first mount */
+  stroke-dasharray: 240;
+  stroke-dashoffset: 240;
+  animation: drawSig 700ms ease-out 200ms forwards;
+}
+
+@keyframes drawSig {
+  to {
+    stroke-dashoffset: 0;
   }
-  .label {
-    max-width: 90px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .underline path {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+}
+
+/* ── The fan of action cards above the signature ──────────────────────── */
+.fan {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  /* Each card positions absolutely off this anchor. The anchor itself
+     has zero size — pointer events on cards only. */
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  /* Push the fan a bit above the signature line. */
+  margin-bottom: 8px;
+}
+
+.actionCard {
+  pointer-events: auto;
+  position: absolute;
+  bottom: 0;
+  /* CSS variables set per-card inline: --rot for rotation, --tx for x-shift. */
+  --rot: 0deg;
+  --tx: 0px;
+  transform-origin: 50% 100%;
+  transform: translate(calc(-50% + var(--tx)), 0) rotate(var(--rot));
+
+  width: clamp(80px, 18vw, 104px);
+  height: clamp(108px, 24vw, 140px);
+  background: linear-gradient(180deg, #fbf5e3 0%, #f1e6c4 100%);
+  border: 2px solid var(--ink-dark);
+  border-radius: 9px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+    3px 4px 0 rgba(42, 31, 18, 0.18),
+    0 8px 18px rgba(42, 31, 18, 0.18);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  font-family: var(--font-body);
+  color: var(--ink-dark);
+  cursor: pointer;
+
+  animation: fanIn 280ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation-delay: var(--delay, 0ms);
+  transition:
+    transform 140ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 140ms ease;
+}
+
+.actionCard:hover {
+  transform: translate(calc(-50% + var(--tx)), -10px) rotate(var(--rot));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+    3px 4px 0 rgba(42, 31, 18, 0.18),
+    0 14px 28px rgba(42, 31, 18, 0.26);
+}
+
+.actionCard:focus-visible {
+  outline: 2px solid var(--accent-terracotta);
+  outline-offset: 3px;
+}
+
+@keyframes fanIn {
+  from {
+    transform: translate(-50%, 24px) rotate(calc(var(--rot) * 0.2)) scale(0.7);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .actionCard {
+    animation: none;
+  }
+}
+
+.actionIcon {
+  font-size: 24px;
+  color: var(--accent-terracotta);
+  line-height: 1;
+}
+
+.actionLabel {
+  font-family: var(--font-hand);
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1;
+  letter-spacing: 0.3px;
+}
+
+/* Compact landscape phones — shrink the signature so it doesn't crowd. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .signatureText {
+    font-size: 22px;
+  }
+  .kindTag {
+    font-size: 9px;
+  }
+  .actionCard {
+    width: 76px;
+    height: 96px;
+  }
+  .actionLabel {
+    font-size: 14px;
+  }
+  .actionIcon {
+    font-size: 18px;
   }
 }

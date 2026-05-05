@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactElement } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import type { Identity } from "@belote/protocol";
 import styles from "./IdentityChip.module.css";
 
@@ -15,10 +15,23 @@ export interface IdentityChipProps {
   readonly onViewProfile?: () => void;
 }
 
+interface ActionDescriptor {
+  readonly id: string;
+  readonly testId: string;
+  readonly label: string;
+  readonly icon: string;
+  readonly onClick: () => void;
+}
+
 /**
- * Small pill in the menu's top-right showing the current identity.
- * Click to open a dropdown of auth actions. Renders nothing while
- * the parent's auth preflight is in flight (`identity === null`).
+ * Iteration 025 redesign — handwritten signature + fanned action cards.
+ *
+ * The signature (Caveat font, terracotta squiggly underline) sits in the
+ * bottom-left corner of the menu. Tap → a small hand of action cards
+ * fans up from behind the signature. Each card is a single action,
+ * tilted and staggered like a real belote hand.
+ *
+ * Renders nothing while `identity === null` (auth preflight in flight).
  */
 export function IdentityChip(props: IdentityChipProps): ReactElement | null {
   const { identity, onSignIn, onSignUp, onSignOut, onViewHistory, onViewFriends, onViewProfile } =
@@ -26,7 +39,11 @@ export function IdentityChip(props: IdentityChipProps): ReactElement | null {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
-  // Close the menu when clicking outside.
+  const close = (): void => {
+    setOpen(false);
+  };
+
+  // Outside-click closes the fan.
   useEffect(() => {
     if (!open) return undefined;
     const onPointerDown = (event: PointerEvent): void => {
@@ -41,123 +58,141 @@ export function IdentityChip(props: IdentityChipProps): ReactElement | null {
     };
   }, [open]);
 
-  if (!identity) return null;
+  const actions = useMemo<readonly ActionDescriptor[]>(() => {
+    if (!identity) return [];
+    if (identity.kind === "guest") {
+      return [
+        {
+          id: "signin",
+          testId: "identity-action-signin",
+          label: "Sign in",
+          icon: "↩",
+          onClick: onSignIn,
+        },
+        {
+          id: "signup",
+          testId: "identity-action-signup",
+          label: "Create account",
+          icon: "✎",
+          onClick: onSignUp,
+        },
+      ];
+    }
+    const out: ActionDescriptor[] = [];
+    if (onViewProfile) {
+      out.push({
+        id: "profile",
+        testId: "identity-action-profile",
+        label: "Profile",
+        icon: "♣",
+        onClick: onViewProfile,
+      });
+    }
+    if (onViewFriends) {
+      out.push({
+        id: "friends",
+        testId: "identity-action-friends",
+        label: "Friends",
+        icon: "♥",
+        onClick: onViewFriends,
+      });
+    }
+    if (onViewHistory) {
+      out.push({
+        id: "history",
+        testId: "identity-action-history",
+        label: "View history",
+        icon: "♦",
+        onClick: onViewHistory,
+      });
+    }
+    out.push({
+      id: "signout",
+      testId: "identity-action-signout",
+      label: "Sign out",
+      icon: "↳",
+      onClick: onSignOut,
+    });
+    return out;
+  }, [identity, onSignIn, onSignUp, onSignOut, onViewProfile, onViewFriends, onViewHistory]);
 
-  const close = (): void => {
-    setOpen(false);
-  };
+  if (!identity) return null;
 
   return (
     <div ref={rootRef} className={styles.root}>
+      {open && (
+        <div className={styles.fan} role="menu">
+          {actions.map((a, i) => {
+            const layout = layoutFor(i, actions.length);
+            return (
+              <button
+                key={a.id}
+                type="button"
+                role="menuitem"
+                data-testid={a.testId}
+                className={styles.actionCard}
+                style={
+                  {
+                    "--rot": `${String(layout.rot)}deg`,
+                    "--tx": `${String(layout.tx)}px`,
+                    "--delay": `${String(i * 50)}ms`,
+                  } as React.CSSProperties
+                }
+                onClick={() => {
+                  close();
+                  a.onClick();
+                }}
+              >
+                <span className={styles.actionIcon} aria-hidden="true">
+                  {a.icon}
+                </span>
+                <span className={styles.actionLabel}>{a.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <button
         type="button"
         data-testid="identity-chip"
         data-kind={identity.kind}
-        className={styles.chip}
+        className={styles.signature}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => {
           setOpen((v) => !v);
         }}
       >
-        <span className={styles.dot} aria-hidden="true" />
-        <span className={styles.label} data-testid="identity-chip-label">
+        <span className={styles.kindTag} aria-hidden="true">
+          {identity.kind === "user" ? "Playing as" : "Guest"}
+        </span>
+        <span className={styles.signatureText} data-testid="identity-chip-label">
           {identity.nickname}
         </span>
-        <span className={styles.caret} aria-hidden="true">
-          ▾
-        </span>
+        <svg
+          className={styles.underline}
+          viewBox="0 0 200 14"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path d="M2 8 Q 30 2, 60 8 T 120 8 T 198 6" />
+        </svg>
       </button>
-
-      {open && (
-        <div className={styles.menu} role="menu">
-          {identity.kind === "guest" ? (
-            <>
-              <button
-                type="button"
-                role="menuitem"
-                data-testid="identity-action-signin"
-                className={styles.menuItem}
-                onClick={() => {
-                  close();
-                  onSignIn();
-                }}
-              >
-                Sign in
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                data-testid="identity-action-signup"
-                className={styles.menuItem}
-                onClick={() => {
-                  close();
-                  onSignUp();
-                }}
-              >
-                Create account
-              </button>
-            </>
-          ) : (
-            <>
-              {onViewProfile && (
-                <button
-                  type="button"
-                  role="menuitem"
-                  data-testid="identity-action-profile"
-                  className={styles.menuItem}
-                  onClick={() => {
-                    close();
-                    onViewProfile();
-                  }}
-                >
-                  Profile
-                </button>
-              )}
-              {onViewFriends && (
-                <button
-                  type="button"
-                  role="menuitem"
-                  data-testid="identity-action-friends"
-                  className={styles.menuItem}
-                  onClick={() => {
-                    close();
-                    onViewFriends();
-                  }}
-                >
-                  Friends
-                </button>
-              )}
-              {onViewHistory && (
-                <button
-                  type="button"
-                  role="menuitem"
-                  data-testid="identity-action-history"
-                  className={styles.menuItem}
-                  onClick={() => {
-                    close();
-                    onViewHistory();
-                  }}
-                >
-                  View history
-                </button>
-              )}
-              <button
-                type="button"
-                role="menuitem"
-                data-testid="identity-action-signout"
-                className={styles.menuItem}
-                onClick={() => {
-                  close();
-                  onSignOut();
-                }}
-              >
-                Sign out
-              </button>
-            </>
-          )}
-        </div>
-      )}
     </div>
   );
+}
+
+/**
+ * Compute rotation + horizontal offset for the i-th card in a fan of `total` cards.
+ * Cards spread over ±18° with a horizontal sweep so they overlap like a real hand.
+ */
+function layoutFor(i: number, total: number): { rot: number; tx: number } {
+  if (total <= 1) return { rot: 0, tx: 0 };
+  const center = (total - 1) / 2;
+  const norm = (i - center) / center; // -1 … +1
+  const rot = norm * 18;
+  // Horizontal spread: each card shifts right by ~28% of its own width per step.
+  const tx = norm * 60;
+  return { rot, tx };
 }

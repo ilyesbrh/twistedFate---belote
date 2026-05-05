@@ -1,17 +1,20 @@
 /* Board-game aesthetic (iteration 021). Layout overrides on top of the
    shared MenuFelt cream-paper surface. */
 
+/* Iteration 025: signature corner sits in the bottom-left, fanning
+   action cards upward over the menu. Pointer events confined to the
+   anchor + fan; doesn't intercept clicks elsewhere. */
 .identityChipSlot {
   position: fixed;
-  top: max(12px, env(safe-area-inset-top));
-  right: max(12px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: max(20px, env(safe-area-inset-left));
   z-index: 30;
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
   .identityChipSlot {
-    top: 6px;
-    right: 6px;
+    bottom: 8px;
+    left: 12px;
   }
 }
 
