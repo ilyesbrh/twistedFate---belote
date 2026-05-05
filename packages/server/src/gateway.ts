@@ -3,8 +3,15 @@ import type { WebSocket } from "ws";
 import { WebSocketServer } from "ws";
 import type { ClientMessage, Identity, ServerMessage, Seat } from "@belote/protocol";
 import { parseClientMessage } from "@belote/protocol";
-import { findGuestById, findSessionByToken, findUserById, type Db } from "@belote/db";
-import { Room, type Broadcaster } from "./room.js";
+import {
+  findGuestById,
+  findSessionByToken,
+  findUserById,
+  recordMatch,
+  type Db,
+  type MatchSeat,
+} from "@belote/db";
+import { Room, type Broadcaster, type GameCompletionInfo } from "./room.js";
 import { RoomRegistry } from "./registry.js";
 import { MatchmakingQueue } from "./matchmakingQueue.js";
 import { SESSION_COOKIE } from "./auth/cookie.js";
@@ -80,6 +87,43 @@ export class Gateway {
   }
 
   // ── Internals ──
+
+  /**
+   * Persist a finished game to the DB. Skips silently if any seat is
+   * fully anonymous (no userId, no guestId), since that would violate
+   * the match_seats CHECK constraint. Also skips when no DB is wired.
+   */
+  private _persistMatch(roomCode: string, info: GameCompletionInfo): void {
+    if (!this._db) return;
+    const members = this._roomMembers.get(roomCode);
+    if (!members) return;
+    const seats: MatchSeat[] = [];
+    for (const seat of [0, 1, 2, 3] as const) {
+      const ctx = members.get(seat);
+      if (!ctx) return;
+      if (!ctx.userId && !ctx.guestId) return;
+      seats.push({
+        seat,
+        userId: ctx.userId,
+        guestId: ctx.guestId,
+        nickname: ctx.nickname || `Seat ${String(seat)}`,
+      });
+    }
+    try {
+      recordMatch(this._db, {
+        code: info.code,
+        startedAt: info.startedAt,
+        endedAt: info.endedAt,
+        targetScore: info.targetScore,
+        finalScoreNs: info.finalScores[0],
+        finalScoreEw: info.finalScores[1],
+        winnerTeam: info.winnerTeam,
+        seats,
+      });
+    } catch {
+      // Don't crash the gateway on a DB write failure.
+    }
+  }
 
   private _resolveIdentity(request: IncomingMessage): Identity | null {
     if (!this._db) return null;
@@ -229,7 +273,11 @@ export class Gateway {
         for (const m of members.values()) send(m.ws, msg);
       },
     };
-    const room = this._registry.createRoom(broadcaster);
+    const room = this._registry.createRoom(broadcaster, {
+      onGameCompleted: (info) => {
+        this._persistMatch(info.code, info);
+      },
+    });
     this._roomMembers.set(room.code, members);
 
     const joined: { ctx: ClientContext; seat: Seat; playerToken: string }[] = [];
@@ -283,7 +331,11 @@ export class Gateway {
         for (const m of members.values()) send(m.ws, msg);
       },
     };
-    const room = this._registry.createRoom(broadcaster);
+    const room = this._registry.createRoom(broadcaster, {
+      onGameCompleted: (info) => {
+        this._persistMatch(info.code, info);
+      },
+    });
     this._roomMembers.set(room.code, members);
     // Pre-register at seat 0 so the player_joined broadcast reaches the creator.
     members.set(0, ctx);

@@ -19,6 +19,7 @@ import { openDb, runMigrations } from "@belote/db";
 import { Gateway } from "../gateway.js";
 import { sessionPlugin } from "../auth/sessionPlugin.js";
 import { registerAuthRoutes } from "../auth/routes.js";
+import { registerMatchRoutes } from "../match-history/routes.js";
 
 const port = Number(process.env["PORT"] ?? 4100);
 const host = process.env["HOST"] ?? "0.0.0.0";
@@ -35,6 +36,7 @@ fastify.log.info({ dbPath }, "database ready");
 await fastify.register(fastifyCookie);
 await fastify.register(sessionPlugin, { db });
 registerAuthRoutes(fastify, { db });
+registerMatchRoutes(fastify, { db });
 
 // Health endpoint (useful for sanity checks and container probes).
 fastify.get("/health", async () => ({ ok: true }));

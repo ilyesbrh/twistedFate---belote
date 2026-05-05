@@ -7,6 +7,8 @@ export interface IdentityChipProps {
   readonly onSignIn: () => void;
   readonly onSignUp: () => void;
   readonly onSignOut: () => void;
+  /** Optional — if provided, shows a "View history" item for users. */
+  readonly onViewHistory?: () => void;
 }
 
 /**
@@ -15,7 +17,7 @@ export interface IdentityChipProps {
  * the parent's auth preflight is in flight (`identity === null`).
  */
 export function IdentityChip(props: IdentityChipProps): ReactElement | null {
-  const { identity, onSignIn, onSignUp, onSignOut } = props;
+  const { identity, onSignIn, onSignUp, onSignOut, onViewHistory } = props;
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
@@ -92,18 +94,34 @@ export function IdentityChip(props: IdentityChipProps): ReactElement | null {
               </button>
             </>
           ) : (
-            <button
-              type="button"
-              role="menuitem"
-              data-testid="identity-action-signout"
-              className={styles.menuItem}
-              onClick={() => {
-                close();
-                onSignOut();
-              }}
-            >
-              Sign out
-            </button>
+            <>
+              {onViewHistory && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  data-testid="identity-action-history"
+                  className={styles.menuItem}
+                  onClick={() => {
+                    close();
+                    onViewHistory();
+                  }}
+                >
+                  View history
+                </button>
+              )}
+              <button
+                type="button"
+                role="menuitem"
+                data-testid="identity-action-signout"
+                className={styles.menuItem}
+                onClick={() => {
+                  close();
+                  onSignOut();
+                }}
+              >
+                Sign out
+              </button>
+            </>
           )}
         </div>
       )}

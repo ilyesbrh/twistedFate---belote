@@ -1,5 +1,6 @@
 import { type ReactElement, Suspense, lazy, useEffect, useState } from "react";
 import { GameTable, GameTableView } from "./components/GameTable/GameTable.js";
+import { HistoryScreen } from "./components/HistoryScreen/HistoryScreen.js";
 import { InstallPrompt } from "./components/InstallPrompt/InstallPrompt.js";
 import { LoginScreen } from "./components/LoginScreen/LoginScreen.js";
 import { ModeSelectScreen, type Mode } from "./components/ModeSelectScreen/ModeSelectScreen.js";
@@ -9,6 +10,7 @@ import { SignupScreen } from "./components/SignupScreen/SignupScreen.js";
 import { useAuth } from "./auth/useAuth.js";
 import { useOnlineLobby } from "./online/useOnlineLobby.js";
 import { useOnlineGameSession } from "./online/useOnlineGameSession.js";
+import { useMatchHistory } from "./online/useMatchHistory.js";
 
 const ScreenViewerHost = lazy(() => import("./dev/ScreenViewerHost.js"));
 
@@ -24,7 +26,7 @@ const CARD_SRCS = SUITS.flatMap((s) =>
   RANKS.map((r) => `${import.meta.env.BASE_URL}cards/${r}_of_${s}.png`),
 );
 
-type Screen = "menu" | "ai" | "online" | "random" | "login" | "signup";
+type Screen = "menu" | "ai" | "online" | "random" | "login" | "signup" | "history";
 
 /** Auto-jump into the online flow if a saved session is present in the URL. */
 function initialScreen(): Screen {
@@ -98,6 +100,22 @@ export default function App(): ReactElement {
           onSignUp={handleSignUp}
           onSignOut={() => {
             void handleSignOut();
+          }}
+          onViewHistory={
+            auth.identity?.kind === "user"
+              ? () => {
+                  setScreen("history");
+                }
+              : undefined
+          }
+        />
+      )}
+
+      {screen === "history" && auth.identity?.kind === "user" && (
+        <HistoryScreenContainer
+          currentUserId={auth.identity.id}
+          onBack={() => {
+            setScreen("menu");
           }}
         />
       )}
@@ -182,6 +200,25 @@ export default function App(): ReactElement {
         />
       )}
     </>
+  );
+}
+
+function HistoryScreenContainer({
+  currentUserId,
+  onBack,
+}: {
+  currentUserId: string;
+  onBack: () => void;
+}): ReactElement {
+  const { matches, loading, error } = useMatchHistory();
+  return (
+    <HistoryScreen
+      matches={matches}
+      loading={loading}
+      error={error}
+      currentUserId={currentUserId}
+      onBack={onBack}
+    />
   );
 }
 

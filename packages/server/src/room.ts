@@ -29,15 +29,35 @@ export type RoomPhase = "lobby" | "bidding" | "playing" | "round_complete" | "ga
 /** The seat-by-index array; index is the seat (0..3). */
 export type Seats = [RoomPlayer | null, RoomPlayer | null, RoomPlayer | null, RoomPlayer | null];
 
+/**
+ * What the gateway needs at game-end to persist a match row.
+ * The Room emits this once when the game-completed event fires.
+ */
+export interface GameCompletionInfo {
+  readonly code: string;
+  readonly startedAt: number;
+  readonly endedAt: number;
+  readonly targetScore: number;
+  readonly finalScores: readonly [number, number];
+  readonly winnerTeam: 0 | 1;
+}
+
+export interface RoomOptions {
+  readonly onGameCompleted?: (info: GameCompletionInfo) => void;
+}
+
 export class Room {
   readonly code: string;
   private readonly _broadcaster: Broadcaster;
   private readonly _session: GameSession;
   private readonly _seats: Seats = [null, null, null, null];
+  private readonly _onGameCompleted?: (info: GameCompletionInfo) => void;
+  private _startedAt: number | null = null;
 
-  constructor(code: string, broadcaster: Broadcaster) {
+  constructor(code: string, broadcaster: Broadcaster, opts: RoomOptions = {}) {
     this.code = code;
     this._broadcaster = broadcaster;
+    this._onGameCompleted = opts.onGameCompleted;
     this._session = new GameSession({
       playerTypes: ["human", "human", "human", "human"],
       stepDelayMs: 0,
@@ -174,6 +194,7 @@ export class Room {
   startGame(targetScore: number): void {
     if (!this.isFull) throw new Error("NOT_FULL");
     const names = this._seats.map((s) => s?.nickname ?? "") as [string, string, string, string];
+    this._startedAt = Date.now();
     this._session.dispatch(createStartGameCommand(names, targetScore));
     this._session.dispatch(createStartRoundCommand());
   }
@@ -229,6 +250,18 @@ export class Room {
     });
     this._broadcastPublicState();
     this._broadcastPrivateStates();
+
+    if (event.type === "game_completed" && this._onGameCompleted) {
+      const target = this._session.game?.targetScore ?? 0;
+      this._onGameCompleted({
+        code: this.code,
+        startedAt: this._startedAt ?? Date.now(),
+        endedAt: Date.now(),
+        targetScore: target,
+        finalScores: event.finalScores,
+        winnerTeam: event.winnerTeamIndex,
+      });
+    }
   }
 
   private _broadcastPublicState(): void {

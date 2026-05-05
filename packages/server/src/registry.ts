@@ -1,4 +1,4 @@
-import { Room, type Broadcaster } from "./room.js";
+import { Room, type Broadcaster, type RoomOptions } from "./room.js";
 
 export interface RoomRegistryConfig {
   readonly codeGenerator?: () => string;
@@ -24,11 +24,11 @@ export class RoomRegistry {
     this._maxRetries = config.maxRetries ?? 16;
   }
 
-  createRoom(broadcaster: Broadcaster): Room {
+  createRoom(broadcaster: Broadcaster, opts: RoomOptions = {}): Room {
     for (let attempt = 0; attempt < this._maxRetries; attempt++) {
       const code = this._gen();
       if (!this._rooms.has(code)) {
-        const room = new Room(code, broadcaster);
+        const room = new Room(code, broadcaster, opts);
         this._rooms.set(code, room);
         return room;
       }

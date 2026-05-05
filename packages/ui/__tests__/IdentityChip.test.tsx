@@ -85,6 +85,40 @@ describe("IdentityChip", () => {
     expect(screen.queryByTestId("identity-chip")).not.toBeInTheDocument();
   });
 
+  it("user dropdown shows a 'View history' item when onViewHistory is provided", async () => {
+    const user = userEvent.setup();
+    const onViewHistory = vi.fn();
+    render(
+      <IdentityChip
+        identity={USER}
+        onSignIn={vi.fn()}
+        onSignUp={vi.fn()}
+        onSignOut={vi.fn()}
+        onViewHistory={onViewHistory}
+      />,
+    );
+    await user.click(screen.getByTestId("identity-chip"));
+    const historyItem = screen.getByTestId("identity-action-history");
+    expect(historyItem).toBeInTheDocument();
+    await user.click(historyItem);
+    expect(onViewHistory).toHaveBeenCalledTimes(1);
+  });
+
+  it("guest dropdown does not show 'View history' even when handler is provided", async () => {
+    const user = userEvent.setup();
+    render(
+      <IdentityChip
+        identity={GUEST}
+        onSignIn={vi.fn()}
+        onSignUp={vi.fn()}
+        onSignOut={vi.fn()}
+        onViewHistory={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByTestId("identity-chip"));
+    expect(screen.queryByTestId("identity-action-history")).not.toBeInTheDocument();
+  });
+
   it("user chip shows a 'user' kind data attribute, guest shows 'guest'", () => {
     const { rerender } = render(
       <IdentityChip identity={USER} onSignIn={vi.fn()} onSignUp={vi.fn()} onSignOut={vi.fn()} />,

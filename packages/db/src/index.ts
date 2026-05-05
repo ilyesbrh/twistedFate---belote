@@ -29,3 +29,6 @@ export {
   sweepExpiredSessions,
 } from "./queries/sessions.js";
 export type { Session, ResolvedSession } from "./queries/sessions.js";
+
+export { recordMatch, listUserMatches, listGuestMatches } from "./queries/matches.js";
+export type { MatchRow, MatchSeat, RecordMatchInput, Team } from "./queries/matches.js";

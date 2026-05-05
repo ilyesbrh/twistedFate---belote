@@ -1,0 +1,147 @@
+.root {
+  width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+  font-family: var(--font-body, "Lora", serif);
+  color: var(--ink-dark, #2a1f12);
+}
+
+.card {
+  width: 100%;
+  max-width: 640px;
+  background: var(--paper-cream, #fffbe9);
+  border: 2px solid var(--ink-dark, #2a1f12);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 var(--ink-dark, #2a1f12);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display, "Yeseva One", serif);
+  font-size: 28px;
+  letter-spacing: 0.5px;
+}
+
+.backBtn {
+  font: inherit;
+  font-size: 14px;
+  background: transparent;
+  border: 1.5px solid var(--ink-dark, #2a1f12);
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.backBtn:hover {
+  background: var(--paper-cream, #fffbe9);
+  color: var(--accent-terracotta, #c2502c);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1.5px solid var(--ink-dark, #2a1f12);
+  border-radius: 8px;
+}
+
+.code {
+  font-family: var(--font-display, "Yeseva One", serif);
+  font-size: 18px;
+  letter-spacing: 1.5px;
+  color: var(--ink-dark, #2a1f12);
+  min-width: 70px;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.partners {
+  font-size: 14px;
+  color: var(--ink-dark, #2a1f12);
+}
+
+.score {
+  font-size: 13px;
+  opacity: 0.75;
+  font-family: var(--font-handwritten, "Caveat", cursive);
+  font-size: 18px;
+  letter-spacing: 0.3px;
+}
+
+.date {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badgeWin {
+  background: rgba(107, 142, 111, 0.18);
+  color: #355c39;
+  border: 1.5px solid #355c39;
+}
+
+.badgeLoss {
+  background: rgba(194, 80, 44, 0.14);
+  color: #6b2817;
+  border: 1.5px solid var(--accent-terracotta, #c2502c);
+}
+
+.empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--ink-dark, #2a1f12);
+  opacity: 0.7;
+  font-family: var(--font-handwritten, "Caveat", cursive);
+  font-size: 22px;
+}
+
+.loading {
+  text-align: center;
+  padding: 24px;
+  opacity: 0.7;
+}
+
+.error {
+  background: #fde6df;
+  border: 1.5px solid var(--accent-terracotta, #c2502c);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #6b2817;
+}
