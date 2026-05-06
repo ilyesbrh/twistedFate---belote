@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import type { LastRoundResult } from "../../hooks/useGameSession.js";
 import styles from "./RoundSummary.module.css";
 
@@ -20,6 +20,8 @@ interface RoundSummaryProps {
   ewTotal: number;
   targetScore: number;
   onNextRound: () => void;
+  /** If set, show a countdown bar instead of the button. Server auto-starts after this many ms. */
+  autoNextRoundMs?: number;
 }
 
 export function RoundSummary({
@@ -29,8 +31,21 @@ export function RoundSummary({
   ewTotal,
   targetScore,
   onNextRound,
+  autoNextRoundMs,
 }: RoundSummaryProps): ReactElement {
   const { wasCancelled, contract, bidderName, roundScore } = result;
+  const [countdown, setCountdown] = useState(autoNextRoundMs ?? 0);
+
+  useEffect(() => {
+    if (!autoNextRoundMs) return undefined;
+    setCountdown(autoNextRoundMs);
+    const interval = setInterval(() => {
+      setCountdown((prev) => Math.max(0, prev - 100));
+    }, 100);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [autoNextRoundMs]);
 
   return (
     <div className={styles.overlay} role="dialog" aria-modal="true">
@@ -71,14 +86,28 @@ export function RoundSummary({
         </div>
 
         {/* ── Action ── */}
-        <button
-          className={styles.nextBtn}
-          onClick={onNextRound}
-          aria-label="Next round"
-          data-touch="primary"
-        >
-          NEXT ROUND
-        </button>
+        {autoNextRoundMs ? (
+          <div className={styles.timerWrap}>
+            <span className={styles.timerLabel}>
+              Next round in {String(Math.ceil(countdown / 1000))}s
+            </span>
+            <div className={styles.timerTrack}>
+              <div
+                className={styles.timerBar}
+                style={{ width: `${String((countdown / autoNextRoundMs) * 100)}%` }}
+              />
+            </div>
+          </div>
+        ) : (
+          <button
+            className={styles.nextBtn}
+            onClick={onNextRound}
+            aria-label="Next round"
+            data-touch="primary"
+          >
+            NEXT ROUND
+          </button>
+        )}
       </div>
     </div>
   );

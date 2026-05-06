@@ -165,7 +165,7 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
     function handleEvent(ev: Record<string, unknown> & { type?: string }): void {
       const profiles = buildProfiles();
 
-      // Reset belote tracker on round_started.
+      // Reset belote tracker + clear round summary on round_started.
       if (ev.type === "round_started") {
         beloteHistory.current = {
           0: { q: false, k: false },
@@ -173,6 +173,7 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
           2: { q: false, k: false },
           3: { q: false, k: false },
         };
+        setLastRoundResult(null);
       }
 
       // Trick sweep animation — same 3-phase choreography as the local AI hook.
@@ -399,20 +400,26 @@ function adapt(input: AdaptInput): GameSessionState {
   };
 
   // Phase mapping.
+  // Keep showing the round summary overlay while lastRoundResult is set,
+  // even if the server already moved to the next round's bidding phase.
   let phase: GamePhase = "idle";
-  switch (pub?.phase) {
-    case "bidding":
-      phase = "bidding";
-      break;
-    case "playing":
-      phase = "playing";
-      break;
-    case "round_complete":
-      phase = "roundComplete";
-      break;
-    case "game_complete":
-      phase = "gameComplete";
-      break;
+  if (lastRoundResult !== null) {
+    phase = "roundComplete";
+  } else {
+    switch (pub?.phase) {
+      case "bidding":
+        phase = "bidding";
+        break;
+      case "playing":
+        phase = "playing";
+        break;
+      case "round_complete":
+        phase = "roundComplete";
+        break;
+      case "game_complete":
+        phase = "gameComplete";
+        break;
+    }
   }
 
   // Players (in seat order 0..3, but mapped to visual positions).
@@ -585,6 +592,7 @@ function adapt(input: AdaptInput): GameSessionState {
     contractHolderPosition,
     messages,
     bubbles,
+    isOnline: true,
     dispatch: () => undefined,
     playCard,
     placeBid,

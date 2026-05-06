@@ -37,6 +37,7 @@ export interface OnlineLobbyState {
   /** Leave the matchmaking queue. */
   cancelRandom(): void;
   startGame(targetScore: number): void;
+  addBots(): void;
   disconnect(): void;
   /** Forget the saved (room, token) for this browser. Call when user
    *  explicitly leaves; rejoin won't be attempted on next load. */
@@ -265,6 +266,9 @@ export function useOnlineLobby(): OnlineLobbyState {
       },
       startGame(targetScore: number) {
         client.send({ type: "start_game", targetScore });
+      },
+      addBots() {
+        client.send({ type: "add_bots" });
       },
       disconnect() {
         client.disconnect();

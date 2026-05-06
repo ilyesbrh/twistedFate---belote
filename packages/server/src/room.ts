@@ -7,7 +7,7 @@ import {
 } from "@belote/app";
 import type { GameEvent } from "@belote/app";
 import type { Seat, ServerMessage, WireBid } from "@belote/protocol";
-import { getValidPlays } from "@belote/core";
+import { getValidPlays, chooseBid, chooseCardForRound, createIdGenerator } from "@belote/core";
 import type { Card, PlayerPosition } from "@belote/core";
 
 export interface RoomPlayer {
@@ -46,12 +46,15 @@ export interface RoomOptions {
   readonly onGameCompleted?: (info: GameCompletionInfo) => void;
 }
 
+const BOT_NAMES = ["SharkyBot", "CardMaster", "TrickQueen", "AceHunter"];
+
 export class Room {
   readonly code: string;
   private readonly _broadcaster: Broadcaster;
   private readonly _session: GameSession;
   private readonly _seats: Seats = [null, null, null, null];
   private readonly _onGameCompleted?: (info: GameCompletionInfo) => void;
+  private readonly _botSeats = new Set<Seat>();
   private _startedAt: number | null = null;
 
   constructor(code: string, broadcaster: Broadcaster, opts: RoomOptions = {}) {
@@ -191,6 +194,30 @@ export class Room {
     this._broadcaster.broadcastAll({ type: "player_left", seat });
   }
 
+  isBot(seat: Seat): boolean {
+    return this._botSeats.has(seat);
+  }
+
+  /**
+   * Fill all empty seats with AI bots. Returns the number of bots added.
+   */
+  addBots(): number {
+    let added = 0;
+    let nameIdx = 0;
+    for (let i = 0; i < 4; i++) {
+      if (this._seats[i] !== null) continue;
+      const seat = i as Seat;
+      const name = BOT_NAMES[nameIdx % BOT_NAMES.length]!;
+      nameIdx++;
+      const playerToken = `bot_${Math.random().toString(36).slice(2, 12)}`;
+      this._seats[seat] = { playerToken, clientId: `bot_${String(seat)}`, nickname: name, connected: true };
+      this._botSeats.add(seat);
+      this._broadcaster.broadcastAll({ type: "player_joined", seat, nickname: name });
+      added++;
+    }
+    return added;
+  }
+
   startGame(targetScore: number): void {
     if (!this.isFull) throw new Error("NOT_FULL");
     const names = this._seats.map((s) => s?.nickname ?? "") as [string, string, string, string];
@@ -244,6 +271,16 @@ export class Room {
   // ── Internals ──
 
   private _onGameEvent(event: GameEvent): void {
+    // Debug trace — visible in server terminal
+    const e = event as Record<string, unknown>;
+    const seat = e["playerPosition"] ?? e["dealerPosition"] ?? "";
+    const extra =
+      event.type === "bid_placed" ? ` ${String((e["bid"] as Record<string, unknown>)?.["type"])}` :
+      event.type === "card_played" ? ` ${String((e["card"] as Record<string, unknown>)?.["suit"])} ${String((e["card"] as Record<string, unknown>)?.["rank"])}` :
+      event.type === "trick_completed" ? ` winner=${String(e["winnerPosition"])}` :
+      "";
+    console.log(`[room:${this.code}] ${event.type} seat=${String(seat)}${extra} phase=${this.phase}`);
+
     this._broadcaster.broadcastAll({
       type: "event",
       event: event as unknown as Record<string, unknown>,
@@ -261,6 +298,75 @@ export class Room {
         finalScores: event.finalScores,
         winnerTeam: event.winnerTeamIndex,
       });
+    }
+
+    // Auto-start next round after 5s for all online games
+    if (event.type === "round_completed" || event.type === "round_cancelled") {
+      if (this._session.state !== "game_completed") {
+        setTimeout(() => {
+          this._session.dispatch(createStartRoundCommand());
+        }, 5000);
+      }
+      return;
+    }
+
+    // Bot auto-play logic
+    if (this._botSeats.size > 0) {
+      // After a trick completes, wait for the sweep animation (1400ms)
+      if (event.type === "trick_completed") {
+        setTimeout(() => {
+          this._tickBot();
+        }, 1800);
+        return;
+      }
+
+      // Bidding moves: 800ms feels like thinking
+      // Card plays: 1200ms to let the card animate in
+      const delay = this.phase === "bidding" ? 800 : 1200;
+      setTimeout(() => {
+        this._tickBot();
+      }, delay);
+    }
+  }
+
+  private _tickBot(): void {
+    const r = this._session.currentRound;
+    if (!r) {
+      console.log(`[room:${this.code}] _tickBot: no current round`);
+      return;
+    }
+
+    if (this.phase === "bidding") {
+      const bidder = this.currentBidderSeat;
+      if (bidder === null || !this._botSeats.has(bidder)) return;
+      console.log(`[room:${this.code}] bot seat=${String(bidder)} bidding...`);
+      const hand = r.players[bidder]?.hand ?? [];
+      const idGen = createIdGenerator();
+      const bid = chooseBid(hand, r.biddingRound, bidder as PlayerPosition, idGen);
+      if (bid.type === "pass") {
+        this.placeBid(bidder, { type: "pass" });
+      } else if (bid.type === "suit") {
+        this.placeBid(bidder, { type: "suit", suit: bid.suit, value: bid.value });
+      } else if (bid.type === "coinche") {
+        this.placeBid(bidder, { type: "coinche" });
+      } else {
+        this.placeBid(bidder, { type: "pass" });
+      }
+    } else if (this.phase === "playing") {
+      const leader = this.leaderSeat;
+      if (leader === null || !this._botSeats.has(leader)) return;
+      console.log(`[room:${this.code}] bot seat=${String(leader)} playing...`);
+      try {
+        const card = chooseCardForRound(r, leader as PlayerPosition);
+        this.playCard(leader, card.id);
+      } catch {
+        // Fallback: play first valid card
+        const hand = r.players[leader]?.hand ?? [];
+        if (hand.length > 0) {
+          const firstCard = hand[0];
+          if (firstCard) this.playCard(leader, firstCard.id);
+        }
+      }
     }
   }
 

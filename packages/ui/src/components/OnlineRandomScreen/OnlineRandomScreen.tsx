@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { ReactElement } from "react";
 import { MenuFelt } from "../MenuFelt/MenuFelt.js";
 import styles from "./OnlineRandomScreen.module.css";
@@ -11,6 +10,8 @@ interface OnlineRandomScreenProps {
   readonly size: number;
   readonly status: "connecting" | "open" | "closed" | "error";
   readonly error: string | null;
+  /** Pre-resolved nickname from auth identity (user or guest). */
+  readonly nickname: string;
   readonly onFind: (nickname: string) => void;
   readonly onCancel: () => void;
   readonly onBack: () => void;
@@ -19,11 +20,9 @@ interface OnlineRandomScreenProps {
 const TARGET_SIZE = 4;
 
 export function OnlineRandomScreen(props: OnlineRandomScreenProps): ReactElement {
-  const { phase, size, status, error, onFind, onCancel, onBack } = props;
-  const [nickname, setNickname] = useState("");
+  const { phase, size, status, error, nickname, onFind, onCancel, onBack } = props;
 
-  const trimmed = nickname.trim();
-  const findDisabled = trimmed.length === 0 || status !== "open";
+  const findDisabled = !nickname || status !== "open";
 
   return (
     <MenuFelt className={styles.root}>
@@ -46,19 +45,11 @@ export function OnlineRandomScreen(props: OnlineRandomScreenProps): ReactElement
 
         {phase === "idle" ? (
           <div className={styles.form}>
-            <input
-              className={styles.input}
-              placeholder="Your nickname"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              aria-label="Nickname"
-              data-testid="random-nickname-input"
-            />
             <button
               className={styles.primaryBtn}
               disabled={findDisabled}
               onClick={() => {
-                onFind(trimmed);
+                onFind(nickname);
               }}
               aria-label="Find a random game"
               data-touch="primary"

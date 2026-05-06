@@ -176,6 +176,7 @@ export function GameTableView({ state, onPlayAgain }: GameTableViewProps) {
           ewTotal={state.themTotalScore}
           targetScore={state.targetScore}
           onNextRound={state.startNextRound}
+          autoNextRoundMs={state.isOnline ? 5000 : undefined}
         />
       )}
 

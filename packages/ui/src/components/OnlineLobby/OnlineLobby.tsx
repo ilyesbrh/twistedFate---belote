@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactElement } from "react";
 import { MenuFelt } from "../MenuFelt/MenuFelt.js";
 import type { OnlineLobbyState } from "../../online/useOnlineLobby.js";
+import { apiListFriends, type Friend } from "../../online/api/friends.js";
 import styles from "./OnlineLobby.module.css";
 
 interface OnlineLobbyProps {
@@ -12,12 +13,35 @@ interface OnlineLobbyProps {
 }
 
 export function OnlineLobby({ lobby, onBack, onGameStarted }: OnlineLobbyProps): ReactElement {
-  const [nickname, setNickname] = useState("");
+  const isUser = lobby.identity?.kind === "user";
+  const autoNickname = lobby.identity?.nickname ?? "";
   const [joinCode, setJoinCode] = useState("");
   const [mode, setMode] = useState<"choose" | "join">("choose");
+  const [friends, setFriends] = useState<readonly Friend[]>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const isFull = lobby.players.length === 4;
   const isHost = lobby.seat === 0;
+
+  // Fetch friends list when user enters a room
+  useEffect(() => {
+    if (lobby.phase !== "in_room" || !isUser) return;
+    apiListFriends()
+      .then((v) => {
+        setFriends(v.friends);
+      })
+      .catch(() => {
+        // silently ignore — invite is optional
+      });
+  }, [lobby.phase, isUser]);
+
+  const copyInvite = (friendId: string): void => {
+    const url = `${window.location.origin}${window.location.pathname}?room=${lobby.code ?? ""}&pid=join`;
+    void navigator.clipboard.writeText(url).then(() => {
+      setCopiedId(friendId);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
 
   return (
     <MenuFelt className={styles.root}>
@@ -68,6 +92,41 @@ export function OnlineLobby({ lobby, onBack, onGameStarted }: OnlineLobbyProps):
                 );
               })}
             </ul>
+            {friends.length > 0 && !isFull && (
+              <div className={styles.inviteSection}>
+                <h3 className={styles.inviteTitle}>Invite friends</h3>
+                <ul className={styles.inviteList}>
+                  {friends.map((f) => (
+                    <li key={f.userId} className={styles.inviteRow}>
+                      <span className={styles.inviteName}>{f.nickname}</span>
+                      <button
+                        type="button"
+                        className={styles.inviteBtn}
+                        onClick={() => {
+                          copyInvite(f.userId);
+                        }}
+                        data-testid={`invite-${f.userId}`}
+                      >
+                        {copiedId === f.userId ? "Copied!" : "Copy link"}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {isHost && !isFull && (
+              <button
+                className={styles.secondaryBtn}
+                onClick={() => {
+                  lobby.addBots();
+                }}
+                aria-label="Fill empty seats with bots"
+                data-touch="primary"
+                data-testid="add-bots-btn"
+              >
+                Fill with bots
+              </button>
+            )}
             {isHost && (
               <button
                 className={styles.startBtn}
@@ -87,21 +146,13 @@ export function OnlineLobby({ lobby, onBack, onGameStarted }: OnlineLobbyProps):
           </div>
         ) : (
           <div className={styles.lobbyForms}>
-            <input
-              className={styles.input}
-              placeholder="Your nickname"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              aria-label="Nickname"
-              data-testid="nickname-input"
-            />
             {mode === "choose" ? (
               <div className={styles.btnRow}>
                 <button
                   className={styles.primaryBtn}
-                  disabled={!nickname.trim() || lobby.status !== "open"}
+                  disabled={!autoNickname || lobby.status !== "open"}
                   onClick={() => {
-                    lobby.createRoom(nickname.trim());
+                    lobby.createRoom(autoNickname);
                   }}
                   aria-label="Create a room"
                   data-touch="primary"
@@ -111,7 +162,7 @@ export function OnlineLobby({ lobby, onBack, onGameStarted }: OnlineLobbyProps):
                 </button>
                 <button
                   className={styles.secondaryBtn}
-                  disabled={!nickname.trim() || lobby.status !== "open"}
+                  disabled={!autoNickname || lobby.status !== "open"}
                   onClick={() => setMode("join")}
                   aria-label="Join an existing room"
                   data-touch="primary"
@@ -135,7 +186,7 @@ export function OnlineLobby({ lobby, onBack, onGameStarted }: OnlineLobbyProps):
                   className={styles.primaryBtn}
                   disabled={joinCode.length !== 4}
                   onClick={() => {
-                    lobby.joinRoom(nickname.trim(), joinCode);
+                    lobby.joinRoom(autoNickname, joinCode);
                   }}
                   aria-label="Join room"
                   data-touch="primary"

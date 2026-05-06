@@ -42,7 +42,8 @@ export type ClientMessage =
   | { readonly type: "play_card"; readonly cardId: string }
   | { readonly type: "ping" }
   | { readonly type: "find_random"; readonly nickname: string }
-  | { readonly type: "cancel_random" };
+  | { readonly type: "cancel_random" }
+  | { readonly type: "add_bots" };
 
 /**
  * Resolved identity attached to a connection. Sent by the server in
@@ -192,6 +193,8 @@ export function isClientMessage(v: unknown): v is ClientMessage {
       return typeof nickname === "string" && nickname.length > 0;
     }
     case "cancel_random":
+      return true;
+    case "add_bots":
       return true;
     default:
       return false;

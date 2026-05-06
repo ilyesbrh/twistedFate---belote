@@ -238,6 +238,11 @@ export class Gateway {
       case "cancel_random":
         this._handleCancelRandom(ctx);
         return;
+      case "add_bots":
+        if (!ctx.room) return sendErr(ctx.ws, "NOT_IN_ROOM", "create or join first");
+        if (ctx.seat !== 0) return sendErr(ctx.ws, "NOT_HOST", "only the host can add bots");
+        ctx.room.addBots();
+        return;
     }
   }
 

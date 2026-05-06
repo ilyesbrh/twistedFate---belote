@@ -407,6 +407,7 @@ function OnlineRandomFlow({ onLeave }: { onLeave: () => void }): ReactElement {
         size={lobby.queueSize}
         status={lobby.status}
         error={lobby.error}
+        nickname={lobby.identity?.nickname ?? ""}
         onFind={(nickname) => {
           lobby.findRandom(nickname);
         }}

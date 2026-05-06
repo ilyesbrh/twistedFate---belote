@@ -113,6 +113,8 @@ export interface GameSessionState {
   messages: GameMessage[];
   /** Per-position thought bubble (auto-dismisses after ~4s). */
   bubbles: Record<Position, GameMessage | null>;
+  /** True when playing an online game (server auto-starts next round). */
+  isOnline: boolean;
   dispatch: (cmd: GameCommand) => void;
   playCard: (cardIndex: number) => void;
   placeBid: (
@@ -482,6 +484,7 @@ export function useGameSession(): GameSessionState {
     contractHolderPosition,
     messages,
     bubbles,
+    isOnline: false,
     dispatch,
     playCard,
     placeBid,
