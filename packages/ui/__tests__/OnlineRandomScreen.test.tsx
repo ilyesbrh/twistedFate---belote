@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { OnlineRandomScreen } from "../src/components/OnlineRandomScreen/OnlineRandomScreen.js";
 
 describe("OnlineRandomScreen", () => {
-  it("idle state: shows nickname input + Find a game button + Back", () => {
+  it("idle state: shows Find a game button + Back", () => {
     render(
       <OnlineRandomScreen
         phase="idle"
@@ -12,19 +12,18 @@ describe("OnlineRandomScreen", () => {
         size={0}
         status="open"
         error={null}
+        nickname="Alice"
         onFind={vi.fn()}
         onCancel={vi.fn()}
         onBack={vi.fn()}
       />,
     );
-    expect(screen.getByTestId("random-nickname-input")).toBeInTheDocument();
     expect(screen.getByTestId("random-find-btn")).toBeInTheDocument();
     expect(screen.getByTestId("random-back-btn")).toBeInTheDocument();
     expect(screen.queryByTestId("random-cancel-btn")).not.toBeInTheDocument();
   });
 
-  it("Find button is disabled until a non-empty nickname is entered", async () => {
-    const user = userEvent.setup();
+  it("Find button is disabled when nickname is empty", () => {
     render(
       <OnlineRandomScreen
         phase="idle"
@@ -32,18 +31,33 @@ describe("OnlineRandomScreen", () => {
         size={0}
         status="open"
         error={null}
+        nickname=""
         onFind={vi.fn()}
         onCancel={vi.fn()}
         onBack={vi.fn()}
       />,
     );
-    const btn = screen.getByTestId("random-find-btn");
-    expect(btn).toBeDisabled();
-    await user.type(screen.getByTestId("random-nickname-input"), "Alice");
-    expect(btn).not.toBeDisabled();
+    expect(screen.getByTestId("random-find-btn")).toBeDisabled();
   });
 
-  it("clicking Find calls onFind with the trimmed nickname", async () => {
+  it("Find button is enabled once a nickname is provided", () => {
+    render(
+      <OnlineRandomScreen
+        phase="idle"
+        position={null}
+        size={0}
+        status="open"
+        error={null}
+        nickname="Alice"
+        onFind={vi.fn()}
+        onCancel={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("random-find-btn")).not.toBeDisabled();
+  });
+
+  it("clicking Find calls onFind with the resolved nickname", async () => {
     const user = userEvent.setup();
     const onFind = vi.fn();
     render(
@@ -53,12 +67,12 @@ describe("OnlineRandomScreen", () => {
         size={0}
         status="open"
         error={null}
+        nickname="Alice"
         onFind={onFind}
         onCancel={vi.fn()}
         onBack={vi.fn()}
       />,
     );
-    await user.type(screen.getByTestId("random-nickname-input"), "  Alice  ");
     await user.click(screen.getByTestId("random-find-btn"));
     expect(onFind).toHaveBeenCalledTimes(1);
     expect(onFind).toHaveBeenCalledWith("Alice");
@@ -72,6 +86,7 @@ describe("OnlineRandomScreen", () => {
         size={0}
         status="connecting"
         error={null}
+        nickname="Alice"
         onFind={vi.fn()}
         onCancel={vi.fn()}
         onBack={vi.fn()}
@@ -88,6 +103,7 @@ describe("OnlineRandomScreen", () => {
         size={3}
         status="open"
         error={null}
+        nickname="Alice"
         onFind={vi.fn()}
         onCancel={vi.fn()}
         onBack={vi.fn()}
@@ -108,6 +124,7 @@ describe("OnlineRandomScreen", () => {
         size={1}
         status="open"
         error={null}
+        nickname="Alice"
         onFind={vi.fn()}
         onCancel={onCancel}
         onBack={vi.fn()}
@@ -125,6 +142,7 @@ describe("OnlineRandomScreen", () => {
         size={0}
         status="open"
         error="ALREADY_IN_ROOM: leave the current room first"
+        nickname="Alice"
         onFind={vi.fn()}
         onCancel={vi.fn()}
         onBack={vi.fn()}
@@ -143,6 +161,7 @@ describe("OnlineRandomScreen", () => {
         size={0}
         status="open"
         error={null}
+        nickname="Alice"
         onFind={vi.fn()}
         onCancel={vi.fn()}
         onBack={onBack}
@@ -160,6 +179,7 @@ describe("OnlineRandomScreen", () => {
         size={3}
         status="open"
         error={null}
+        nickname="Alice"
         onFind={vi.fn()}
         onCancel={vi.fn()}
         onBack={vi.fn()}
@@ -178,6 +198,7 @@ describe("OnlineRandomScreen", () => {
         size={0}
         status="open"
         error={null}
+        nickname="Alice"
         onFind={vi.fn()}
         onCancel={vi.fn()}
         onBack={vi.fn()}
@@ -188,7 +209,6 @@ describe("OnlineRandomScreen", () => {
       "aria-label",
       "Find a random game",
     );
-    expect(screen.getByTestId("random-nickname-input")).toHaveAttribute("aria-label", "Nickname");
 
     rerender(
       <OnlineRandomScreen
@@ -197,6 +217,7 @@ describe("OnlineRandomScreen", () => {
         size={1}
         status="open"
         error={null}
+        nickname="Alice"
         onFind={vi.fn()}
         onCancel={vi.fn()}
         onBack={vi.fn()}
@@ -216,6 +237,7 @@ describe("OnlineRandomScreen", () => {
         size={0}
         status="open"
         error={null}
+        nickname="Alice"
         onFind={vi.fn()}
         onCancel={vi.fn()}
         onBack={vi.fn()}
@@ -234,6 +256,7 @@ describe("OnlineRandomScreen", () => {
         size={0}
         status="open"
         error={null}
+        nickname="Alice"
         onFind={vi.fn()}
         onCancel={vi.fn()}
         onBack={vi.fn()}
@@ -251,6 +274,7 @@ describe("OnlineRandomScreen", () => {
         size={2}
         status="open"
         error={null}
+        nickname="Alice"
         onFind={vi.fn()}
         onCancel={vi.fn()}
         onBack={vi.fn()}

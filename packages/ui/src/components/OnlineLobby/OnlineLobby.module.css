@@ -361,7 +361,9 @@
   cursor: pointer;
   min-height: 36px;
   box-shadow: 2px 2px 0 var(--ink-dark, #2a1f12);
-  transition: transform 80ms ease, box-shadow 80ms ease;
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease;
 }
 
 .inviteBtn:hover {

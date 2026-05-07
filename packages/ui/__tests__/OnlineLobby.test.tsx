@@ -15,12 +15,15 @@ function makeLobby(overrides: Partial<OnlineLobbyState> = {}): OnlineLobbyState 
     error: null,
     queuePosition: null,
     queueSize: 0,
-    identity: null,
+    // Identity is auto-resolved in production; provide a guest identity so
+    // the create/join buttons are enabled in idle-phase tests.
+    identity: { kind: "guest", id: "g-test", nickname: "Guest-test" },
     createRoom: vi.fn(),
     joinRoom: vi.fn(),
     findRandom: vi.fn(),
     cancelRandom: vi.fn(),
     startGame: vi.fn(),
+    addBots: vi.fn(),
     disconnect: vi.fn(),
     clearSavedSession: vi.fn(),
     // We don't need the actual OnlineClient in component tests.
@@ -33,7 +36,6 @@ describe("OnlineLobby", () => {
   it("renders the lobby idle form", () => {
     render(<OnlineLobby lobby={makeLobby()} onBack={vi.fn()} onGameStarted={vi.fn()} />);
     expect(screen.getByTestId("online-lobby")).toBeInTheDocument();
-    expect(screen.getByTestId("nickname-input")).toBeInTheDocument();
     expect(screen.getByTestId("create-room-btn")).toBeInTheDocument();
     expect(screen.getByTestId("enter-join-btn")).toBeInTheDocument();
   });
@@ -49,12 +51,23 @@ describe("OnlineLobby", () => {
   it("interactive controls expose accessible labels (idle phase)", () => {
     render(<OnlineLobby lobby={makeLobby()} onBack={vi.fn()} onGameStarted={vi.fn()} />);
     expect(screen.getByTestId("lobby-back")).toHaveAttribute("aria-label", "Back to menu");
-    expect(screen.getByTestId("nickname-input")).toHaveAttribute("aria-label", "Nickname");
     expect(screen.getByTestId("create-room-btn")).toHaveAttribute("aria-label", "Create a room");
     expect(screen.getByTestId("enter-join-btn")).toHaveAttribute(
       "aria-label",
       "Join an existing room",
     );
+  });
+
+  it("create/join buttons stay disabled when there is no identity yet", () => {
+    render(
+      <OnlineLobby
+        lobby={makeLobby({ identity: null })}
+        onBack={vi.fn()}
+        onGameStarted={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("create-room-btn")).toBeDisabled();
+    expect(screen.getByTestId("enter-join-btn")).toBeDisabled();
   });
 
   it("primary CTAs are tagged data-touch='primary'", () => {

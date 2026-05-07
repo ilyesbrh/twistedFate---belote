@@ -210,7 +210,12 @@ export class Room {
       const name = BOT_NAMES[nameIdx % BOT_NAMES.length]!;
       nameIdx++;
       const playerToken = `bot_${Math.random().toString(36).slice(2, 12)}`;
-      this._seats[seat] = { playerToken, clientId: `bot_${String(seat)}`, nickname: name, connected: true };
+      this._seats[seat] = {
+        playerToken,
+        clientId: `bot_${String(seat)}`,
+        nickname: name,
+        connected: true,
+      };
       this._botSeats.add(seat);
       this._broadcaster.broadcastAll({ type: "player_joined", seat, nickname: name });
       added++;
@@ -275,11 +280,16 @@ export class Room {
     const e = event as Record<string, unknown>;
     const seat = e["playerPosition"] ?? e["dealerPosition"] ?? "";
     const extra =
-      event.type === "bid_placed" ? ` ${String((e["bid"] as Record<string, unknown>)?.["type"])}` :
-      event.type === "card_played" ? ` ${String((e["card"] as Record<string, unknown>)?.["suit"])} ${String((e["card"] as Record<string, unknown>)?.["rank"])}` :
-      event.type === "trick_completed" ? ` winner=${String(e["winnerPosition"])}` :
-      "";
-    console.log(`[room:${this.code}] ${event.type} seat=${String(seat)}${extra} phase=${this.phase}`);
+      event.type === "bid_placed"
+        ? ` ${String((e["bid"] as Record<string, unknown>)?.["type"])}`
+        : event.type === "card_played"
+          ? ` ${String((e["card"] as Record<string, unknown>)?.["suit"])} ${String((e["card"] as Record<string, unknown>)?.["rank"])}`
+          : event.type === "trick_completed"
+            ? ` winner=${String(e["winnerPosition"])}`
+            : "";
+    console.log(
+      `[room:${this.code}] ${event.type} seat=${String(seat)}${extra} phase=${this.phase}`,
+    );
 
     this._broadcaster.broadcastAll({
       type: "event",
