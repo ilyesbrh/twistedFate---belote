@@ -3,7 +3,11 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  width: 220px;
+  /* Fluid width — fit-content with a sensible floor + viewport-bounded ceiling.
+     `min-width: max-content` guarantees the suit row + value grid never squeeze
+     under their natural content width (was the landscape clip culprit). */
+  width: max-content;
+  min-width: 240px;
   max-width: calc(100vw - 16px);
   border-radius: 14px;
   background: linear-gradient(180deg, #fffbe9 0%, var(--paper-cream-deep) 100%);
@@ -186,7 +190,9 @@
    stacks under ~290px. */
 @media (max-height: 500px) and (orientation: landscape) {
   .panel {
-    width: 260px;
+    /* Landscape: widen so the 4-col value grid + suit row breathe. */
+    min-width: 320px;
+    max-width: calc(100vw - 24px);
     border-radius: 10px;
   }
   .suitRow {
@@ -224,7 +230,7 @@
 
 @media (max-width: 600px) {
   .panel {
-    width: 160px;
+    min-width: 220px;
   }
   .suitBtn {
     font-size: 18px;

@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import type { Suit } from "@belote/core";
 import type { PlayerData, Position } from "../../data/mockGame.js";
 import type { GameMessage, MessageType } from "../../messages/gameMessages.js";
 import styles from "./PlayerAvatar.module.css";
@@ -10,8 +11,19 @@ interface PlayerAvatarProps {
   size?: AvatarSize;
   isActive?: boolean;
   isContractHolder?: boolean;
+  /** When set + isContractHolder, the stamp shows the suit + value instead of a generic ★. */
+  contractInfo?: { suit: Suit; value: number } | null;
   bubbleMessage?: GameMessage | null;
 }
+
+const SUIT_GLYPH: Record<Suit, string> = {
+  hearts: "♥",
+  diamonds: "♦",
+  clubs: "♣",
+  spades: "♠",
+};
+
+const isRedSuit = (s: Suit): boolean => s === "hearts" || s === "diamonds";
 
 const TOOLTIP_SIDE: Record<Position, string> = {
   north: styles.tooltipBottom,
@@ -41,6 +53,7 @@ export function PlayerAvatar({
   size = "md",
   isActive = false,
   isContractHolder = false,
+  contractInfo = null,
   bubbleMessage,
 }: PlayerAvatarProps): ReactElement {
   // 2-letter monogram so players with the same first letter are
@@ -60,15 +73,27 @@ export function PlayerAvatar({
             D
           </span>
         )}
-        {isContractHolder && (
-          <span
-            className={styles.contractStamp}
-            aria-label="Contract holder"
-            title="Contract holder"
-          >
-            ★
-          </span>
-        )}
+        {isContractHolder &&
+          (contractInfo !== null ? (
+            <span
+              className={`${styles.contractStamp} ${styles.contractStampRich} ${
+                isRedSuit(contractInfo.suit) ? styles.contractStampRed : ""
+              }`}
+              aria-label={`Contract holder — ${String(contractInfo.value)} ${contractInfo.suit}`}
+              title={`Contract: ${String(contractInfo.value)} ${SUIT_GLYPH[contractInfo.suit]}`}
+            >
+              <span className={styles.contractSuit}>{SUIT_GLYPH[contractInfo.suit]}</span>
+              <span className={styles.contractValue}>{contractInfo.value}</span>
+            </span>
+          ) : (
+            <span
+              className={styles.contractStamp}
+              aria-label="Contract holder"
+              title="Contract holder"
+            >
+              ★
+            </span>
+          ))}
         {isActive && <span className={styles.activeRing} aria-hidden="true" />}
       </div>
 

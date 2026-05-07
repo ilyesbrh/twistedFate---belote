@@ -76,6 +76,16 @@ export interface LastRoundResult {
   roundScore: RoundScore | null;
 }
 
+// ── Bid Reveal (one-shot animation when bidding closes) ──────────────────
+
+export interface BidReveal {
+  /** Re-mount key — bumped per bidding_completed so React replays animation. */
+  key: number;
+  contract: Contract;
+  winnerPosition: Position;
+  winnerName: string;
+}
+
 // ── Exported types ───────────────────────────────────────────────────────────
 
 export type GamePhase = "idle" | "bidding" | "playing" | "roundComplete" | "gameComplete";
@@ -113,6 +123,10 @@ export interface GameSessionState {
   messages: GameMessage[];
   /** Per-position thought bubble (auto-dismisses after ~4s). */
   bubbles: Record<Position, GameMessage | null>;
+  /** One-shot bid-win reveal animation payload. Cleared by `dismissBidReveal`. */
+  bidReveal: BidReveal | null;
+  /** Called by `<BidWinReveal>` when its animation finishes. */
+  dismissBidReveal: () => void;
   /** True when playing an online game (server auto-starts next round). */
   isOnline: boolean;
   dispatch: (cmd: GameCommand) => void;
@@ -139,6 +153,8 @@ export function useGameSession(): GameSessionState {
     winnerPosition: Position | null;
   } | null>(null);
   const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
+  const [bidReveal, setBidReveal] = useState<BidReveal | null>(null);
+  const bidRevealKey = useRef(0);
   /** Delayed winner — gives the player time to see the last actions before the popup. */
   const [delayedWinnerTeamIndex, setDelayedWinnerTeamIndex] = useState<0 | 1 | null>(null);
   const [messages, setMessages] = useState<GameMessage[]>([]);
@@ -202,6 +218,16 @@ export function useGameSession(): GameSessionState {
             }
           }
         }
+        // Trigger the bid-win reveal animation. Key bump so React remounts
+        // the overlay even if the user wins two rounds in a row.
+        bidRevealKey.current += 1;
+        const bidderPos = ev.contract.bidderPosition;
+        setBidReveal({
+          key: bidRevealKey.current,
+          contract: ev.contract,
+          winnerPosition: POS_TO_SEAT[bidderPos]!,
+          winnerName: PROFILES[bidderPos]!.name,
+        });
       }
 
       if (event.type === "card_played") {
@@ -458,6 +484,10 @@ export function useGameSession(): GameSessionState {
     sessionRef.current.dispatch(createStartRoundCommand());
   };
 
+  const dismissBidReveal = useCallback(() => {
+    setBidReveal(null);
+  }, []);
+
   return {
     phase,
     players,
@@ -484,6 +514,8 @@ export function useGameSession(): GameSessionState {
     contractHolderPosition,
     messages,
     bubbles,
+    bidReveal,
+    dismissBidReveal,
     isOnline: false,
     dispatch,
     playCard,

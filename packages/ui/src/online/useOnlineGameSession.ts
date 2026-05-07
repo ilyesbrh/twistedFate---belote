@@ -21,7 +21,12 @@ import type {
 } from "@belote/core";
 import type { Seat, ServerMessage } from "@belote/protocol";
 import type { OnlineLobbyState } from "./useOnlineLobby.js";
-import type { GameSessionState, GamePhase, LastRoundResult } from "../hooks/useGameSession.js";
+import type {
+  GameSessionState,
+  GamePhase,
+  LastRoundResult,
+  BidReveal,
+} from "../hooks/useGameSession.js";
 import type { CardData, PlayerData, Position, TrickCardData } from "../data/mockGame.js";
 import { eventToMessage, createBeloteMessage } from "../messages/gameMessages.js";
 import type { GameMessage, ProfileLookup } from "../messages/gameMessages.js";
@@ -70,6 +75,8 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
   const [legalIds, setLegalIds] = useState<ReadonlySet<string>>(new Set());
   const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
   const [delayedWinner, setDelayedWinner] = useState<0 | 1 | null>(null);
+  const [bidReveal, setBidReveal] = useState<BidReveal | null>(null);
+  const bidRevealKey = useRef(0);
   const [messages, setMessages] = useState<GameMessage[]>([]);
   /**
    * Holds a completed trick during the sweep animation. Mirrors
@@ -307,6 +314,24 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
           });
         }, 1200);
       }
+      // Bid-win reveal animation. Mirrors the local AI hook — fires once
+      // per bidding_completed; bumped key forces remount on each round.
+      if (ev.type === "bidding_completed") {
+        const c = ev["contract"] as Contract | undefined;
+        if (c) {
+          bidRevealKey.current += 1;
+          const bidderPos = c.bidderPosition;
+          const winnerName =
+            (pubRef.current?.players ?? []).find((p) => p.seat === bidderPos)?.nickname ??
+            `Seat ${String(bidderPos + 1)}`;
+          setBidReveal({
+            key: bidRevealKey.current,
+            contract: c,
+            winnerPosition: seatToPos(bidderPos),
+            winnerName,
+          });
+        }
+      }
       if (ev.type === "game_completed") {
         const winner = (ev["winnerTeamIndex"] as 0 | 1 | undefined) ?? 0;
         setTimeout(() => {
@@ -317,6 +342,10 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
 
     return off;
   }, [lobby.client, lobby.seat, buildProfiles, rotateMessage, showBubble]);
+
+  const dismissBidReveal = useCallback(() => {
+    setBidReveal(null);
+  }, []);
 
   return useMemo<GameSessionState>(() => {
     return adapt({
@@ -329,6 +358,8 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
       messages,
       bubbles,
       completedTrick,
+      bidReveal,
+      dismissBidReveal,
     });
   }, [
     pub,
@@ -340,6 +371,8 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
     messages,
     bubbles,
     completedTrick,
+    bidReveal,
+    dismissBidReveal,
   ]);
 }
 
@@ -377,6 +410,8 @@ interface AdaptInput {
   messages: GameMessage[];
   bubbles: Record<Position, GameMessage | null>;
   completedTrick: { cards: TrickCardData[]; winnerPosition: Position | null } | null;
+  bidReveal: BidReveal | null;
+  dismissBidReveal: () => void;
 }
 
 function adapt(input: AdaptInput): GameSessionState {
@@ -390,6 +425,8 @@ function adapt(input: AdaptInput): GameSessionState {
     messages,
     bubbles,
     completedTrick,
+    bidReveal,
+    dismissBidReveal,
   } = input;
   const mySeat: Seat = lobby.seat ?? 0;
 
@@ -592,6 +629,8 @@ function adapt(input: AdaptInput): GameSessionState {
     contractHolderPosition,
     messages,
     bubbles,
+    bidReveal,
+    dismissBidReveal,
     isOnline: true,
     dispatch: () => undefined,
     playCard,

@@ -1,0 +1,245 @@
+/* ── Reveal overlay — fixed full-screen, anchored to centre ── */
+.root {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 50;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  /* Center anchor — every stage's transform builds off translate(-50%,-50%). */
+  transform: translate(-50%, -50%);
+  /* travel + fade transitions (the pop is a keyframe animation, see below). */
+  transition:
+    transform 0.7s cubic-bezier(0.5, 0, 0.5, 1),
+    opacity 0.4s ease;
+}
+
+/* ── Medallion — wax-seal style, fits any suit + bid value ── */
+.medallion {
+  width: 156px;
+  height: 156px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background:
+    radial-gradient(circle at 30% 28%, #f6c87a 0%, #d28a3a 45%, #a45816 100%), var(--accent-mustard);
+  border: 3px solid var(--ink-dark);
+  color: var(--ink-dark);
+  box-shadow:
+    0 0 0 6px rgba(255, 251, 233, 0.85),
+    0 0 0 8px var(--ink-dark),
+    0 12px 30px rgba(42, 31, 18, 0.45),
+    inset 0 4px 12px rgba(255, 255, 255, 0.35),
+    inset 0 -10px 24px rgba(42, 31, 18, 0.3);
+  font-family: var(--font-display);
+  user-select: none;
+}
+
+.suit {
+  font-size: 70px;
+  line-height: 0.85;
+  color: var(--ink-dark);
+  text-shadow:
+    0 1px 0 rgba(255, 251, 233, 0.5),
+    0 2px 6px rgba(42, 31, 18, 0.35);
+}
+.suitRed {
+  color: #8a2020;
+}
+
+.value {
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1;
+  color: var(--ink-dark);
+  letter-spacing: 1px;
+  text-shadow: 0 1px 0 rgba(255, 251, 233, 0.5);
+}
+
+/* ── Label below the medallion ── */
+.label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 4px 14px;
+  background: rgba(255, 251, 233, 0.96);
+  border: 2px solid var(--ink-dark);
+  border-radius: 12px;
+  box-shadow: 0 4px 0 rgba(42, 31, 18, 0.22);
+}
+.coinche {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--accent-terracotta);
+  letter-spacing: 0.5px;
+}
+.winner {
+  font-family: var(--font-hand);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink-dark);
+}
+
+/* ── Stage 1: pop in at centre ──
+   Uses a keyframe (not transition) because we need an over-shoot bounce. */
+.stage_pop {
+  opacity: 1;
+  animation: revealPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes revealPop {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3) rotate(-12deg);
+    opacity: 0;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1.18) rotate(4deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* ── Stage 2: travel to winner avatar quadrant. The transform target is
+   chosen per `pos_${position}` class below; opacity stays high so the
+   user's eye tracks the medallion to its destination. ── */
+.stage_travel {
+  opacity: 0.95;
+}
+.stage_travel.pos_north {
+  transform: translate(-50%, calc(-50% - 36vh)) scale(0.42);
+}
+.stage_travel.pos_south {
+  transform: translate(calc(-50% - 38vw), calc(-50% + 36vh)) scale(0.42);
+}
+.stage_travel.pos_east {
+  transform: translate(calc(-50% + 42vw), -50%) scale(0.42);
+}
+.stage_travel.pos_west {
+  transform: translate(calc(-50% - 42vw), -50%) scale(0.42);
+}
+
+/* ── Stage 3: fade out (transform inherits from travel target so the
+   medallion stays where it landed). ── */
+.stage_gone {
+  opacity: 0;
+}
+.stage_gone.pos_north {
+  transform: translate(-50%, calc(-50% - 36vh)) scale(0.3);
+}
+.stage_gone.pos_south {
+  transform: translate(calc(-50% - 38vw), calc(-50% + 36vh)) scale(0.3);
+}
+.stage_gone.pos_east {
+  transform: translate(calc(-50% + 42vw), -50%) scale(0.3);
+}
+.stage_gone.pos_west {
+  transform: translate(calc(-50% - 42vw), -50%) scale(0.3);
+}
+
+/* ── Mobile portrait — smaller medallion, shorter travel ── */
+@media (max-width: 600px) {
+  .medallion {
+    width: 124px;
+    height: 124px;
+    border-width: 2.5px;
+    box-shadow:
+      0 0 0 5px rgba(255, 251, 233, 0.85),
+      0 0 0 7px var(--ink-dark),
+      0 10px 24px rgba(42, 31, 18, 0.45),
+      inset 0 4px 12px rgba(255, 255, 255, 0.35),
+      inset 0 -10px 24px rgba(42, 31, 18, 0.3);
+  }
+  .suit {
+    font-size: 56px;
+  }
+  .value {
+    font-size: 24px;
+  }
+  .label {
+    padding: 3px 10px;
+  }
+  .coinche {
+    font-size: 12px;
+  }
+  .winner {
+    font-size: 14px;
+  }
+}
+
+/* ── Landscape phone — short height, compact layout ── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .medallion {
+    width: 96px;
+    height: 96px;
+    border-width: 2px;
+  }
+  .suit {
+    font-size: 44px;
+  }
+  .value {
+    font-size: 18px;
+  }
+  .label {
+    padding: 2px 8px;
+  }
+  .coinche {
+    font-size: 11px;
+  }
+  .winner {
+    font-size: 12px;
+  }
+  .stage_travel.pos_north {
+    transform: translate(-50%, calc(-50% - 28vh)) scale(0.5);
+  }
+  .stage_travel.pos_south {
+    transform: translate(calc(-50% - 30vw), calc(-50% + 26vh)) scale(0.5);
+  }
+  .stage_travel.pos_east {
+    transform: translate(calc(-50% + 34vw), -50%) scale(0.5);
+  }
+  .stage_travel.pos_west {
+    transform: translate(calc(-50% - 34vw), -50%) scale(0.5);
+  }
+}
+
+/* Respect reduced-motion: skip the bounce + travel, just fade in/out. */
+@media (prefers-reduced-motion: reduce) {
+  .stage_pop {
+    animation: revealFadeIn 0.3s ease-out;
+  }
+  .stage_travel,
+  .stage_travel.pos_north,
+  .stage_travel.pos_south,
+  .stage_travel.pos_east,
+  .stage_travel.pos_west {
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+  }
+  .stage_gone,
+  .stage_gone.pos_north,
+  .stage_gone.pos_south,
+  .stage_gone.pos_east,
+  .stage_gone.pos_west {
+    transform: translate(-50%, -50%) scale(0.7);
+  }
+}
+
+@keyframes revealFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

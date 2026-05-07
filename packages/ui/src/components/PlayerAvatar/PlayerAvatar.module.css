@@ -73,23 +73,74 @@
   box-shadow: 0 1.5px 0 rgba(42, 31, 18, 0.3);
 }
 
-/* ── Contract holder star (top-right) ── */
+/* ── Contract holder stamp (bottom-right of token) ──
+   Lives at the bottom corner so it never collides with the dealer "D"
+   (top-left) or the avatar action menu (top-right). When `contractInfo`
+   is provided it renders a small wax-seal pill (suit + value); legacy
+   ★ form is kept for fixtures that don't pass contract details. */
 .contractStamp {
   position: absolute;
-  top: -10px;
-  right: -8px;
-  width: 24px;
+  bottom: -6px;
+  right: -10px;
+  min-width: 24px;
   height: 24px;
+  padding: 0 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  gap: 3px;
+  border-radius: 14px;
   background: linear-gradient(180deg, #d24545 0%, var(--accent-terracotta) 100%);
   color: #fffbe9;
   border: 1.5px solid var(--ink-dark);
+  font-family: var(--font-display);
   font-size: 13px;
   line-height: 1;
-  box-shadow: 0 1.5px 0 rgba(42, 31, 18, 0.3);
+  box-shadow:
+    0 2px 0 rgba(42, 31, 18, 0.32),
+    0 4px 10px rgba(42, 31, 18, 0.22);
+  z-index: 4;
+  animation: contractStampLand 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Rich variant — wax seal containing the contract suit + value. Cream
+   background so the suit colour reads at small sizes. */
+.contractStampRich {
+  background:
+    radial-gradient(circle at 30% 30%, #fffbe9 0%, var(--paper-cream-deep) 90%), var(--paper-cream);
+  color: var(--ink-dark);
+}
+
+.contractSuit {
+  font-size: 14px;
+  line-height: 1;
+  color: var(--ink-dark);
+}
+
+.contractStampRed .contractSuit {
+  color: #8a2020;
+}
+
+.contractValue {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: var(--ink-dark);
+}
+
+@keyframes contractStampLand {
+  0% {
+    transform: scale(2.2) translateY(-30px);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }
 
 /* ── Active player: soft terracotta aura, no hard rectangle ── */
@@ -348,10 +399,17 @@
     left: -6px;
   }
   .contractStamp {
-    width: 18px;
+    min-width: 18px;
     height: 18px;
+    padding: 0 4px;
     font-size: 10px;
-    top: -7px;
-    right: -6px;
+    bottom: -4px;
+    right: -8px;
+  }
+  .contractSuit {
+    font-size: 11px;
+  }
+  .contractValue {
+    font-size: 9px;
   }
 }

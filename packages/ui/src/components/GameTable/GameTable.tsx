@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useGameSession } from "../../hooks/useGameSession.js";
 import type { GameSessionState } from "../../hooks/useGameSession.js";
+import { AvatarActionMenu } from "../AvatarActionMenu/AvatarActionMenu.js";
 import { BidPanel } from "../BidPanel/BidPanel.js";
-import { ChatButton } from "../ChatButton/ChatButton.js";
+import { BidWinReveal } from "../BidWinReveal/BidWinReveal.js";
 import { ChatPanel } from "../ChatPanel/ChatPanel.js";
 import { GameOver } from "../GameOver/GameOver.js";
 import { HandDisplay } from "../HandDisplay/HandDisplay.js";
@@ -40,6 +41,9 @@ export function GameTableView({ state, onPlayAgain }: GameTableViewProps) {
 
   const active = state.activePosition;
   const showBid = state.phase === "bidding" && state.isMyTurn && state.biddingRound !== null;
+  const contractInfo = state.contract
+    ? { suit: state.contract.suit, value: state.contract.value }
+    : null;
 
   const tableBg = `url('${import.meta.env.BASE_URL}table-paper.svg') center / cover no-repeat`;
 
@@ -79,6 +83,7 @@ export function GameTableView({ state, onPlayAgain }: GameTableViewProps) {
           size="md"
           isActive={active === "north"}
           isContractHolder={state.contractHolderPosition === "north"}
+          contractInfo={state.contractHolderPosition === "north" ? contractInfo : null}
           bubbleMessage={state.bubbles.north}
         />
       </div>
@@ -90,6 +95,7 @@ export function GameTableView({ state, onPlayAgain }: GameTableViewProps) {
           size="sm"
           isActive={active === "west"}
           isContractHolder={state.contractHolderPosition === "west"}
+          contractInfo={state.contractHolderPosition === "west" ? contractInfo : null}
           bubbleMessage={state.bubbles.west}
         />
       </div>
@@ -106,6 +112,7 @@ export function GameTableView({ state, onPlayAgain }: GameTableViewProps) {
           size="sm"
           isActive={active === "east"}
           isContractHolder={state.contractHolderPosition === "east"}
+          contractInfo={state.contractHolderPosition === "east" ? contractInfo : null}
           bubbleMessage={state.bubbles.east}
         />
       </div>
@@ -147,16 +154,30 @@ export function GameTableView({ state, onPlayAgain }: GameTableViewProps) {
             size="lg"
             isActive={active === "south"}
             isContractHolder={state.contractHolderPosition === "south"}
+            contractInfo={state.contractHolderPosition === "south" ? contractInfo : null}
             bubbleMessage={state.bubbles.south}
           />
           <div className={styles.chatBtn}>
-            <ChatButton onClick={() => setChatOpen(true)} />
+            <AvatarActionMenu onChatOpen={() => setChatOpen(true)} />
           </div>
         </div>
       </div>
 
       {/* ── Chat panel overlay ── */}
       <ChatPanel isOpen={chatOpen} onClose={() => setChatOpen(false)} messages={state.messages} />
+
+      {/* ── Bid-win reveal overlay (one-shot per round, animates to winner) ── */}
+      {state.bidReveal != null && (
+        <BidWinReveal
+          key={state.bidReveal.key}
+          contractValue={state.bidReveal.contract.value}
+          contractSuit={state.bidReveal.contract.suit}
+          contractCoincheLevel={state.bidReveal.contract.coincheLevel}
+          winnerPosition={state.bidReveal.winnerPosition}
+          winnerName={state.bidReveal.winnerName}
+          onComplete={state.dismissBidReveal}
+        />
+      )}
 
       {/* ── Start screen ── */}
       {state.phase === "idle" && (
