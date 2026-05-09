@@ -239,6 +239,7 @@ describe("calculateRoundScore with SA contract from getContract", () => {
           id: idGen.generateId("trick"),
           leadingPlayerPosition: 1 as PlayerPosition,
           trumpSuit: "hearts" as Suit,
+          contractType: "sans-atout" as const,
           cards: Object.freeze(played),
           state: "completed" as const,
           winnerPosition: 1 as PlayerPosition,

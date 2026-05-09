@@ -41,11 +41,12 @@ function trick(
   );
   return Object.freeze({
     id: idGen.generateId("trick"),
-    state: "completed" as const,
+    leadingPlayerPosition: (cards[0]?.pos ?? ("north" as PlayerPosition)) as PlayerPosition,
+    trumpSuit: "hearts" as const,
+    contractType: "suit" as const,
     cards: Object.freeze(played),
-    leadPlayerPosition: cards[0]?.pos ?? "north",
+    state: "completed" as const,
     winnerPosition: winner,
-    currentPlayerPosition: winner,
   });
 }
 
