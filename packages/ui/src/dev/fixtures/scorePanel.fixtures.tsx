@@ -88,4 +88,70 @@ export const scorePanelFixtures: readonly Fixture[] = [
       />
     ),
   },
+  {
+    id: "score-panel-bidding",
+    title: "Bidding phase — no contract yet",
+    group: "ScorePanel",
+    render: () => (
+      <ScorePanel
+        target={1000}
+        usScore={0}
+        themScore={0}
+        usTotalScore={120}
+        themTotalScore={85}
+        dealerName="Villy"
+      />
+    ),
+  },
+  {
+    id: "score-panel-sa",
+    title: "Sans-Atout (SA) contract",
+    group: "ScorePanel",
+    render: () => (
+      <ScorePanel
+        target={1000}
+        usScore={64}
+        themScore={40}
+        usTotalScore={250}
+        themTotalScore={180}
+        dealerName="ElenaP"
+        contractValue={90}
+        contractType="sans-atout"
+      />
+    ),
+  },
+  {
+    id: "score-panel-ta",
+    title: "Tout-Atout (TA) contract",
+    group: "ScorePanel",
+    render: () => (
+      <ScorePanel
+        target={1000}
+        usScore={80}
+        themScore={30}
+        usTotalScore={340}
+        themTotalScore={200}
+        dealerName="DilyanaBl"
+        contractValue={100}
+        contractType="tout-atout"
+      />
+    ),
+  },
+  {
+    id: "score-panel-capot",
+    title: "Capot contract",
+    group: "ScorePanel",
+    render: () => (
+      <ScorePanel
+        target={1000}
+        usScore={152}
+        themScore={0}
+        usTotalScore={500}
+        themTotalScore={0}
+        trumpSuit="spades"
+        dealerName="Vane_Bane"
+        isCapot
+      />
+    ),
+  },
 ];
