@@ -6,15 +6,18 @@ export {
   ALL_RANKS,
   TRUMP_POINTS,
   NON_TRUMP_POINTS,
+  SANS_ATOUT_POINTS,
+  TOUT_ATOUT_POINTS,
   TRUMP_ORDER,
   NON_TRUMP_ORDER,
   createCard,
   getCardPoints,
+  getCoincheCardPoints,
   getCardRankOrder,
   createDeck,
   shuffleDeck,
 } from "./models/index.js";
-export type { Suit, Rank, Card } from "./models/index.js";
+export type { Suit, Rank, Card, ContractType } from "./models/index.js";
 
 export { createPlayer, setPlayerHand, createTeam, dealCards } from "./models/index.js";
 export type { PlayerPosition, Player, Team } from "./models/index.js";
