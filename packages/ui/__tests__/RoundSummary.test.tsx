@@ -329,6 +329,20 @@ describe("RoundSummary", () => {
       expect(dashes.length).toBeGreaterThanOrEqual(1);
     });
 
+    it("shows both Belote and Annonces rows when both are present", () => {
+      renderRoundSummary({
+        result: makeNormalResult({
+          bidderPosition: 0,
+          beloteBonusTeam: "contracting",
+          announcementWinner: "ns",
+          announcementPoints: 100,
+        }),
+      });
+      expect(screen.getByText("Belote")).toBeInTheDocument();
+      expect(screen.getByText("Annonces")).toBeInTheDocument();
+      expect(screen.getByText("+100")).toBeInTheDocument();
+    });
+
     it("shows round final scores", () => {
       renderRoundSummary({
         nsTotal: 300,
