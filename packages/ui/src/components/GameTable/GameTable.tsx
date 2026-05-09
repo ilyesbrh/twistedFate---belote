@@ -3,6 +3,7 @@ import { useGameSession } from "../../hooks/useGameSession.js";
 import type { GameSessionState } from "../../hooks/useGameSession.js";
 import { AvatarActionMenu } from "../AvatarActionMenu/AvatarActionMenu.js";
 import { BidPanel } from "../BidPanel/BidPanel.js";
+import { CoinchBidPanel } from "../CoinchBidPanel/CoinchBidPanel.js";
 import { BidWinReveal } from "../BidWinReveal/BidWinReveal.js";
 import { ChatPanel } from "../ChatPanel/ChatPanel.js";
 import { GameOver } from "../GameOver/GameOver.js";
@@ -30,10 +31,17 @@ interface GameTableViewProps {
   onPlayAgain: () => void;
   gameName?: string;
   gameSubtitle?: string;
+  coincheBidding?: boolean;
 }
 
 /** Pure-presentation game table — accepts any GameSessionState (AI or online). */
-export function GameTableView({ state, onPlayAgain, gameName, gameSubtitle }: GameTableViewProps) {
+export function GameTableView({
+  state,
+  onPlayAgain,
+  gameName,
+  gameSubtitle,
+  coincheBidding = false,
+}: GameTableViewProps) {
   const [chatOpen, setChatOpen] = useState(false);
 
   const south = state.players.find((p) => p.position === "south")!;
@@ -132,11 +140,19 @@ export function GameTableView({ state, onPlayAgain, gameName, gameSubtitle }: Ga
       {/* ── Bid panel — above south hand, only when it's human's turn to bid ── */}
       {showBid && (
         <div className={styles.bidPanel}>
-          <BidPanel
-            biddingRound={state.biddingRound!}
-            validBidValues={state.validBidValues}
-            onBid={state.placeBid}
-          />
+          {coincheBidding ? (
+            <CoinchBidPanel
+              biddingRound={state.biddingRound!}
+              validBidValues={state.validBidValues}
+              onBid={state.placeBid}
+            />
+          ) : (
+            <BidPanel
+              biddingRound={state.biddingRound!}
+              validBidValues={state.validBidValues}
+              onBid={state.placeBid}
+            />
+          )}
         </div>
       )}
 

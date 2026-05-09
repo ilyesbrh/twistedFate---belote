@@ -312,7 +312,7 @@ export function useCoinchGameSession(): GameSessionState {
   const validBidValues: readonly BidValue[] = BID_VALUES.filter((v) => v > highestValue);
 
   const placeBid = (
-    type: "pass" | "suit" | "coinche" | "surcoinche",
+    type: "pass" | "suit" | "sans-atout" | "tout-atout" | "coinche" | "surcoinche",
     value?: BidValue,
     suit?: Suit,
   ): void => {

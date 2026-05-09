@@ -14,6 +14,7 @@ export function CoinchGameTable({ onPlayAgain }: CoinchGameTableProps): ReactEle
       onPlayAgain={onPlayAgain}
       gameName="Coinche"
       gameSubtitle="SA · TA · Coinché"
+      coincheBidding
     />
   );
 }
