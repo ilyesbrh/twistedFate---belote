@@ -1,0 +1,379 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  GameSession,
+  createStartGameCommand,
+  createStartRoundCommand,
+  createPlaceBidCommand,
+  createPlayCardCommand,
+} from "@coinche/app";
+
+import { BID_VALUES, getValidPlays, calculateRunningPoints, getCardRankOrder } from "@coinche/core";
+import type { Card, BiddingRound as CoinchBiddingRound, Suit } from "@coinche/core";
+import type {
+  BiddingRound as BeloteBiddingRound,
+  BidValue,
+  Contract,
+  RoundScore,
+} from "@belote/core";
+import type { CardData, PlayerData, Position, TrickCardData } from "../data/mockGame.js";
+import type { GameSessionState, LastRoundResult, BidReveal } from "./useGameSession.js";
+import type { GameMessage } from "../messages/gameMessages.js";
+
+// ── Constants ───────────────────────────────────────────────────────────────
+
+const HUMAN = 0 as const;
+
+const POS_TO_SEAT: Record<number, Position> = {
+  0: "south",
+  1: "west",
+  2: "north",
+  3: "east",
+};
+
+const PROFILES: Record<number, { name: string; avatarUrl: string; level: number; isVip: boolean }> =
+  {
+    0: {
+      name: "ElenaP",
+      avatarUrl: "https://i.pravatar.cc/150?u=elenap-coinche",
+      level: 14,
+      isVip: true,
+    },
+    1: {
+      name: "Villy",
+      avatarUrl: "https://i.pravatar.cc/150?u=villy-coinche",
+      level: 17,
+      isVip: true,
+    },
+    2: {
+      name: "DilyanaBl",
+      avatarUrl: "https://i.pravatar.cc/150?u=dilyanab-coinche",
+      level: 18,
+      isVip: false,
+    },
+    3: {
+      name: "Vane_Bane",
+      avatarUrl: "https://i.pravatar.cc/150?u=vanebane-coinche",
+      level: 10,
+      isVip: true,
+    },
+  };
+
+const FALLBACK_PROFILE = { name: "Unknown", avatarUrl: "", level: 1, isVip: false };
+
+const TRICK_OFFSETS: Record<Position, { rotation: number; offsetX: number; offsetY: number }> = {
+  south: { rotation: 5, offsetX: 6, offsetY: 12 },
+  north: { rotation: -4, offsetX: -6, offsetY: -12 },
+  west: { rotation: -8, offsetX: -14, offsetY: 4 },
+  east: { rotation: 9, offsetX: 14, offsetY: -4 },
+};
+
+function getProfile(i: number): { name: string; avatarUrl: string; level: number; isVip: boolean } {
+  return PROFILES[i] ?? FALLBACK_PROFILE;
+}
+
+function getSeat(i: number): Position {
+  return POS_TO_SEAT[i] ?? "south";
+}
+
+const EMPTY_BUBBLES: Record<Position, GameMessage | null> = {
+  south: null,
+  north: null,
+  west: null,
+  east: null,
+};
+
+// ── Hook ─────────────────────────────────────────────────────────────────────
+
+export function useCoinchGameSession(): GameSessionState {
+  const sessionRef = useRef(
+    new GameSession({ playerTypes: ["human", "ai", "ai", "ai"], stepDelayMs: 3000 }),
+  );
+  const [rev, setRev] = useState(0);
+  const [isDealing, setIsDealing] = useState(false);
+  const [completedTrick, setCompletedTrick] = useState<{
+    cards: TrickCardData[];
+    winnerPosition: Position | null;
+  } | null>(null);
+  const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
+  const [bidReveal, setBidReveal] = useState<BidReveal | null>(null);
+  const bidRevealKey = useRef(0);
+  const [delayedWinnerTeamIndex, setDelayedWinnerTeamIndex] = useState<0 | 1 | null>(null);
+
+  const dismissBidReveal = useCallback((): void => {
+    setBidReveal(null);
+  }, []);
+
+  useEffect((): (() => void) => {
+    const session = sessionRef.current;
+
+    const unsub = session.on((event): void => {
+      if (event.type === "round_started") {
+        setIsDealing(true);
+        setTimeout((): void => {
+          setIsDealing(false);
+        }, 900);
+      }
+
+      if (event.type === "bidding_completed") {
+        bidRevealKey.current += 1;
+        const bidderPos = event.contract.bidderPosition;
+        setBidReveal({
+          key: bidRevealKey.current,
+          // Coinche Contract is a structural superset of Belote Contract
+          contract: event.contract as unknown as Contract,
+          winnerPosition: getSeat(bidderPos),
+          winnerName: getProfile(bidderPos).name,
+        });
+      }
+
+      if (event.type === "trick_completed") {
+        const winnerPos = getSeat(event.winnerPosition);
+        const cards: TrickCardData[] = event.trick.cards.map((pc): TrickCardData => {
+          const seat = getSeat(pc.playerPosition);
+          return {
+            suit: pc.card.suit,
+            rank: pc.card.rank,
+            position: seat,
+            ...TRICK_OFFSETS[seat],
+          };
+        });
+        setCompletedTrick({ cards, winnerPosition: null });
+        setTimeout((): void => {
+          setCompletedTrick({ cards, winnerPosition: winnerPos });
+        }, 700);
+        setTimeout((): void => {
+          setCompletedTrick(null);
+        }, 1400);
+      }
+
+      if (event.type === "round_completed") {
+        const bidderPos = event.round.contract?.bidderPosition ?? 0;
+        setTimeout((): void => {
+          setLastRoundResult({
+            wasCancelled: false,
+            contract: event.round.contract as unknown as Contract | null,
+            bidderName: getProfile(bidderPos).name,
+            roundScore: event.roundScore as unknown as RoundScore,
+          });
+        }, 2000);
+      }
+
+      if (event.type === "round_cancelled") {
+        setTimeout((): void => {
+          setLastRoundResult({
+            wasCancelled: true,
+            contract: null,
+            bidderName: "",
+            roundScore: null,
+          });
+        }, 2000);
+      }
+
+      if (event.type === "game_completed") {
+        setTimeout((): void => {
+          setDelayedWinnerTeamIndex(event.winnerTeamIndex);
+        }, 2500);
+      }
+
+      setRev((r) => r + 1);
+    });
+
+    return unsub;
+  }, []);
+
+  void rev;
+
+  const session = sessionRef.current;
+  const game = session.game;
+  const round = session.currentRound;
+
+  type GamePhase = "idle" | "bidding" | "playing" | "roundComplete" | "gameComplete";
+  let phase: GamePhase = "idle";
+  if (session.state === "game_completed") phase = "gameComplete";
+  else if (session.state === "round_completed") phase = "roundComplete";
+  else if (session.state === "round_playing") phase = "playing";
+  else if (session.state === "round_bidding") phase = "bidding";
+
+  const players: PlayerData[] = [0, 1, 2, 3].map((i): PlayerData => {
+    const profile = getProfile(i);
+    return {
+      name: profile.name,
+      level: profile.level,
+      avatarUrl: profile.avatarUrl,
+      isVip: profile.isVip,
+      isDealer: round?.dealerPosition === i,
+      position: getSeat(i),
+      cardCount: round?.players[i]?.hand.length ?? 0,
+    };
+  });
+
+  const coinchContract = round?.contract ?? null;
+  const rawHand: readonly Card[] = round?.players[HUMAN]?.hand ?? [];
+  const trumpForSort: Suit | null = coinchContract?.suit ?? null;
+  const DEFAULT_SUIT_ORDER: readonly Suit[] = ["hearts", "spades", "diamonds", "clubs"];
+
+  const suitRank = (suit: Suit): number => {
+    if (trumpForSort !== null && suit === trumpForSort) return -1;
+    return DEFAULT_SUIT_ORDER.indexOf(suit);
+  };
+
+  const coreHand: readonly Card[] = [...rawHand].sort((a, b): number => {
+    const s = suitRank(a.suit) - suitRank(b.suit);
+    if (s !== 0) return s;
+    return getCardRankOrder(a, trumpForSort) - getCardRankOrder(b, trumpForSort);
+  });
+
+  const playerHand: CardData[] = coreHand.map((c): CardData => ({ suit: c.suit, rank: c.rank }));
+
+  const currentTrick = round?.currentTrick;
+  const liveTrickCards: TrickCardData[] = (currentTrick?.cards ?? []).map((pc): TrickCardData => {
+    const seat = getSeat(pc.playerPosition);
+    return { suit: pc.card.suit, rank: pc.card.rank, position: seat, ...TRICK_OFFSETS[seat] };
+  });
+  const trickCards = completedTrick?.cards ?? liveTrickCards;
+  const trickWinnerPosition = completedTrick?.winnerPosition ?? null;
+
+  const trumpSuit: Suit | null =
+    coinchContract?.contractType === "suit" ? coinchContract.suit : null;
+
+  let activePosition: Position = "south";
+  if (phase === "bidding" && round !== null) {
+    activePosition = getSeat(round.biddingRound.currentPlayerPosition);
+  } else if (phase === "playing" && round?.currentTrick !== null) {
+    const trick = round.currentTrick;
+    const nextIdx = (trick.leadingPlayerPosition + trick.cards.length) % 4;
+    activePosition = getSeat(nextIdx);
+  }
+
+  const targetScore = game?.targetScore ?? 3000;
+  const usTotalScore = game?.teamScores[0] ?? 0;
+  const themTotalScore = game?.teamScores[1] ?? 0;
+  let usScore = 0;
+  let themScore = 0;
+
+  if (round !== null && coinchContract !== null) {
+    const running = calculateRunningPoints(
+      round.tricks,
+      coinchContract.contractType === "suit" ? coinchContract.suit : null,
+      coinchContract.contractType,
+      coinchContract.bidderPosition,
+    );
+    const contractingIsNS =
+      coinchContract.bidderPosition === 0 || coinchContract.bidderPosition === 2;
+    if (contractingIsNS) {
+      usScore = running.contractingTeamPoints;
+      themScore = running.opponentTeamPoints;
+    } else {
+      themScore = running.contractingTeamPoints;
+      usScore = running.opponentTeamPoints;
+    }
+  }
+
+  const contractHolderPosition: Position | null =
+    coinchContract !== null ? getSeat(coinchContract.bidderPosition) : null;
+  const dealerName: string = round !== null ? getProfile(round.dealerPosition).name : "";
+
+  let isMyTurn = false;
+  if (phase === "bidding" && round !== null) {
+    isMyTurn = round.biddingRound.currentPlayerPosition === HUMAN;
+  } else if (
+    phase === "playing" &&
+    round?.currentTrick !== null &&
+    round?.currentTrick !== undefined
+  ) {
+    const trick = round.currentTrick;
+    const nextIdx = (trick.leadingPlayerPosition + trick.cards.length) % 4;
+    isMyTurn = nextIdx === HUMAN;
+  }
+
+  let legalCardIndices: ReadonlySet<number> = new Set();
+  if (phase === "playing" && isMyTurn) {
+    if (round?.currentTrick !== null) {
+      const legal = getValidPlays(round.currentTrick, HUMAN, coreHand);
+      const legalIds = new Set(legal.map((c) => c.id));
+      legalCardIndices = new Set(
+        coreHand.reduce<number[]>((acc, c, i) => {
+          if (legalIds.has(c.id)) acc.push(i);
+          return acc;
+        }, []),
+      );
+    } else {
+      legalCardIndices = new Set(coreHand.map((_c, i) => i));
+    }
+  }
+
+  const coinchBiddingRound: CoinchBiddingRound | null =
+    phase === "bidding" && isMyTurn && round !== null ? round.biddingRound : null;
+  // Coinche BidType is a superset of Belote BidType; cast is safe since BidPanel
+  // only reads coinched/surcoinched booleans and highestBid.value (same fields).
+  const biddingRound = coinchBiddingRound as unknown as BeloteBiddingRound | null;
+
+  const highestValue: number = coinchBiddingRound?.highestBid?.value ?? 70;
+  const validBidValues: readonly BidValue[] = BID_VALUES.filter((v) => v > highestValue);
+
+  const placeBid = (
+    type: "pass" | "suit" | "coinche" | "surcoinche",
+    value?: BidValue,
+    suit?: Suit,
+  ): void => {
+    sessionRef.current.dispatch(createPlaceBidCommand(HUMAN, type, value, suit));
+  };
+
+  const playCard = (cardIndex: number): void => {
+    sessionRef.current.dispatch(createPlayCardCommand(HUMAN, coreHand[cardIndex]));
+  };
+
+  const startNextRound = (): void => {
+    sessionRef.current.dispatch(createStartRoundCommand());
+  };
+
+  const startGame = (): void => {
+    sessionRef.current.dispatch(
+      createStartGameCommand(
+        [getProfile(0).name, getProfile(1).name, getProfile(2).name, getProfile(3).name],
+        3000,
+      ),
+    );
+    sessionRef.current.dispatch(createStartRoundCommand());
+  };
+
+  const dispatch = (cmd: unknown): void => {
+    sessionRef.current.dispatch(cmd as Parameters<typeof sessionRef.current.dispatch>[0]);
+  };
+
+  return {
+    phase,
+    players,
+    playerHand,
+    trickCards,
+    trickWinnerPosition,
+    trumpSuit,
+    activePosition,
+    targetScore,
+    usTotalScore,
+    themTotalScore,
+    usScore,
+    themScore,
+    dealerName,
+    isMyTurn,
+    isDealing,
+    roundNumber: session.roundNumber,
+    lastRoundResult,
+    winnerTeamIndex: delayedWinnerTeamIndex,
+    legalCardIndices,
+    biddingRound,
+    validBidValues,
+    contract: coinchContract as unknown as Contract | null,
+    contractHolderPosition,
+    messages: [],
+    bubbles: EMPTY_BUBBLES,
+    bidReveal,
+    dismissBidReveal,
+    isOnline: false,
+    dispatch: dispatch as GameSessionState["dispatch"],
+    playCard,
+    placeBid,
+    startNextRound,
+    startGame,
+  };
+}

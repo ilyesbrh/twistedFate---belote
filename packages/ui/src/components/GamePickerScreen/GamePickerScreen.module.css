@@ -1,0 +1,86 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 2rem 1.5rem;
+}
+
+.identity {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.title {
+  font-family: "Yeseva One", serif;
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  color: var(--paper-cream, #f5f0e8);
+  text-align: center;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.games {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+  max-width: 640px;
+}
+
+.gameBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 2rem 2.5rem;
+  min-width: 200px;
+  flex: 1;
+
+  background: var(--paper-cream, #f5f0e8);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease;
+}
+
+.gameBtn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.gameBtn:active {
+  transform: translateY(0);
+}
+
+.gameSuits {
+  font-size: 1.6rem;
+  color: var(--accent-terracotta, #c0392b);
+  letter-spacing: 0.15em;
+}
+
+.gameName {
+  font-family: "Yeseva One", serif;
+  font-size: 1.5rem;
+  color: var(--ink-dark, #1a1a2e);
+  font-weight: 700;
+}
+
+.gameSubtitle {
+  font-family: "Lora", serif;
+  font-size: 0.85rem;
+  color: var(--ink-dark, #1a1a2e);
+  opacity: 0.65;
+}

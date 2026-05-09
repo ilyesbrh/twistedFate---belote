@@ -23,6 +23,8 @@ import {
   playCardInRound,
   createPassBid,
   createSuitBid,
+  createSansAtoutBid,
+  createToutAtoutBid,
   createCoincheBid,
   createSurcoincheBid,
   getNextPlayerPosition,
@@ -264,7 +266,7 @@ export class GameSession {
 
   private _createBid(
     playerPosition: PlayerPosition,
-    bidType: "pass" | "suit" | "coinche" | "surcoinche",
+    bidType: "pass" | "suit" | "sans-atout" | "tout-atout" | "coinche" | "surcoinche",
     value: BidValue | undefined,
     suit: Suit | undefined,
   ): ReturnType<typeof createPassBid> {
@@ -276,6 +278,18 @@ export class GameSession {
           throw new Error("Suit bid requires value and suit");
         }
         return createSuitBid(playerPosition, value, suit, this._idGenerator);
+      }
+      case "sans-atout": {
+        if (value === undefined) {
+          throw new Error("Sans-atout bid requires a value");
+        }
+        return createSansAtoutBid(playerPosition, value, this._idGenerator);
+      }
+      case "tout-atout": {
+        if (value === undefined) {
+          throw new Error("Tout-atout bid requires a value");
+        }
+        return createToutAtoutBid(playerPosition, value, this._idGenerator);
       }
       case "coinche":
         return createCoincheBid(playerPosition, this._idGenerator);

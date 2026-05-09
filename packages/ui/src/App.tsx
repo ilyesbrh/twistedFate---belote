@@ -1,5 +1,7 @@
 import { type ReactElement, Suspense, lazy, useEffect, useState } from "react";
+import { CoinchGameTable } from "./components/CoinchGameTable/CoinchGameTable.js";
 import { FriendsScreen } from "./components/FriendsScreen/FriendsScreen.js";
+import { GamePickerScreen } from "./components/GamePickerScreen/GamePickerScreen.js";
 import { GameTable, GameTableView } from "./components/GameTable/GameTable.js";
 import { HistoryScreen } from "./components/HistoryScreen/HistoryScreen.js";
 import { InstallPrompt } from "./components/InstallPrompt/InstallPrompt.js";
@@ -38,16 +40,27 @@ const CARD_SRCS = SUITS.flatMap((s) =>
   RANKS.map((r) => `${import.meta.env.BASE_URL}cards/${r}_of_${s}.png`),
 );
 
-type Screen = "menu" | "ai" | "online" | "random" | "login" | "signup" | "history" | "friends";
+type Screen =
+  | "game-picker"
+  | "menu"
+  | "ai"
+  | "coinche-ai"
+  | "online"
+  | "random"
+  | "login"
+  | "signup"
+  | "history"
+  | "friends"
+  | "profile";
 
 /** Auto-jump into the online flow if a saved session is present in the URL. */
 function initialScreen(): Screen {
-  if (typeof window === "undefined") return "menu";
+  if (typeof window === "undefined") return "game-picker";
   const url = new URL(window.location.href);
   const code = url.searchParams.get("room");
   const pid = url.searchParams.get("pid");
   if (code && pid && /^[A-Z]{4}$/.test(code)) return "online";
-  return "menu";
+  return "game-picker";
 }
 
 export default function App(): ReactElement {
@@ -78,13 +91,40 @@ export default function App(): ReactElement {
   };
   const handleSignOut = async (): Promise<void> => {
     await auth.logout();
-    setScreen("menu");
+    setScreen("game-picker");
   };
 
   return (
     <>
       {/* Install banner only on the menu — it overlaps the in-game score panel. */}
       {screen === "menu" && <InstallPrompt />}
+
+      {screen === "game-picker" && (
+        <GamePickerScreen
+          onPickBelote={() => {
+            setScreen("menu");
+          }}
+          onPickCoinche={() => {
+            setScreen("coinche-ai");
+          }}
+          identity={auth.identity}
+          onSignIn={handleSignIn}
+          onSignUp={handleSignUp}
+          onSignOut={() => {
+            void handleSignOut();
+          }}
+        />
+      )}
+
+      {screen === "coinche-ai" && (
+        <CoinchGameTable
+          key={gameKey}
+          onPlayAgain={() => {
+            setGameKey((k) => k + 1);
+            setScreen("game-picker");
+          }}
+        />
+      )}
       <div
         style={{
           position: "absolute",

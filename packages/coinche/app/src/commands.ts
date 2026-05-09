@@ -17,7 +17,7 @@ export interface StartRoundCommand {
 export interface PlaceBidCommand {
   readonly type: "place_bid";
   readonly playerPosition: PlayerPosition;
-  readonly bidType: "pass" | "suit" | "coinche" | "surcoinche";
+  readonly bidType: "pass" | "suit" | "sans-atout" | "tout-atout" | "coinche" | "surcoinche";
   readonly value?: BidValue;
   readonly suit?: Suit;
 }
@@ -49,7 +49,7 @@ export function createStartRoundCommand(): StartRoundCommand {
 
 export function createPlaceBidCommand(
   playerPosition: PlayerPosition,
-  bidType: "pass" | "suit" | "coinche" | "surcoinche",
+  bidType: "pass" | "suit" | "sans-atout" | "tout-atout" | "coinche" | "surcoinche",
   value?: BidValue,
   suit?: Suit,
 ): PlaceBidCommand {
