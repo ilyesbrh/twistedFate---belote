@@ -78,4 +78,56 @@ export const playerAvatarFixtures: readonly Fixture[] = [
     group: "PlayerAvatar",
     render: () => <PlayerAvatar player={NORTH_PLAYER} size="sm" />,
   },
+  {
+    id: "player-avatar-contract-suit",
+    title: "Contract holder — suit contract (♠ 100)",
+    group: "PlayerAvatar",
+    render: () => (
+      <PlayerAvatar
+        player={NORTH_PLAYER}
+        size="md"
+        isContractHolder
+        contractInfo={{ suit: "spades", value: 100 }}
+      />
+    ),
+  },
+  {
+    id: "player-avatar-contract-sa",
+    title: "Contract holder — SA 90",
+    group: "PlayerAvatar",
+    render: () => (
+      <PlayerAvatar
+        player={NORTH_PLAYER}
+        size="md"
+        isContractHolder
+        contractInfo={{ suit: "hearts", value: 90, contractType: "sans-atout" }}
+      />
+    ),
+  },
+  {
+    id: "player-avatar-contract-ta",
+    title: "Contract holder — TA 100",
+    group: "PlayerAvatar",
+    render: () => (
+      <PlayerAvatar
+        player={NORTH_PLAYER}
+        size="md"
+        isContractHolder
+        contractInfo={{ suit: "hearts", value: 100, contractType: "tout-atout" }}
+      />
+    ),
+  },
+  {
+    id: "player-avatar-contract-capot",
+    title: "Contract holder — Capot ♣",
+    group: "PlayerAvatar",
+    render: () => (
+      <PlayerAvatar
+        player={NORTH_PLAYER}
+        size="md"
+        isContractHolder
+        contractInfo={{ suit: "clubs", value: 160, isCapot: true }}
+      />
+    ),
+  },
 ];
