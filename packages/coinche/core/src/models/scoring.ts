@@ -31,6 +31,8 @@ export interface RoundScore {
   readonly beloteBonusTeam: "contracting" | "opponent" | null;
   readonly contractingTeamFinalScore: number;
   readonly opponentTeamFinalScore: number;
+  readonly announcementWinner: "ns" | "ew" | null;
+  readonly announcementPoints: number;
 }
 
 // ── Rounding helper ──
@@ -177,8 +179,39 @@ function contractingTeamWonAllTricks(
 
 // ── calculateRoundScore ──
 
-export function calculateRoundScore(tricks: readonly Trick[], contract: Contract): RoundScore {
+export function calculateRoundScore(
+  tricks: readonly Trick[],
+  contract: Contract,
+  announcementWinner: "ns" | "ew" | null = null,
+  announcementPoints: number = 0,
+): RoundScore {
   const trumpSuit = contract.contractType === "suit" ? contract.suit : null;
+
+  // Determine whether the contracting team is NS (positions 0 + 2) or EW (positions 1 + 3).
+  const contractingIsNS = contract.bidderPosition === 0 || contract.bidderPosition === 2;
+
+  /** Apply announcement bonus to the two mutable score totals. */
+  function applyAnnouncementBonus(
+    contracting: number,
+    opponent: number,
+  ): { contractingTeamFinalScore: number; opponentTeamFinalScore: number } {
+    let c = contracting;
+    let o = opponent;
+    if (announcementWinner === "ns") {
+      if (contractingIsNS) {
+        c += announcementPoints;
+      } else {
+        o += announcementPoints;
+      }
+    } else if (announcementWinner === "ew") {
+      if (!contractingIsNS) {
+        c += announcementPoints;
+      } else {
+        o += announcementPoints;
+      }
+    }
+    return { contractingTeamFinalScore: c, opponentTeamFinalScore: o };
+  }
 
   // ── Announced capot scoring ──
   if (contract.isCapot) {
@@ -199,10 +232,15 @@ export function calculateRoundScore(tricks: readonly Trick[], contract: Contract
     const beloteBonusTeam =
       trumpSuit !== null ? detectBeloteRebelote(tricks, trumpSuit, contract.bidderPosition) : null;
 
-    const contractingTeamFinalScore =
+    let contractingTeamFinalScore =
       contractingTeamScore + (beloteBonusTeam === "contracting" ? BELOTE_BONUS : 0);
-    const opponentTeamFinalScore =
+    let opponentTeamFinalScore =
       opponentTeamScore + (beloteBonusTeam === "opponent" ? BELOTE_BONUS : 0);
+
+    ({ contractingTeamFinalScore, opponentTeamFinalScore } = applyAnnouncementBonus(
+      contractingTeamFinalScore,
+      opponentTeamFinalScore,
+    ));
 
     return Object.freeze({
       contractingTeamPoints,
@@ -215,6 +253,8 @@ export function calculateRoundScore(tricks: readonly Trick[], contract: Contract
       beloteBonusTeam,
       contractingTeamFinalScore,
       opponentTeamFinalScore,
+      announcementWinner,
+      announcementPoints,
     });
   }
 
@@ -273,6 +313,11 @@ export function calculateRoundScore(tricks: readonly Trick[], contract: Contract
     opponentTeamFinalScore += BELOTE_BONUS;
   }
 
+  ({ contractingTeamFinalScore, opponentTeamFinalScore } = applyAnnouncementBonus(
+    contractingTeamFinalScore,
+    opponentTeamFinalScore,
+  ));
+
   return Object.freeze({
     contractingTeamPoints,
     opponentTeamPoints,
@@ -284,5 +329,7 @@ export function calculateRoundScore(tricks: readonly Trick[], contract: Contract
     beloteBonusTeam,
     contractingTeamFinalScore,
     opponentTeamFinalScore,
+    announcementWinner,
+    announcementPoints,
   });
 }

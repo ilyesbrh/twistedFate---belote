@@ -9,6 +9,12 @@ import { createTrick, playCard, removeCardFromHand, getTrickWinner } from "./tri
 import type { RoundScore } from "./scoring.js";
 import { calculateRoundScore } from "./scoring.js";
 import { getNextPlayerPosition } from "./player-helpers.js";
+import type { Announcement } from "./announcements.js";
+import {
+  findAnnouncements,
+  resolveAnnouncementWinner,
+  calculateAnnouncementTotal,
+} from "./announcements.js";
 
 // ── Types ──
 
@@ -25,6 +31,14 @@ export interface Round {
   readonly currentTrick: Trick | null;
   readonly roundScore: RoundScore | null;
   readonly phase: RoundPhase;
+  /** Announcements for the NS team (positions 0 + 2), populated when bidding completes. */
+  readonly nsAnnouncements: readonly Announcement[];
+  /** Announcements for the EW team (positions 1 + 3), populated when bidding completes. */
+  readonly ewAnnouncements: readonly Announcement[];
+  /** Which team won the announcement comparison, or null if no announcements. */
+  readonly announcementWinner: "ns" | "ew" | null;
+  /** Total announcement points for the winning team (0 if no winner). */
+  readonly announcementPoints: number;
 }
 
 // ── Factory ──
@@ -50,6 +64,10 @@ export function createRound(
     currentTrick: null,
     roundScore: null,
     phase: "bidding" as const,
+    nsAnnouncements: Object.freeze([]) as readonly Announcement[],
+    ewAnnouncements: Object.freeze([]) as readonly Announcement[],
+    announcementWinner: null,
+    announcementPoints: 0,
   });
 }
 
@@ -72,6 +90,26 @@ export function placeBidInRound(round: Round, bid: Bid, idGenerator: IdGenerator
       idGenerator,
     );
 
+    // Auto-detect announcements from each player's hand (V1: single-moment detection)
+    const trumpSuit = contract.contractType === "suit" ? contract.suit : null;
+    const nsAnnouncements = Object.freeze([
+      ...findAnnouncements(round.players[0].hand),
+      ...findAnnouncements(round.players[2].hand),
+    ]);
+    const ewAnnouncements = Object.freeze([
+      ...findAnnouncements(round.players[1].hand),
+      ...findAnnouncements(round.players[3].hand),
+    ]);
+    const winnerAB = resolveAnnouncementWinner(nsAnnouncements, ewAnnouncements, trumpSuit);
+    const announcementWinner: "ns" | "ew" | null =
+      winnerAB === "a" ? "ns" : winnerAB === "b" ? "ew" : null;
+    const announcementPoints =
+      announcementWinner === "ns"
+        ? calculateAnnouncementTotal(nsAnnouncements)
+        : announcementWinner === "ew"
+          ? calculateAnnouncementTotal(ewAnnouncements)
+          : 0;
+
     return Object.freeze({
       id: round.id,
       roundNumber: round.roundNumber,
@@ -83,6 +121,10 @@ export function placeBidInRound(round: Round, bid: Bid, idGenerator: IdGenerator
       currentTrick: firstTrick,
       roundScore: null,
       phase: "playing" as const,
+      nsAnnouncements,
+      ewAnnouncements,
+      announcementWinner,
+      announcementPoints,
     });
   }
 
@@ -98,6 +140,10 @@ export function placeBidInRound(round: Round, bid: Bid, idGenerator: IdGenerator
       currentTrick: null,
       roundScore: null,
       phase: "cancelled" as const,
+      nsAnnouncements: round.nsAnnouncements,
+      ewAnnouncements: round.ewAnnouncements,
+      announcementWinner: round.announcementWinner,
+      announcementPoints: round.announcementPoints,
     });
   }
 
@@ -113,6 +159,10 @@ export function placeBidInRound(round: Round, bid: Bid, idGenerator: IdGenerator
     currentTrick: null,
     roundScore: null,
     phase: "bidding" as const,
+    nsAnnouncements: round.nsAnnouncements,
+    ewAnnouncements: round.ewAnnouncements,
+    announcementWinner: round.announcementWinner,
+    announcementPoints: round.announcementPoints,
   });
 }
 
@@ -163,8 +213,13 @@ export function playCardInRound(
     const trickWinner = getTrickWinner(updatedTrick);
 
     if (newTricks.length === 8) {
-      // Round complete — calculate score
-      const roundScore = calculateRoundScore(newTricks, round.contract);
+      // Round complete — calculate score (pass announcement info)
+      const roundScore = calculateRoundScore(
+        newTricks,
+        round.contract,
+        round.announcementWinner,
+        round.announcementPoints,
+      );
 
       return Object.freeze({
         id: round.id,
@@ -177,6 +232,10 @@ export function playCardInRound(
         currentTrick: null,
         roundScore,
         phase: "completed" as const,
+        nsAnnouncements: round.nsAnnouncements,
+        ewAnnouncements: round.ewAnnouncements,
+        announcementWinner: round.announcementWinner,
+        announcementPoints: round.announcementPoints,
       });
     }
 
@@ -199,6 +258,10 @@ export function playCardInRound(
       currentTrick: nextTrick,
       roundScore: null,
       phase: "playing" as const,
+      nsAnnouncements: round.nsAnnouncements,
+      ewAnnouncements: round.ewAnnouncements,
+      announcementWinner: round.announcementWinner,
+      announcementPoints: round.announcementPoints,
     });
   }
 
@@ -214,5 +277,9 @@ export function playCardInRound(
     currentTrick: updatedTrick,
     roundScore: null,
     phase: "playing" as const,
+    nsAnnouncements: round.nsAnnouncements,
+    ewAnnouncements: round.ewAnnouncements,
+    announcementWinner: round.announcementWinner,
+    announcementPoints: round.announcementPoints,
   });
 }
