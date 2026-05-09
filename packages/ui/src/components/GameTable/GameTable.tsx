@@ -191,6 +191,8 @@ export function GameTableView({
           contractValue={state.bidReveal.contract.value}
           contractSuit={state.bidReveal.contract.suit}
           contractCoincheLevel={state.bidReveal.contract.coincheLevel}
+          contractType={state.bidReveal.contractType}
+          isCapot={state.bidReveal.isCapot}
           winnerPosition={state.bidReveal.winnerPosition}
           winnerName={state.bidReveal.winnerName}
           onComplete={state.dismissBidReveal}

@@ -92,6 +92,10 @@ export interface BidReveal {
   contract: Contract;
   winnerPosition: Position;
   winnerName: string;
+  /** Coinche contract type — overrides suit display in BidWinReveal. */
+  contractType?: "suit" | "sans-atout" | "tout-atout";
+  /** True when the contract was an announced capot (Coinche only). */
+  isCapot?: boolean;
 }
 
 // ── Exported types ───────────────────────────────────────────────────────────

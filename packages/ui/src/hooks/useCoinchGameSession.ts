@@ -256,12 +256,17 @@ export function useCoinchGameSession(): GameSessionState {
       if (event.type === "bidding_completed") {
         bidRevealKey.current += 1;
         const bidderPos = event.contract.bidderPosition;
+        const revealContract = event.contract as unknown as Contract & {
+          contractType?: "suit" | "sans-atout" | "tout-atout";
+          isCapot?: boolean;
+        };
         setBidReveal({
           key: bidRevealKey.current,
-          // Coinche Contract is a structural superset of Belote Contract
-          contract: event.contract as unknown as Contract,
+          contract: revealContract as unknown as Contract,
           winnerPosition: getSeat(bidderPos),
           winnerName: getProfile(bidderPos).name,
+          contractType: revealContract.contractType,
+          isCapot: revealContract.isCapot,
         });
       }
 
