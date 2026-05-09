@@ -71,8 +71,29 @@ export default tseslint.config(
       "vitest.config.ts",
       "packages/*/vitest.config.ts",
       "packages/*/vite.config.ts",
+      "packages/coinche/*/vitest.config.ts",
     ],
     ...tseslint.configs.disableTypeChecked,
+  },
+
+  // ── Game isolation: no cross-game imports ─────────────────────────────────
+  // Per docs/PLATFORM_MANIFESTO.md Rule 1: game packages cannot import each other.
+  {
+    files: ["packages/coinche/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@belote/*"],
+              message:
+                "Game packages cannot import each other. Duplicate the code or extract to @cards/* (≥3-game evidence required). See docs/PLATFORM_MANIFESTO.md Rule 1.",
+            },
+          ],
+        },
+      ],
+    },
   },
 
   prettierConfig,

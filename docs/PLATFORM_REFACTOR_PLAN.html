@@ -1,0 +1,1273 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TwistedFate — Platform Refactor Plan</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Yeseva+One&family=Caveat:wght@500;700&family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --paper-cream: #f4ead5;
+        --paper-warm: #ede0c2;
+        --ink-dark: #2a2218;
+        --ink-soft: #4a3f30;
+        --accent-terracotta: #c0593c;
+        --accent-terracotta-dark: #9d3f24;
+        --accent-teal: #2c6e6a;
+        --accent-mustard: #d4a648;
+        --accent-sage: #7d8c6e;
+        --gold-700: #8a6a1a;
+        --shadow-stamp: 0 6px 0 rgba(40, 30, 20, 0.18), 0 14px 28px rgba(40, 30, 20, 0.22);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #1a140e;
+      }
+
+      body {
+        font-family: "Lora", Georgia, serif;
+        color: var(--ink-dark);
+        line-height: 1.55;
+      }
+
+      /* ── Slide deck container ───────────────────────────── */
+      .deck {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .slide {
+        background:
+          radial-gradient(circle at 12% 8%, rgba(192, 89, 60, 0.06) 0, transparent 40%),
+          radial-gradient(circle at 88% 92%, rgba(44, 110, 106, 0.05) 0, transparent 40%),
+          repeating-linear-gradient(
+            45deg,
+            transparent 0,
+            transparent 18px,
+            rgba(74, 63, 48, 0.02) 18px,
+            rgba(74, 63, 48, 0.02) 19px
+          ),
+          var(--paper-cream);
+        border: 1px solid rgba(40, 34, 24, 0.08);
+        border-radius: 14px;
+        box-shadow:
+          0 8px 0 rgba(0, 0, 0, 0.18),
+          0 24px 60px rgba(0, 0, 0, 0.45);
+        margin: 28px 0;
+        padding: 56px 64px;
+        min-height: 720px;
+        position: relative;
+        page-break-after: always;
+        scroll-margin-top: 24px;
+      }
+
+      .slide::before {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border: 1px dashed rgba(74, 63, 48, 0.15);
+        border-radius: 8px;
+        pointer-events: none;
+      }
+
+      .slide-num {
+        position: absolute;
+        top: 22px;
+        right: 32px;
+        font-family: "Caveat", cursive;
+        font-size: 22px;
+        color: var(--accent-terracotta);
+        opacity: 0.85;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: "Yeseva One", "Yeseva", Georgia, serif;
+        color: var(--ink-dark);
+        line-height: 1.15;
+        margin: 0 0 0.6em;
+      }
+
+      h1 {
+        font-size: 64px;
+        letter-spacing: -0.5px;
+      }
+
+      h2 {
+        font-size: 38px;
+        margin-top: 0;
+        position: relative;
+        padding-bottom: 14px;
+      }
+
+      h2::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 86px;
+        height: 4px;
+        background: var(--accent-terracotta);
+        border-radius: 2px;
+      }
+
+      h3 {
+        font-size: 24px;
+        margin-top: 28px;
+      }
+
+      .eyebrow {
+        font-family: "Caveat", cursive;
+        font-size: 28px;
+        color: var(--accent-terracotta);
+        letter-spacing: 0.5px;
+      }
+
+      .lede {
+        font-size: 19px;
+        color: var(--ink-soft);
+        max-width: 78ch;
+      }
+
+      p,
+      li {
+        font-size: 16px;
+        color: var(--ink-soft);
+      }
+
+      strong {
+        color: var(--ink-dark);
+      }
+
+      em {
+        font-style: italic;
+        color: var(--ink-dark);
+      }
+
+      a {
+        color: var(--accent-teal);
+        text-decoration: none;
+        border-bottom: 1px dotted var(--accent-teal);
+      }
+
+      code {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 13px;
+        background: rgba(40, 34, 24, 0.07);
+        color: var(--accent-terracotta-dark);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+
+      pre {
+        background: #1f1a13;
+        color: #e9dec4;
+        padding: 18px 22px;
+        border-radius: 8px;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 13px;
+        line-height: 1.55;
+        overflow-x: auto;
+        border-left: 4px solid var(--accent-terracotta);
+      }
+
+      pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+
+      /* ── Tables ───────────────────────────────────────────── */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        font-size: 14.5px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 10px 14px;
+        border-bottom: 1px solid rgba(40, 34, 24, 0.12);
+        vertical-align: top;
+      }
+
+      th {
+        background: rgba(40, 34, 24, 0.05);
+        font-family: "Yeseva One", serif;
+        font-weight: normal;
+        color: var(--ink-dark);
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 1px;
+      }
+
+      tr:hover td {
+        background: rgba(192, 89, 60, 0.04);
+      }
+
+      /* ── Mermaid diagrams ─────────────────────────────────── */
+      .mermaid {
+        background: rgba(255, 252, 244, 0.5);
+        padding: 24px;
+        border-radius: 10px;
+        margin: 18px 0;
+        text-align: center;
+        border: 1px solid rgba(40, 34, 24, 0.08);
+        overflow-x: auto;
+        white-space: pre;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 12px;
+      }
+
+      .mermaid svg {
+        max-width: 100%;
+        height: auto;
+      }
+
+      /* ── Cards / callouts ─────────────────────────────────── */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin: 16px 0;
+      }
+
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin: 16px 0;
+      }
+
+      .card {
+        background: rgba(255, 252, 244, 0.6);
+        border: 1px solid rgba(40, 34, 24, 0.1);
+        border-left: 4px solid var(--accent-terracotta);
+        border-radius: 8px;
+        padding: 18px 20px;
+      }
+
+      .card.teal {
+        border-left-color: var(--accent-teal);
+      }
+      .card.sage {
+        border-left-color: var(--accent-sage);
+      }
+      .card.mustard {
+        border-left-color: var(--accent-mustard);
+      }
+
+      .card h4 {
+        font-family: "Yeseva One", serif;
+        font-size: 18px;
+        margin: 0 0 8px;
+        color: var(--ink-dark);
+      }
+
+      .card p,
+      .card li {
+        font-size: 14.5px;
+        margin: 4px 0;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-family: "Caveat", cursive;
+        font-size: 16px;
+        margin-right: 6px;
+      }
+
+      .pill.keep {
+        background: #d4f4dd;
+        color: #2a5a36;
+      }
+      .pill.adapt {
+        background: #fff1c2;
+        color: #7a5a18;
+      }
+      .pill.extract {
+        background: #ffd9c2;
+        color: #8a3d1a;
+      }
+      .pill.new {
+        background: #d2e7f4;
+        color: #1c4d6e;
+      }
+
+      .stamp {
+        display: inline-block;
+        background: var(--accent-terracotta);
+        color: #fff8e9;
+        padding: 8px 22px;
+        border-radius: 6px;
+        font-family: "Yeseva One", serif;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-size: 14px;
+        box-shadow: var(--shadow-stamp);
+        transform: rotate(-1.5deg);
+      }
+
+      .signature {
+        font-family: "Caveat", cursive;
+        font-size: 22px;
+        color: var(--ink-soft);
+      }
+
+      /* ── Title slide ──────────────────────────────────────── */
+      .slide-title {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+        align-items: center;
+      }
+
+      .slide-title .eyebrow {
+        font-size: 32px;
+      }
+
+      .slide-title h1 {
+        font-size: 84px;
+        margin-top: 12px;
+        line-height: 1;
+      }
+
+      .slide-title .subtitle {
+        font-family: "Caveat", cursive;
+        font-size: 30px;
+        color: var(--accent-teal);
+        margin-top: 18px;
+      }
+
+      .slide-title .meta {
+        margin-top: 60px;
+        font-size: 14px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+
+      /* ── Navigation ───────────────────────────────────────── */
+      .toc {
+        position: fixed;
+        right: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--paper-cream);
+        border: 1px solid rgba(40, 34, 24, 0.15);
+        border-radius: 10px;
+        padding: 12px 14px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        z-index: 100;
+        max-width: 220px;
+      }
+
+      .toc ol {
+        margin: 0;
+        padding-left: 20px;
+        font-family: "Caveat", cursive;
+        font-size: 17px;
+      }
+
+      .toc a {
+        color: var(--ink-dark);
+        border-bottom: none;
+      }
+
+      .toc a:hover {
+        color: var(--accent-terracotta);
+      }
+
+      .toc h5 {
+        margin: 0 0 6px;
+        font-family: "Yeseva One", serif;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--accent-terracotta);
+      }
+
+      @media (max-width: 1100px) {
+        .toc {
+          display: none;
+        }
+        .grid-3,
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+        .slide {
+          padding: 36px 28px;
+        }
+        h1 {
+          font-size: 44px;
+        }
+        .slide-title h1 {
+          font-size: 52px;
+        }
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+        .toc {
+          display: none;
+        }
+        .slide {
+          box-shadow: none;
+          margin: 0;
+          page-break-after: always;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="toc" aria-label="Slide index">
+      <h5>Slides</h5>
+      <ol>
+        <li><a href="#s1">Cover</a></li>
+        <li><a href="#s2">Goal &amp; V1 scope</a></li>
+        <li><a href="#s3">Where we are today</a></li>
+        <li><a href="#s4">Target architecture</a></li>
+        <li><a href="#s5">Plugin contract</a></li>
+        <li><a href="#s6">Keep / Adapt / Extract / New</a></li>
+        <li><a href="#s7">File-level mapping</a></li>
+        <li><a href="#s8">Migration roadmap</a></li>
+        <li><a href="#s9">Concept-by-concept decisions</a></li>
+        <li><a href="#s10">Risks &amp; mitigations</a></li>
+        <li><a href="#s11">Open questions</a></li>
+      </ol>
+    </nav>
+
+    <main class="deck">
+      <!-- ── Slide 1: cover ────────────────────────────────── -->
+      <section class="slide slide-title" id="s1">
+        <div class="slide-num">01</div>
+        <div class="eyebrow">A platform refactor plan</div>
+        <h1>TwistedFate</h1>
+        <div class="subtitle">From one Belote app → a card-game platform</div>
+        <div style="margin-top: 60px">
+          <span class="stamp">Strategic Plan · v1</span>
+        </div>
+        <div class="meta">PM/CEO review · drafted 2026-05-07 · scope: Belote-family games</div>
+      </section>
+
+      <!-- ── Slide 2: goal + V1 scope ──────────────────────── -->
+      <section class="slide" id="s2">
+        <div class="slide-num">02</div>
+        <div class="eyebrow">The premise</div>
+        <h2>Goal &amp; V1 scope</h2>
+
+        <p class="lede">
+          Turn TwistedFate from <em>one Belote app</em> into a
+          <strong>shell + plugin platform</strong>. The shell owns everything common (table, cards,
+          avatars, chat, lobby, auth, identity, friends, history). Each game is a plugin that
+          contributes its rules engine, its bidding/action panels, its scoring display, and its AI.
+        </p>
+
+        <h3>V1 scope — same-deck, same-layout games only</h3>
+        <p style="margin-top: 0">
+          Defer multi-deck and multi-seat-count abstractions until a real second-family game (Tarot,
+          Bridge, Uno…) demands them.
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Game</th>
+              <th>Deck</th>
+              <th>Players</th>
+              <th>Layout</th>
+              <th>What changes vs Belote</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Belote</strong> (today)</td>
+              <td>32</td>
+              <td>4 (2v2)</td>
+              <td>Current</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><strong>Simple Belote</strong></td>
+              <td>32</td>
+              <td>4 (2v2)</td>
+              <td>Identical</td>
+              <td>No coinche / surcoinche, simpler scoring</td>
+            </tr>
+            <tr>
+              <td><strong>Bigger Wins</strong></td>
+              <td>32</td>
+              <td>4 (2v2)</td>
+              <td>Identical</td>
+              <td>Different rank order, no trump or all-trump</td>
+            </tr>
+            <tr>
+              <td><strong>Coinche / Contrée</strong></td>
+              <td>32</td>
+              <td>4 (2v2)</td>
+              <td>Identical</td>
+              <td>Auction-value bid model</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="grid-2" style="margin-top: 28px">
+          <div class="card teal">
+            <h4>What V1 does buy us</h4>
+            <ul>
+              <li>Plugin interface, registry, and lifecycle</li>
+              <li>Per-game match history + leaderboards</li>
+              <li>Game picker in lobby</li>
+              <li>Reusable shell for the next 3 games</li>
+            </ul>
+          </div>
+          <div class="card mustard">
+            <h4>What V1 explicitly skips</h4>
+            <ul>
+              <li>Variable deck sizes (no 52, 78, 108-special yet)</li>
+              <li>Variable seat counts (4-only)</li>
+              <li>Runtime federated module loading (build-time registry V1)</li>
+              <li>LLM personas (separate roadmap)</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Slide 3: where we are ─────────────────────────── -->
+      <section class="slide" id="s3">
+        <div class="slide-num">03</div>
+        <div class="eyebrow">Diagnosis</div>
+        <h2>Where we are today</h2>
+
+        <p class="lede">
+          The architecture is clean and layered, but every layer is named
+          <code>@belote/*</code> and contains Belote-specific names in its public surface.
+          Pure-Belote (red) is leaking into protocol, server, and hooks where it doesn't belong.
+        </p>
+
+        <div class="mermaid">
+          flowchart TB subgraph UI["@belote/ui — React, all-in-one"] UA[Auth screens] UL[Lobby]
+          UG[GameTable] UC[Chat / Avatars] UH[useGameSession] UO[useOnlineGameSession] end subgraph
+          APP["@belote/app — session orchestration"] AS[GameSession class] AC["Commands: place_bid,
+          play_card"] AE["Events: bid_placed, card_played..."] AS --- AC AS --- AE end subgraph
+          CORE["@belote/core — pure domain"] CC["Card · Deck · Player"] CB[Bidding model] CT[Trick
+          rules] CSC[Scoring] CR["Round / Game"] CAI[AI strategy] end subgraph
+          PROTO["@belote/protocol"] P1["ClientMessage: place_bid, play_card"] P2["ServerMessage:
+          public_state, private_state"] end subgraph SERVER["@belote/server"] SG["Gateway · WS +
+          auth"] SR["Room · owns one GameSession"] SM[matchmakingQueue] SF[friends]
+          SH[match-history] SP[profiles] end subgraph DBPKG["@belote/db"] DB1[("SQLite: users,
+          sessions, friends, matches")] end UI --> APP APP --> CORE UI -->|WS| SERVER SERVER --> APP
+          SERVER --> DBPKG UI -.types.-> PROTO SERVER -.types.-> PROTO classDef beloteSpecific
+          fill:#fde2e2,stroke:#c00,color:#600 classDef shareable fill:#d4f4dd,stroke:#0a0,color:#063
+          classDef mixed fill:#fff1c2,stroke:#b80,color:#653 class CORE,APP,PROTO beloteSpecific
+          class UA,UL,UC,SG,SF,SH,SP,DBPKG shareable class UG,UH,UO,SR,SM mixed
+        </div>
+
+        <div class="grid-3" style="margin-top: 8px">
+          <div class="card">
+            <h4 style="color: #c00">🟥 Belote-only</h4>
+            <p>
+              <code>@belote/core</code>, <code>@belote/app</code>, <code>@belote/protocol</code> —
+              leak Belote names into every consumer.
+            </p>
+          </div>
+          <div class="card teal">
+            <h4 style="color: #0a0">🟩 Already shareable</h4>
+            <p>
+              Auth, friends, history, profiles, gateway, identity, lobby chrome, design tokens, db.
+            </p>
+          </div>
+          <div class="card mustard">
+            <h4 style="color: #b80">🟨 Mixed</h4>
+            <p>
+              <code>GameTable</code>, <code>useGameSession</code>, <code>room.ts</code>, matchmaking
+              — generic bones, Belote-coded today.
+            </p>
+          </div>
+        </div>
+
+        <h3>Confirmed coupling hot spots (from the code)</h3>
+        <ul>
+          <li>
+            <code>BID_VALUES</code>, <code>TRUMP_POINTS</code>, <code>BELOTE_BONUS</code>,
+            <code>chooseBid</code>, <code>chooseCardForRound</code> — pure Belote rule names
+            exported from the engine.
+          </li>
+          <li>
+            <code>app/commands.ts</code> hardcodes <code>place_bid</code> +
+            <code>play_card</code> as the only actions — no abstraction over "game-specific action".
+          </li>
+          <li>
+            <code>protocol/index.ts</code> bakes <code>WireBid</code> +
+            <code>BID_VALUES_WIRE</code> into the wire shape.
+          </li>
+          <li>
+            <code>RoomPhase = "lobby"|"bidding"|"playing"|...</code> — phase enum is Belote's, not
+            generic.
+          </li>
+          <li>
+            <code>useGameSession.ts</code> (526 lines) holds Belote presentation logic (trick
+            offsets, contract holder, bidding shape).
+          </li>
+          <li><code>messages/gameMessages.ts</code> switches on Belote events directly.</li>
+        </ul>
+      </section>
+
+      <!-- ── Slide 4: target architecture ──────────────────── -->
+      <section class="slide" id="s4">
+        <div class="slide-num">04</div>
+        <div class="eyebrow">North star</div>
+        <h2>Target architecture</h2>
+
+        <p class="lede">
+          A single platform shell that knows nothing about any specific game. Each game is a
+          self-contained plugin bundle: rules engine, AI, per-game UI bits, per-game protocol
+          encoding.
+        </p>
+
+        <div class="mermaid">
+          flowchart TB subgraph SHELL["PLATFORM SHELL — game-agnostic"] direction TB subgraph
+          SHELL_UI["@cards/ui-shell"] SUA["Auth · Identity · Friends"] SUL["Lobby · Game Picker ·
+          Matchmaking"] SUT["Table chrome · Felt · Wood rim"] SUH["HandLayout · OpponentHand ·
+          CardFace · CardBack"] SUS["ScorePanel BASE · ChatPanel · Avatars"] SUR["Round / Game-over
+          chrome"] end subgraph SHELL_APP["@cards/session"] SAB["Generic Session of TState, TCmd,
+          TEvent"] SAR["Round / turn lifecycle dispatch"] end subgraph
+          SHELL_CORE["@cards/primitives"] SCC["Card · Suit · Rank · ID"] SCD["Deck factory · shuffle
+          · deal"] SCP["Player · Team · Position · seat math"] end subgraph
+          SHELL_TT["@cards/trick-taking"] STT["Trick · trump rules · winner rules — parametrized"]
+          end subgraph SHELL_PROTO["@cards/protocol"] SPB["hello · room · seat · queue · identity<br />+
+          generic action envelopes"] end subgraph SHELL_SERVER["@cards/server"] SSG["Gateway · WS ·
+          auth"] SSR["Room shell · seats · reconnect"] SSM["Matchmaking by gameId"] SSF[Friends]
+          SSH["Match history — game_id column"] SSP[Profiles] end SHELL_DB[("@cards/db — SQLite,
+          plugin-extensible")] end subgraph PLUGIN_BELOTE["GAME PLUGIN · Belote"]
+          PB_RULES["belote/rules — bidding · scoring · belote-rebelote"] PB_AI[belote/ai]
+          PB_UI["belote/ui — BidPanel · ScoreLine · RoundSummary"] PB_PROTO["belote/protocol —
+          WireBid types"] end subgraph PLUGIN_SIMPLE["GAME PLUGIN · Simple Belote"]
+          PS_RULES["simple/rules — simpler scoring · no coinche"] PS_AI[simple/ai] PS_UI["simple/ui
+          — SimpleBidPanel · ScoreLine"] PS_PROTO[simple/protocol] end subgraph PLUGIN_BIGGER["GAME
+          PLUGIN · Bigger Wins"] PG_RULES["bigger/rules — different rank order"] PG_AI[bigger/ai]
+          PG_UI[bigger/ui] PG_PROTO[bigger/protocol] end PLUGIN_BELOTE -->|implements GamePlugin|
+          SHELL PLUGIN_SIMPLE -->|implements GamePlugin| SHELL PLUGIN_BIGGER -->|implements
+          GamePlugin| SHELL
+        </div>
+
+        <div class="grid-2">
+          <div class="card teal">
+            <h4>The shell never imports a game</h4>
+            <p>
+              All flow goes through the <code>GamePlugin</code> interface. Adding a 4th game
+              requires <em>zero</em> shell changes.
+            </p>
+          </div>
+          <div class="card sage">
+            <h4>Plugins never import each other</h4>
+            <p>
+              Each plugin is a leaf. Cross-game features live in shell (e.g. cross-game
+              leaderboards).
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Slide 5: plugin contract ──────────────────────── -->
+      <section class="slide" id="s5">
+        <div class="slide-num">05</div>
+        <div class="eyebrow">The seam</div>
+        <h2>The plugin contract</h2>
+
+        <p class="lede">
+          One interface, four collaborators:
+          <strong>RulesEngine</strong> (pure logic) · <strong>AiPolicy</strong> (decisions) ·
+          <strong>PluginUiContributions</strong> (visuals) · <strong>PluginProtocol</strong> (wire
+          encoding).
+        </p>
+
+        <div class="mermaid">
+          classDiagram class GamePlugin { +id : GameId +displayName : string +deck : DeckSpec
+          +seating : SeatingSpec +rules : RulesEngine +ai : AiPolicy +ui : PluginUiContributions
+          +protocol : PluginProtocol +messages : EventToMessageMap } class RulesEngine {
+          +createInitialRound(deal, dealer) +legalActions(state, seat) +apply(state, action)
+          +isRoundOver(state) +scoreRound(state) +isGameOver(totals, target) } class AiPolicy {
+          +chooseAction(state, seat, persona) } class PluginUiContributions { +ActionPanel
+          +ScoreLineRenderer +RoundSummaryDetails +EventBubbleRenderer } class PluginProtocol {
+          +encodeAction(action) +decodeAction(wire) +encodeState(state, viewerSeat)
+          +encodePrivate(state, viewerSeat) } GamePlugin --> RulesEngine GamePlugin --> AiPolicy
+          GamePlugin --> PluginUiContributions GamePlugin --> PluginProtocol
+        </div>
+
+        <h3>TypeScript sketch</h3>
+        <pre><code>export interface GamePlugin&lt;S, A, E&gt; {
+  readonly id:          GameId;             // "belote", "simple-belote", ...
+  readonly displayName: string;
+  readonly deck:        DeckSpec;           // V1 always Belote32
+  readonly seating:     SeatingSpec;        // V1 always 4-2v2
+  readonly rules:       RulesEngine&lt;S, A, E&gt;;
+  readonly ai:          AiPolicy&lt;S, A&gt;;
+  readonly ui:          PluginUiContributions&lt;S, A, E&gt;;
+  readonly protocol:    PluginProtocol&lt;S, A&gt;;
+}
+
+export interface RulesEngine&lt;S, A, E&gt; {
+  createInitialRound(deal: DealtHands, dealer: Seat):  S;
+  legalActions(state: S, seat: Seat):                  readonly A[];
+  apply(state: S, action: A):                          { state: S; events: readonly E[] };
+  isRoundOver(state: S):                               boolean;
+  scoreRound(state: S):                                RoundScore;
+  isGameOver(totals: TeamTotals, target: number):      WinnerOrNull;
+}</code></pre>
+
+        <p>
+          The shell <code>GameSession</code> only knows: deal cards → ask
+          <code>legalActions</code> → dispatch <code>apply</code> → emit events → ask
+          <code>isRoundOver</code>. It never sees a "bid" or a "trick".
+        </p>
+      </section>
+
+      <!-- ── Slide 6: 4-bucket inventory ───────────────────── -->
+      <section class="slide" id="s6">
+        <div class="slide-num">06</div>
+        <div class="eyebrow">The work, sorted</div>
+        <h2>Keep · Adapt · Extract · New</h2>
+
+        <div class="mermaid">
+          flowchart LR subgraph KEEP["KEEP AS-IS — move to shell"] K1["CardFace · CardBack"]
+          K2["OpponentHand · HandDisplay layout"] K3["PlayerAvatar · AvatarActionMenu"]
+          K4["ChatPanel · ThoughtBubble"] K5["IdentityChip · auth screens"] K6["Friends ·
+          MatchHistory · Profile"] K7["InstallPrompt · PWA shell"] K8["Felt · wood rim · paper ·
+          tokens.css"] K9["Gateway · auth cookie · session plugin"] K10["Matchmaking queue
+          scaffold"] end subgraph ADAPT["ADAPT — keep, add a slot"] A1["GameTable — ActionPanel +
+          scoreline slots"] A2["useGameSession — parametrize on plugin"] A3["useOnlineGameSession —
+          plugin-encoded wire"] A4["ScorePanel — shell + plugin scoreline"] A5["RoundSummary — shell
+          header + plugin body"] A6["Lobby — add pick-a-game step"] A7["Room.ts — take pluginId ·
+          own GamePlugin"] A8["Match-history schema — add game_id column"] A9["Protocol
+          ClientMessage — add game_action envelope"] A10["ScreenViewer fixtures — group by plugin"]
+          end subgraph EXTRACT["EXTRACT — Belote into plugin"] E1["BidPanel into belote-rules/ui"]
+          E2["BidWinReveal into belote-rules/ui"] E3["Belote scoring · belote-rebelote"] E4["Bidding
+          model · BidValue · Coinche"] E5["chooseBid · chooseCardForRound"] E6["gameMessages.ts
+          mapper"] E7["WireBid types in protocol"] E8["Trick must-overtrump partner rule"] end
+          subgraph NEWBUCKET["NEW — does not exist today"] N1[GamePlugin interface] N2[Plugin
+          registry] N3[Game picker screen] N4[Generic action envelope in protocol] N5["RankOrderSpec
+          · DeckSpec · SeatingSpec types"] N6[Plugin-aware RoomPhase enum] N7["Plugin AI persona
+          hook — future LLM swap"] end style KEEP fill:#d4f4dd,stroke:#0a7,color:#063 style ADAPT
+          fill:#fff1c2,stroke:#b80,color:#653 style EXTRACT fill:#ffd9c2,stroke:#c63,color:#732
+          style NEWBUCKET fill:#d2e7f4,stroke:#27a,color:#1c4d6e
+        </div>
+
+        <div style="margin-top: 18px">
+          <span class="pill keep">KEEP</span> moves untouched into the shell.
+          <span class="pill adapt">ADAPT</span> stays where it is but gains a parameter or a slot.
+          <span class="pill extract">EXTRACT</span> moves out of the platform into the Belote
+          plugin. <span class="pill new">NEW</span> is net-new code we must write.
+        </div>
+      </section>
+
+      <!-- ── Slide 7: file-level mapping ───────────────────── -->
+      <section class="slide" id="s7">
+        <div class="slide-num">07</div>
+        <div class="eyebrow">Concrete moves</div>
+        <h2>File-level mapping</h2>
+
+        <p class="lede">
+          Load-bearing files only. Smaller files (UI atoms, tests, fixtures) follow their parent's
+          bucket.
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Current file</th>
+              <th>Move to</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>core/models/card.ts</code></td>
+              <td><code>@cards/primitives</code></td>
+              <td><span class="pill keep">KEEP</span> ranks become a param</td>
+            </tr>
+            <tr>
+              <td><code>core/models/player.ts</code></td>
+              <td><code>@cards/primitives</code></td>
+              <td><span class="pill keep">KEEP</span></td>
+            </tr>
+            <tr>
+              <td><code>core/models/bid.ts</code></td>
+              <td><code>@belote-rules/core</code></td>
+              <td><span class="pill extract">EXTRACT</span></td>
+            </tr>
+            <tr>
+              <td><code>core/models/trick.ts</code></td>
+              <td><code>@cards/trick-taking</code></td>
+              <td><span class="pill adapt">ADAPT</span> parametrize trump &amp; follow rules</td>
+            </tr>
+            <tr>
+              <td><code>core/models/scoring.ts</code></td>
+              <td><code>@belote-rules/core</code></td>
+              <td><span class="pill extract">EXTRACT</span></td>
+            </tr>
+            <tr>
+              <td><code>core/models/round.ts</code></td>
+              <td>split</td>
+              <td>shell handles lifecycle, plugin owns rules</td>
+            </tr>
+            <tr>
+              <td><code>core/ai/strategy.ts</code></td>
+              <td><code>@belote-rules/ai</code></td>
+              <td><span class="pill extract">EXTRACT</span></td>
+            </tr>
+            <tr>
+              <td><code>app/session.ts</code></td>
+              <td><code>@cards/session</code> + <code>@belote-rules/app</code></td>
+              <td><span class="pill adapt">ADAPT</span> generify on TState/TAction/TEvent</td>
+            </tr>
+            <tr>
+              <td><code>app/commands.ts</code></td>
+              <td>split</td>
+              <td>
+                shell: <code>start_game / start_round</code>; plugin:
+                <code>bid · play</code>
+              </td>
+            </tr>
+            <tr>
+              <td><code>protocol/index.ts</code></td>
+              <td>
+                <code>@cards/protocol</code> +
+                <code>@belote-rules/protocol</code>
+              </td>
+              <td>
+                <span class="pill extract">EXTRACT</span> WireBid;
+                <span class="pill new">NEW</span> action envelope
+              </td>
+            </tr>
+            <tr>
+              <td><code>server/gateway.ts</code></td>
+              <td><code>@cards/server</code></td>
+              <td><span class="pill keep">KEEP</span> add gameId routing</td>
+            </tr>
+            <tr>
+              <td><code>server/room.ts</code></td>
+              <td>shell + plugin handlers</td>
+              <td>
+                <span class="pill adapt">ADAPT</span> takes a
+                <code>GamePlugin</code>
+              </td>
+            </tr>
+            <tr>
+              <td><code>server/matchmakingQueue.ts</code></td>
+              <td><code>@cards/server</code></td>
+              <td><span class="pill adapt">ADAPT</span> queue keyed by gameId</td>
+            </tr>
+            <tr>
+              <td><code>ui/components/GameTable.tsx</code></td>
+              <td><code>@cards/ui-shell</code></td>
+              <td><span class="pill adapt">ADAPT</span> slots for ActionPanel / scoreline</td>
+            </tr>
+            <tr>
+              <td><code>ui/components/BidPanel/</code></td>
+              <td><code>@belote-rules/ui</code></td>
+              <td><span class="pill extract">EXTRACT</span> verbatim</td>
+            </tr>
+            <tr>
+              <td><code>ui/components/RoundSummary/</code></td>
+              <td>shell + plugin body</td>
+              <td><span class="pill adapt">ADAPT</span></td>
+            </tr>
+            <tr>
+              <td><code>ui/components/ScorePanel/</code></td>
+              <td>shell + plugin scoreline</td>
+              <td><span class="pill adapt">ADAPT</span></td>
+            </tr>
+            <tr>
+              <td><code>ui/hooks/useGameSession.ts</code></td>
+              <td><code>@cards/ui-shell</code> + plugin glue</td>
+              <td><span class="pill adapt">ADAPT</span> generic over plugin types</td>
+            </tr>
+            <tr>
+              <td><code>ui/messages/gameMessages.ts</code></td>
+              <td>plugin</td>
+              <td><span class="pill extract">EXTRACT</span> per-plugin event mapper</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ── Slide 8: roadmap ──────────────────────────────── -->
+      <section class="slide" id="s8">
+        <div class="slide-num">08</div>
+        <div class="eyebrow">The path</div>
+        <h2>Migration roadmap</h2>
+
+        <p class="lede">
+          A big-bang rewrite would break 705 tests. We stick to your iteration discipline — small
+          steps, all-four-checks-green every iteration. The user-visible app must work end-to-end at
+          the end of every step.
+        </p>
+
+        <div class="mermaid">
+          gantt title TwistedFate platform refactor (calendar-agnostic, N iterations) dateFormat X
+          axisFormat %s section Phase 0 — Inventory Define GamePlugin interface :p0a, 0, 1
+          Architecture doc + decision log :p0b, 1, 1 section Phase 1 — Generify primitives Split
+          @cards/primitives :p1a, 2, 2 Split @cards/trick-taking :p1b, 4, 2 Belote rules to
+          belote-rules/core :p1c, 6, 2 Tests still 705 of 705 :milestone, m1, 8, 0 section Phase 2 —
+          Generic session @cards/session generic :p2a, 8, 2 Belote plugin implements v1 :p2b, 10, 2
+          Local AI plays through plugin :milestone, m2, 12, 0 section Phase 3 — Protocol + server
+          Action envelope in protocol :p3a, 12, 2 Room takes a GamePlugin :p3b, 14, 2 MM + history
+          keyed by gameId :p3c, 16, 1 Online Belote via plugin :milestone, m3, 17, 0 section Phase 4
+          — Generic UI GameTable ActionPanel slot :p4a, 17, 2 BidPanel + RoundSummary to plugin
+          :p4b, 19, 2 Game picker screen in lobby :p4c, 21, 1 section Phase 5 — Second game Simple
+          Belote plugin :p5a, 22, 3 Bigger Wins plugin :p5b, 25, 2 Two games shipped :milestone, m5,
+          27, 0
+        </div>
+
+        <h3>Exit gate per phase</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Phase</th>
+              <th>Exit gate (must be true to ship)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>0</strong></td>
+              <td>
+                Decision log committed; <code>GamePlugin</code> interface reviewed; no code change.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>1</strong></td>
+              <td>
+                Engine split, Belote-specific ringfenced; 705/705 tests green; old
+                <code>@belote/core</code> import surface preserved as a shim.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>2</strong></td>
+              <td>Local AI mode plays a full Belote game through the plugin path. Tests green.</td>
+            </tr>
+            <tr>
+              <td><strong>3</strong></td>
+              <td>
+                Online Belote works end-to-end through the new envelope. Match-history rows have
+                <code>game_id = "belote"</code>.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>4</strong></td>
+              <td>
+                Belote still works <em>identically</em> to today; ScreenViewer fixtures grouped by
+                plugin; visual-diff baselines re-blessed.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>5</strong></td>
+              <td>
+                Adding plugin #2 takes <em>only</em> rules + AI + a small UI bundle.
+                <strong>Zero shell changes.</strong> Two games live in the lobby.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ── Slide 9: concept-by-concept ───────────────────── -->
+      <section class="slide" id="s9">
+        <div class="slide-num">09</div>
+        <div class="eyebrow">The judgment calls</div>
+        <h2>Concept-by-concept decisions</h2>
+
+        <p class="lede">For every Belote-flavored thing in the codebase: where does it land?</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Belote concept</th>
+              <th>Decision</th>
+              <th>Rationale</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>32-card deck (7..A × 4)</td>
+              <td>Lift to <code>DeckSpec</code> param</td>
+              <td>V1 games all use it; type-ready for 52/78 later.</td>
+            </tr>
+            <tr>
+              <td>4-player 2v2 seating</td>
+              <td>Lift to <code>SeatingSpec</code></td>
+              <td>4-only in V1, but the seam exists.</td>
+            </tr>
+            <tr>
+              <td>Suit ordering ♠ ♥ ♦ ♣</td>
+              <td>Generic in <code>@cards/primitives</code></td>
+              <td>Universal.</td>
+            </tr>
+            <tr>
+              <td>Trump-J=20, 9=14, etc.</td>
+              <td>Belote plugin's <code>scoreRound</code></td>
+              <td>Pure rule, doesn't belong in shell.</td>
+            </tr>
+            <tr>
+              <td>Bidding 80–160 step 10</td>
+              <td>Belote plugin's <code>legalActions</code></td>
+              <td>Different per game.</td>
+            </tr>
+            <tr>
+              <td>Coinche / Surcoinche</td>
+              <td>Belote plugin</td>
+              <td>Variant-specific.</td>
+            </tr>
+            <tr>
+              <td>Belote / Rebelote (K+Q trump)</td>
+              <td>Belote plugin</td>
+              <td>Pure rule.</td>
+            </tr>
+            <tr>
+              <td>Must-overtrump-partner</td>
+              <td><code>@cards/trick-taking</code> config flag</td>
+              <td>Other trick-takers need it inverted.</td>
+            </tr>
+            <tr>
+              <td>8 cards per hand</td>
+              <td>Plugin's <code>createInitialRound</code></td>
+              <td>Game-driven.</td>
+            </tr>
+            <tr>
+              <td>Last-trick +10 bonus</td>
+              <td>Plugin's <code>scoreRound</code></td>
+              <td>Rule.</td>
+            </tr>
+            <tr>
+              <td>south / north / west / east</td>
+              <td>Shell — derived from seat</td>
+              <td>Universal mapping.</td>
+            </tr>
+            <tr>
+              <td>BidPanel UI</td>
+              <td>Plugin</td>
+              <td>Per game.</td>
+            </tr>
+            <tr>
+              <td>ScorePanel chrome</td>
+              <td>Shell</td>
+              <td>Pure layout (box, ribbons).</td>
+            </tr>
+            <tr>
+              <td>"Trump: ♠ • 100" line</td>
+              <td>Plugin scoreline</td>
+              <td>Belote-specific data.</td>
+            </tr>
+            <tr>
+              <td>ChatPanel</td>
+              <td>Shell</td>
+              <td>No game knowledge.</td>
+            </tr>
+            <tr>
+              <td>Avatars + bubbles</td>
+              <td>Shell</td>
+              <td>No game knowledge.</td>
+            </tr>
+            <tr>
+              <td>Felt / wood / paper bg</td>
+              <td>Shell tokens</td>
+              <td>Visual brand.</td>
+            </tr>
+            <tr>
+              <td>Auth · Friends · MatchHistory</td>
+              <td>Shell</td>
+              <td>Already game-agnostic infra.</td>
+            </tr>
+            <tr>
+              <td>Match-history row</td>
+              <td>Add <code>gameId</code> column</td>
+              <td>Cross-game leaderboards become possible.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ── Slide 10: risks ───────────────────────────────── -->
+      <section class="slide" id="s10">
+        <div class="slide-num">10</div>
+        <div class="eyebrow">What could go wrong</div>
+        <h2>Risks &amp; mitigations</h2>
+
+        <div class="mermaid">
+          flowchart LR R1["Risk — Generic types blow up<br />TState, TAction, TEvent everywhere"]
+          R2["Risk — 705 tests break"] R3["Risk — Protocol break for live clients"] R4["Risk — Lobby
+          UX gets a step heavier"] R5["Risk — Matchmaking pool fragments by game"] R6["Risk — Visual
+          regressions during shell extraction"] M1["Mitigation — Generics live on Session/Room
+          only;<br />plugin code uses concrete types"] M2["Mitigation — Phase-by-phase shim;<br />belote/core
+          re-exports until last step"] M3["Mitigation — Keep place_bid and play_card<br />as legacy
+          aliases until sunset window"] M4["Mitigation — Last-played quick-resume on home;<br />game
+          picker only on first launch"] M5["Mitigation — V1 ships Belote as default;<br />other
+          games behind feature flag"] M6["Mitigation — pnpm visual baseline sweep<br />at end of
+          every phase"] R1 --> M1 R2 --> M2 R3 --> M3 R4 --> M4 R5 --> M5 R6 --> M6 classDef risk
+          fill:#fde2e2,stroke:#c00,color:#600 classDef mitigation
+          fill:#d4f4dd,stroke:#0a0,color:#063 class R1,R2,R3,R4,R5,R6 risk class M1,M2,M3,M4,M5,M6
+          mitigation
+        </div>
+      </section>
+
+      <!-- ── Slide 11: open questions ──────────────────────── -->
+      <section class="slide" id="s11">
+        <div class="slide-num">11</div>
+        <div class="eyebrow">Lock these before we touch code</div>
+        <h2>Open questions for you</h2>
+
+        <div class="grid-2">
+          <div class="card">
+            <h4>1 · Plugin loading model</h4>
+            <p>
+              Build-time import + static registry
+              <strong>(my recommendation, V1)</strong> — simpler, shippable now. Or runtime
+              federated module loading — lets games ship independently but adds infra cost.
+            </p>
+          </div>
+          <div class="card teal">
+            <h4>2 · Naming</h4>
+            <p>
+              <code>@cards/*</code> for shell + <code>@&lt;game&gt;-rules/*</code> for plugins? Or
+              <code>@twistedfate/shell</code> + <code>@twistedfate/game-belote</code>? Brand
+              decision.
+            </p>
+          </div>
+          <div class="card sage">
+            <h4>3 · Variant boundary</h4>
+            <p>
+              Is "Simple Belote" a separate plugin or a config flag on the Belote plugin? My take:
+              separate plugin if it changes
+              <code>scoreRound</code> or <code>legalActions</code>; config flag if only cosmetic.
+            </p>
+          </div>
+          <div class="card mustard">
+            <h4>4 · Persistence migration</h4>
+            <p>
+              Migrate existing matches table to add <code>game_id</code> (default
+              <code>"belote"</code> for old rows). Confirm before I plan the SQL. One-shot or
+              zero-downtime?
+            </p>
+          </div>
+          <div class="card" style="grid-column: span 2; border-left-color: var(--accent-mustard)">
+            <h4>5 · The proof game — which one?</h4>
+            <p>Of {Simple Belote, Bigger Wins, Coinche} — which validates the platform first?</p>
+            <ul style="margin-top: 4px">
+              <li>
+                <strong>Coinche</strong> — closest to Belote. Lowest risk, weakest platform stress
+                test.
+              </li>
+              <li>
+                <strong>Simple Belote</strong> — strips features. Good for regression coverage of
+                the rules engine.
+              </li>
+              <li>
+                <strong>Bigger Wins</strong> — different rank order, optional no-trump phase.
+                Strongest platform stress test (forces the action-panel slot to render an empty
+                state, exercises <code>RankOrder</code> param).
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 56px">
+          <span class="stamp">Awaiting decisions</span>
+          <p class="signature" style="margin-top: 28px">
+            Once these five lock, Phase 0 is one iteration of doc work and Phase 1 starts
+            immediately after.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        themeVariables: {
+          fontFamily: "'Lora', Georgia, serif",
+          primaryColor: "#f4ead5",
+          primaryTextColor: "#2a2218",
+          primaryBorderColor: "#4a3f30",
+          lineColor: "#9d3f24",
+          secondaryColor: "#ede0c2",
+          tertiaryColor: "#fff8e9",
+          mainBkg: "#fff8e9",
+          nodeBorder: "#4a3f30",
+          clusterBkg: "rgba(244, 234, 213, 0.55)",
+          clusterBorder: "#8a6a1a",
+          edgeLabelBackground: "#fff8e9",
+          tertiaryTextColor: "#2a2218",
+          textColor: "#2a2218",
+        },
+        flowchart: { htmlLabels: true, curve: "basis", padding: 12 },
+        gantt: {
+          fontSize: 12,
+          gridLineStartPadding: 350,
+          barHeight: 20,
+          barGap: 4,
+          topPadding: 60,
+        },
+        class: { titleTopMargin: 18 },
+      });
+
+      // Smooth-scroll keyboard nav: arrow keys page through slides
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      let current = 0;
+      function nearestSlideIndex() {
+        const mid = window.scrollY + window.innerHeight / 2;
+        let best = 0,
+          bestDist = Infinity;
+        slides.forEach((s, i) => {
+          const c = s.offsetTop + s.offsetHeight / 2;
+          const d = Math.abs(c - mid);
+          if (d < bestDist) {
+            bestDist = d;
+            best = i;
+          }
+        });
+        return best;
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
+          current = Math.min(slides.length - 1, nearestSlideIndex() + 1);
+          slides[current].scrollIntoView({ behavior: "smooth", block: "start" });
+          e.preventDefault();
+        } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+          current = Math.max(0, nearestSlideIndex() - 1);
+          slides[current].scrollIntoView({ behavior: "smooth", block: "start" });
+          e.preventDefault();
+        } else if (e.key === "Home") {
+          slides[0].scrollIntoView({ behavior: "smooth", block: "start" });
+        } else if (e.key === "End") {
+          slides[slides.length - 1].scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    </script>
+  </body>
+</html>
