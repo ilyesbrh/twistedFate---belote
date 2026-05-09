@@ -175,4 +175,81 @@ export const roundSummaryFixtures: readonly Fixture[] = [
       />
     ),
   },
+  {
+    id: "round-summary-coinche-sa",
+    title: "Coinche SA (sans-atout) contract met",
+    group: "RoundSummary",
+    render: () => (
+      <RoundSummary
+        roundNumber={4}
+        result={{
+          wasCancelled: false,
+          contract: { id: "c1", suit: "hearts", value: 90, bidderPosition: 0, coincheLevel: 1 },
+          bidderName: "ElenaP",
+          roundScore: makeRoundScore({ contractingTeamFinalScore: 90, opponentTeamFinalScore: 72 }),
+          contractType: "sans-atout",
+          announcementWinner: "ns",
+          announcementPoints: 50,
+        }}
+        nsTotal={230}
+        ewTotal={180}
+        targetScore={1000}
+        onNextRound={noop}
+      />
+    ),
+  },
+  {
+    id: "round-summary-coinche-ta",
+    title: "Coinche TA (tout-atout) contract failed",
+    group: "RoundSummary",
+    render: () => (
+      <RoundSummary
+        roundNumber={5}
+        result={{
+          wasCancelled: false,
+          contract: { id: "c2", suit: "hearts", value: 100, bidderPosition: 1, coincheLevel: 1 },
+          bidderName: "Villy",
+          roundScore: makeRoundScore({
+            contractingTeamPoints: 60,
+            opponentTeamPoints: 102,
+            contractMet: false,
+            contractingTeamFinalScore: 0,
+            opponentTeamFinalScore: 260,
+          }),
+          contractType: "tout-atout",
+        }}
+        nsTotal={330}
+        ewTotal={60}
+        targetScore={1000}
+        onNextRound={noop}
+      />
+    ),
+  },
+  {
+    id: "round-summary-coinche-capot",
+    title: "Coinche Capot achieved",
+    group: "RoundSummary",
+    render: () => (
+      <RoundSummary
+        roundNumber={3}
+        result={{
+          wasCancelled: false,
+          contract: { id: "c3", suit: "spades", value: 160, bidderPosition: 2, coincheLevel: 1 },
+          bidderName: "DilyanaBl",
+          roundScore: makeRoundScore({
+            contractingTeamPoints: 152,
+            opponentTeamPoints: 0,
+            contractMet: true,
+            contractingTeamFinalScore: 500,
+            opponentTeamFinalScore: 0,
+          }),
+          isCapot: true,
+        }}
+        nsTotal={500}
+        ewTotal={0}
+        targetScore={1000}
+        onNextRound={noop}
+      />
+    ),
+  },
 ];

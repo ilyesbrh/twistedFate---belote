@@ -8,6 +8,7 @@ import { scorePanelFixtures } from "./scorePanel.fixtures.js";
 import { gameOverFixtures } from "./gameOver.fixtures.js";
 import { chatPanelFixtures } from "./chatPanel.fixtures.js";
 import { bidPanelFixtures } from "./bidPanel.fixtures.js";
+import { coinchBidPanelFixtures } from "./coinchBidPanel.fixtures.js";
 import { onlineRandomScreenFixtures } from "./onlineRandomScreen.fixtures.js";
 import { onlineLobbyFixtures } from "./onlineLobby.fixtures.js";
 import { roundSummaryFixtures } from "./roundSummary.fixtures.js";
@@ -20,6 +21,7 @@ export const fixtures: readonly Fixture[] = [
   ...onlineRandomScreenFixtures,
   ...gameTableViewFixtures,
   ...bidPanelFixtures,
+  ...coinchBidPanelFixtures,
   ...scorePanelFixtures,
   ...roundSummaryFixtures,
   ...chatPanelFixtures,
