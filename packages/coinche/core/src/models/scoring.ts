@@ -180,18 +180,23 @@ export function calculateRoundScore(tricks: readonly Trick[], contract: Contract
   let contractingTeamScore: number;
   let opponentTeamScore: number;
 
+  // Coinche payout formula: (contract.value + 160) × level.
+  // Applies to: all failures (any level) and coinched/surcoinched successes (×2 / ×4).
+  // Plain success (×1) keeps card-based scoring.
+  const coinchePayout = (contract.value + FAILED_CONTRACT_POINTS) * contract.coincheLevel;
+
   if (contractMet) {
     if (contract.coincheLevel === 1) {
       contractingTeamScore = contractingTeamRoundedPoints;
       opponentTeamScore = opponentTeamRoundedPoints;
     } else {
-      // Contré/surcontré success: winner takes a flat 160 × level, loser 0.
-      contractingTeamScore = FAILED_CONTRACT_POINTS * contract.coincheLevel;
+      // Coinched/surcoinched success: winner takes (contract + 160) × level, loser 0.
+      contractingTeamScore = coinchePayout;
       opponentTeamScore = 0;
     }
   } else {
     contractingTeamScore = 0;
-    opponentTeamScore = FAILED_CONTRACT_POINTS * contract.coincheLevel;
+    opponentTeamScore = coinchePayout;
   }
 
   let contractingTeamFinalScore = contractingTeamScore;

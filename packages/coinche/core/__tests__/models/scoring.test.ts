@@ -1133,53 +1133,58 @@ describe("calculateRoundScore — belote inside contract", () => {
 // ==============================================================
 
 describe("calculateRoundScore — failure awards", () => {
-  it("level 1: opponent gets 160, contracting 0", () => {
+  it("level 1: opponent gets contract + 160, contracting 0", () => {
+    // Coinche plain failure: (100 + 160) × 1 = 260
     const tricks = buildTemplatedRound("hearts", [1, 1, 1, 1, 1, 1, 1, 1]);
     const contract = makeContract(100, "hearts", 0);
     const result = calculateRoundScore(tricks, contract);
     expect(result.contractMet).toBe(false);
     expect(result.contractingTeamScore).toBe(0);
-    expect(result.opponentTeamScore).toBe(160);
+    expect(result.opponentTeamScore).toBe(260);
     expect(result.contractingTeamFinalScore).toBe(0);
-    expect(result.opponentTeamFinalScore).toBe(160);
+    expect(result.opponentTeamFinalScore).toBe(260);
   });
 
-  it("level 2 (contré): opponent gets 320", () => {
+  it("level 2 (contré): opponent gets (contract + 160) × 2", () => {
+    // (100 + 160) × 2 = 520
     const tricks = buildTemplatedRound("hearts", [1, 1, 1, 1, 1, 1, 1, 1]);
     const contract = makeContract(100, "hearts", 0, 2);
     const result = calculateRoundScore(tricks, contract);
-    expect(result.opponentTeamScore).toBe(320);
+    expect(result.opponentTeamScore).toBe(520);
     expect(result.contractingTeamScore).toBe(0);
   });
 
-  it("level 4 (surcontré): opponent gets 640", () => {
+  it("level 4 (surcontré): opponent gets (contract + 160) × 4", () => {
+    // (100 + 160) × 4 = 1040
     const tricks = buildTemplatedRound("hearts", [1, 1, 1, 1, 1, 1, 1, 1]);
     const contract = makeContract(100, "hearts", 0, 4);
     const result = calculateRoundScore(tricks, contract);
-    expect(result.opponentTeamScore).toBe(640);
+    expect(result.opponentTeamScore).toBe(1040);
     expect(result.contractingTeamScore).toBe(0);
   });
 });
 
 // ==============================================================
-// Contré / surcontré success: flat 160 × level, loser 0
+// Contré / surcontré success: (contract + 160) × level, loser 0
 // ==============================================================
 
 describe("calculateRoundScore — contré/surcontré success", () => {
-  it("level 2 met: contracting gets 320, opponent 0", () => {
+  it("level 2 met: contracting gets (contract + 160) × 2, opponent 0", () => {
+    // (100 + 160) × 2 = 520
     const tricks = buildTemplatedRound("hearts", [0, 0, 0, 0, 0, 0, 0, 0]);
     const contract = makeContract(100, "hearts", 0, 2);
     const result = calculateRoundScore(tricks, contract);
     expect(result.contractMet).toBe(true);
-    expect(result.contractingTeamScore).toBe(320);
+    expect(result.contractingTeamScore).toBe(520);
     expect(result.opponentTeamScore).toBe(0);
   });
 
-  it("level 4 met: contracting gets 640, opponent 0", () => {
+  it("level 4 met: contracting gets (contract + 160) × 4, opponent 0", () => {
+    // (100 + 160) × 4 = 1040
     const tricks = buildTemplatedRound("hearts", [0, 0, 0, 0, 0, 0, 0, 0]);
     const contract = makeContract(100, "hearts", 0, 4);
     const result = calculateRoundScore(tricks, contract);
-    expect(result.contractingTeamScore).toBe(640);
+    expect(result.contractingTeamScore).toBe(1040);
     expect(result.opponentTeamScore).toBe(0);
   });
 });
