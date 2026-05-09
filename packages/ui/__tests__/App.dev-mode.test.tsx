@@ -52,10 +52,13 @@ afterEach(() => {
 });
 
 describe("App dev-mode gate", () => {
-  it("without ?screens, renders the menu (regression check)", () => {
+  it("without ?screens, renders the game picker (regression check)", async () => {
     render(<App />);
-    // ModeSelectScreen is the default landing surface.
     expect(screen.queryByTestId("screen-viewer")).not.toBeInTheDocument();
+    // Auth preflight resolves (guest mint after 401), then GamePickerScreen mounts.
+    await waitFor(() => {
+      expect(screen.getByTestId("game-picker-screen")).toBeInTheDocument();
+    });
   });
 
   it("with ?screens and DEV true, renders the screen viewer", async () => {
