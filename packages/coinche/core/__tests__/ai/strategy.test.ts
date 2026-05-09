@@ -45,7 +45,7 @@ function makeTrickWith(
   trumpSuit: Suit,
   plays: readonly [Suit, Rank, PlayerPosition][],
 ): Trick {
-  let trick = createTrick(leader, trumpSuit, idGen);
+  let trick = createTrick(leader, trumpSuit, "suit", idGen);
   for (const [suit, rank, pos] of plays) {
     const c = card(suit, rank);
     trick = playCard(trick, c, pos, [c]);
@@ -64,7 +64,7 @@ describe("chooseCard — Leading", () => {
     const eightClubs = card("clubs", "8");
     const hand = [sevenHearts, eightClubs, aceSpades];
 
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const chosen = chooseCard(hand, trick, "hearts", 0 as PlayerPosition);
     expect(chosen.id).toBe(aceSpades.id);
   });
@@ -75,7 +75,7 @@ describe("chooseCard — Leading", () => {
     const sevenDiamonds = card("diamonds", "7");
     const hand = [tenClubs, aceSpades, sevenDiamonds];
 
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const chosen = chooseCard(hand, trick, "hearts", 0 as PlayerPosition);
     expect(chosen.id).toBe(aceSpades.id);
   });
@@ -86,7 +86,7 @@ describe("chooseCard — Leading", () => {
     const hQ = card("hearts", "queen");
     const hand = [h7, h8, hQ];
 
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const chosen = chooseCard(hand, trick, "hearts", 0 as PlayerPosition);
     // Should play some trump — all are trump
     expect(chosen.suit).toBe("hearts");
@@ -98,7 +98,7 @@ describe("chooseCard — Leading", () => {
     const d7 = card("diamonds", "7");
     const hand = [hJ, sA, d7];
 
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const chosen = chooseCard(hand, trick, "hearts", 0 as PlayerPosition);
     expect(chosen.suit).not.toBe("hearts");
   });
@@ -109,7 +109,7 @@ describe("chooseCard — Leading", () => {
     const c9 = card("clubs", "9"); // 0 pts (non-trump)
     const hand = [s7, d8, c9];
 
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const chosen = chooseCard(hand, trick, "hearts", 0 as PlayerPosition);
     // Any of the 0-point cards is acceptable
     expect(hand.some((c) => c.id === chosen.id)).toBe(true);
@@ -122,7 +122,7 @@ describe("chooseCard — Leading", () => {
     const cK = card("clubs", "king");
     const hand = [sA, hJ, d10, cK];
 
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const chosen = chooseCard(hand, trick, "hearts", 0 as PlayerPosition);
     expect(isValidPlay(trick, chosen, 0 as PlayerPosition, hand)).toBe(true);
   });
@@ -135,7 +135,7 @@ describe("chooseCard — Leading", () => {
 describe("chooseCard — Following suit", () => {
   it("should play cheapest winning card when can win the trick", () => {
     // Led suit is spades. Player 0 led spades 7. Player 1 must follow.
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("spades", "7");
     const t1 = playCard(trick, lead, 0, [lead]);
 
@@ -153,7 +153,7 @@ describe("chooseCard — Following suit", () => {
 
   it("should play lowest card of suit when cannot win", () => {
     // Led suit is spades. Player 0 led spades ace (rank 7, highest).
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("spades", "ace");
     const t1 = playCard(trick, lead, 0, [lead]);
 
@@ -170,7 +170,7 @@ describe("chooseCard — Following suit", () => {
   it("should play low when partner is currently winning", () => {
     // Player 0 leads spades king. Player 1 plays spades 7.
     // Player 2 (partner of player 0) follows suit.
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("spades", "king");
     const t1 = playCard(trick, lead, 0, [lead]);
     const p1Card = card("spades", "7");
@@ -188,7 +188,7 @@ describe("chooseCard — Following suit", () => {
 
   it("should play ace to win when it beats all played cards", () => {
     // Player 0 leads spades 10 (rank 6). Player 1 follows.
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("spades", "10");
     const t1 = playCard(trick, lead, 0, [lead]);
 
@@ -203,7 +203,7 @@ describe("chooseCard — Following suit", () => {
   });
 
   it("should handle single valid suit card (forced play)", () => {
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("spades", "ace");
     const t1 = playCard(trick, lead, 0, [lead]);
 
@@ -217,7 +217,7 @@ describe("chooseCard — Following suit", () => {
   });
 
   it("should always return a valid play when following suit", () => {
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("spades", "ace");
     const t1 = playCard(trick, lead, 0, [lead]);
 
@@ -238,7 +238,7 @@ describe("chooseCard — Following suit", () => {
 describe("chooseCard — Must trump", () => {
   it("should play lowest winning trump when can overtrump", () => {
     // Led clubs. Player 1 trumped with hearts 8 (rank 1).
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("clubs", "ace");
     const t1 = playCard(trick, lead, 0, [lead]);
     const trump8 = card("hearts", "8");
@@ -256,7 +256,7 @@ describe("chooseCard — Must trump", () => {
 
   it("should play lowest trump when cannot overtrump", () => {
     // Led clubs. Player 1 trumped with hearts jack (rank 7, highest).
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("clubs", "ace");
     const t1 = playCard(trick, lead, 0, [lead]);
     const trumpJ = card("hearts", "jack");
@@ -274,7 +274,7 @@ describe("chooseCard — Must trump", () => {
 
   it("should play any trump when no trump on table yet", () => {
     // Led clubs. Player 1 can't follow suit and must trump.
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("clubs", "ace");
     const t1 = playCard(trick, lead, 0, [lead]);
 
@@ -290,7 +290,7 @@ describe("chooseCard — Must trump", () => {
 
   it("should prefer economy (lowest winning trump, not highest)", () => {
     // Led clubs. Player 1 trumped with hearts queen (rank 2).
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("clubs", "7");
     const t1 = playCard(trick, lead, 0, [lead]);
     const hQ = card("hearts", "queen");
@@ -308,7 +308,7 @@ describe("chooseCard — Must trump", () => {
   });
 
   it("should always return a valid play when trumping", () => {
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("clubs", "ace");
     const t1 = playCard(trick, lead, 0, [lead]);
 
@@ -329,7 +329,7 @@ describe("chooseCard — Must trump", () => {
 describe("chooseCard — Discarding", () => {
   it("should play lowest value card", () => {
     // Led spades. Player 1 has no spades and no trump (hearts).
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("spades", "ace");
     const t1 = playCard(trick, lead, 0, [lead]);
 
@@ -343,7 +343,7 @@ describe("chooseCard — Discarding", () => {
   });
 
   it("should prefer zero-point cards", () => {
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("spades", "ace");
     const t1 = playCard(trick, lead, 0, [lead]);
 
@@ -356,7 +356,7 @@ describe("chooseCard — Discarding", () => {
   });
 
   it("should handle single card in hand", () => {
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("spades", "ace");
     const t1 = playCard(trick, lead, 0, [lead]);
 
@@ -368,7 +368,7 @@ describe("chooseCard — Discarding", () => {
   });
 
   it("should always return a valid play when discarding", () => {
-    const trick = createTrick(0, "hearts", idGen);
+    const trick = createTrick(0, "hearts", "suit", idGen);
     const lead = card("spades", "ace");
     const t1 = playCard(trick, lead, 0, [lead]);
 
@@ -481,7 +481,7 @@ describe("chooseCardForRound", () => {
     const sQ = card("spades", "queen");
     const sJ = card("spades", "jack");
 
-    const currentTrick = createTrick(1, "hearts", idGen);
+    const currentTrick = createTrick(1, "hearts", "suit", idGen);
 
     const players = Object.freeze([
       setPlayerHand(createPlayer("N", 0, idGen), [sA]),
@@ -534,7 +534,7 @@ describe("chooseCardForRound", () => {
     const d10 = card("diamonds", "10");
     const cK = card("clubs", "king");
 
-    const currentTrick = createTrick(2, "hearts", idGen);
+    const currentTrick = createTrick(2, "hearts", "suit", idGen);
 
     const players = Object.freeze([
       setPlayerHand(createPlayer("N", 0, idGen), [sA]),

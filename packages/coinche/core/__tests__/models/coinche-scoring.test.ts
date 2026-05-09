@@ -50,6 +50,7 @@ function trick(
     id: idGen.generateId("trick"),
     leadingPlayerPosition: cards[0]!.pos,
     trumpSuit,
+    contractType: "suit" as const,
     cards: Object.freeze(played),
     state: "completed" as const,
     winnerPosition: winner,

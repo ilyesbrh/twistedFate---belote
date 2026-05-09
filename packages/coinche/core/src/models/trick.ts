@@ -1,5 +1,5 @@
 import type { IdGenerator } from "../utils/id.js";
-import type { Card, Suit } from "./card.js";
+import type { Card, ContractType, Suit } from "./card.js";
 import { getCardRankOrder } from "./card.js";
 import type { Player, PlayerPosition } from "./player.js";
 import { setPlayerHand } from "./player.js";
@@ -16,6 +16,7 @@ export interface Trick {
   readonly id: string;
   readonly leadingPlayerPosition: PlayerPosition;
   readonly trumpSuit: Suit;
+  readonly contractType: ContractType;
   readonly cards: readonly PlayedCard[];
   readonly state: TrickState;
   readonly winnerPosition: PlayerPosition | null;
@@ -26,16 +27,30 @@ export interface Trick {
 export function createTrick(
   leadingPlayerPosition: PlayerPosition,
   trumpSuit: Suit,
+  contractType: ContractType,
   idGenerator: IdGenerator,
 ): Trick {
   return Object.freeze({
     id: idGenerator.generateId("trick"),
     leadingPlayerPosition,
     trumpSuit,
+    contractType,
     cards: Object.freeze([]),
     state: "in_progress" as const,
     winnerPosition: null,
   });
+}
+
+// ── Rank helpers ──
+
+/** TRUMP_ORDER rank for a card — used in TA where all suits rank like trump. */
+function taRank(card: Card): number {
+  return getCardRankOrder(card, card.suit);
+}
+
+/** NON_TRUMP_ORDER rank for a card — used in SA where no suit is trump. */
+function saRank(card: Card): number {
+  return getCardRankOrder(card, null);
 }
 
 // ── Validation ──
@@ -81,51 +96,60 @@ export function isValidPlay(
   }
   const ledSuit = firstCard.card.suit;
 
-  // Must follow suit
+  // Must follow led suit — common to all contract types
   const hasLedSuit = playerHand.some((c) => c.suit === ledSuit);
   if (hasLedSuit) {
     return card.suit === ledSuit;
   }
 
-  // Cannot follow suit — check trump obligations
-  const hasTrump = playerHand.some((c) => c.suit === trick.trumpSuit);
-  if (!hasTrump) {
-    // No led suit, no trump → play anything
-    return true;
+  // Cannot follow led suit — behaviour differs by contract type
+  switch (trick.contractType) {
+    case "sans-atout":
+      // No trump — play anything when can't follow
+      return true;
+
+    case "tout-atout": {
+      // All suits are trump — must overtrump if possible
+      const highestOnTable = Math.max(...trick.cards.map((pc) => taRank(pc.card)));
+      const canOvertrump = playerHand.some((c) => c.suit !== ledSuit && taRank(c) > highestOnTable);
+      if (!canOvertrump) {
+        return true;
+      }
+      return taRank(card) > highestOnTable;
+    }
+
+    case "suit": {
+      const hasTrump = playerHand.some((c) => c.suit === trick.trumpSuit);
+      if (!hasTrump) {
+        return true;
+      }
+
+      if (card.suit !== trick.trumpSuit) {
+        return false;
+      }
+
+      const trumpsOnTable = trick.cards.filter((pc) => pc.card.suit === trick.trumpSuit);
+      if (trumpsOnTable.length === 0) {
+        return true;
+      }
+
+      const highestTrumpRank = Math.max(
+        ...trumpsOnTable.map((pc) => getCardRankOrder(pc.card, trick.trumpSuit)),
+      );
+      const cardRank = getCardRankOrder(card, trick.trumpSuit);
+
+      const playerTrumps = playerHand.filter((c) => c.suit === trick.trumpSuit);
+      const canOvertrump = playerTrumps.some(
+        (c) => getCardRankOrder(c, trick.trumpSuit) > highestTrumpRank,
+      );
+
+      if (canOvertrump) {
+        return cardRank > highestTrumpRank;
+      }
+
+      return true;
+    }
   }
-
-  // Must play trump
-  if (card.suit !== trick.trumpSuit) {
-    return false;
-  }
-
-  // Check overtrump requirement
-  const trumpsOnTable = trick.cards.filter((pc) => pc.card.suit === trick.trumpSuit);
-  if (trumpsOnTable.length === 0) {
-    // No trump on table yet — any trump is fine
-    return true;
-  }
-
-  // Find highest trump rank on table
-  const highestTrumpRank = Math.max(
-    ...trumpsOnTable.map((pc) => getCardRankOrder(pc.card, trick.trumpSuit)),
-  );
-
-  const cardRank = getCardRankOrder(card, trick.trumpSuit);
-
-  // Can the player overtrump?
-  const playerTrumps = playerHand.filter((c) => c.suit === trick.trumpSuit);
-  const canOvertrump = playerTrumps.some(
-    (c) => getCardRankOrder(c, trick.trumpSuit) > highestTrumpRank,
-  );
-
-  if (canOvertrump) {
-    // Must overtrump
-    return cardRank > highestTrumpRank;
-  }
-
-  // Cannot overtrump — any trump is acceptable
-  return true;
 }
 
 // ── Valid Plays Query ──
@@ -140,49 +164,78 @@ export function getValidPlays(
 
 // ── Winner Determination (private) ──
 
-function determineTrickWinner(cards: readonly PlayedCard[], trumpSuit: Suit): PlayerPosition {
+function determineTrickWinner(
+  cards: readonly PlayedCard[],
+  trumpSuit: Suit,
+  contractType: ContractType,
+): PlayerPosition {
   const firstCard = cards[0];
   if (firstCard === undefined) {
     throw new Error("Cannot determine winner: no cards played");
   }
   const ledSuit = firstCard.card.suit;
 
-  const trumpCards = cards.filter((pc) => pc.card.suit === trumpSuit);
-
-  if (trumpCards.length > 0) {
-    // Highest trump wins
-    let winner = trumpCards[0];
-    if (winner === undefined) {
-      throw new Error("Trump cards array invariant violated");
-    }
-    for (let i = 1; i < trumpCards.length; i++) {
-      const current = trumpCards[i];
-      if (current === undefined) {
-        throw new Error("Trump cards array invariant violated");
+  switch (contractType) {
+    case "sans-atout": {
+      // No trump — highest NON_TRUMP_ORDER rank in led suit wins
+      const ledSuitCards = cards.filter((pc) => pc.card.suit === ledSuit);
+      let winner = ledSuitCards[0];
+      if (winner === undefined) throw new Error("SA winner invariant: no led-suit cards");
+      for (let i = 1; i < ledSuitCards.length; i++) {
+        const current = ledSuitCards[i];
+        if (current === undefined) continue;
+        if (saRank(current.card) > saRank(winner.card)) winner = current;
       }
-      if (getCardRankOrder(current.card, trumpSuit) > getCardRankOrder(winner.card, trumpSuit)) {
-        winner = current;
-      }
+      return winner.playerPosition;
     }
-    return winner.playerPosition;
-  }
 
-  // No trump — highest card of led suit wins
-  const ledSuitCards = cards.filter((pc) => pc.card.suit === ledSuit);
-  let winner = ledSuitCards[0];
-  if (winner === undefined) {
-    throw new Error("Led suit cards array invariant violated");
-  }
-  for (let i = 1; i < ledSuitCards.length; i++) {
-    const current = ledSuitCards[i];
-    if (current === undefined) {
-      throw new Error("Led suit cards array invariant violated");
+    case "tout-atout": {
+      // All trump — highest TRUMP_ORDER rank wins; tied rank → led-suit card wins
+      let winner = firstCard;
+      for (let i = 1; i < cards.length; i++) {
+        const current = cards[i];
+        if (current === undefined) continue;
+        const cr = taRank(current.card);
+        const wr = taRank(winner.card);
+        if (cr > wr || (cr === wr && current.card.suit === ledSuit)) {
+          winner = current;
+        }
+      }
+      return winner.playerPosition;
     }
-    if (getCardRankOrder(current.card, null) > getCardRankOrder(winner.card, null)) {
-      winner = current;
+
+    case "suit": {
+      // Standard trump logic
+      const trumpCards = cards.filter((pc) => pc.card.suit === trumpSuit);
+
+      if (trumpCards.length > 0) {
+        let winner = trumpCards[0];
+        if (winner === undefined) throw new Error("Trump cards array invariant violated");
+        for (let i = 1; i < trumpCards.length; i++) {
+          const current = trumpCards[i];
+          if (current === undefined) continue;
+          if (
+            getCardRankOrder(current.card, trumpSuit) > getCardRankOrder(winner.card, trumpSuit)
+          ) {
+            winner = current;
+          }
+        }
+        return winner.playerPosition;
+      }
+
+      const ledSuitCards = cards.filter((pc) => pc.card.suit === ledSuit);
+      let winner = ledSuitCards[0];
+      if (winner === undefined) throw new Error("Led suit cards array invariant violated");
+      for (let i = 1; i < ledSuitCards.length; i++) {
+        const current = ledSuitCards[i];
+        if (current === undefined) continue;
+        if (getCardRankOrder(current.card, null) > getCardRankOrder(winner.card, null)) {
+          winner = current;
+        }
+      }
+      return winner.playerPosition;
     }
   }
-  return winner.playerPosition;
 }
 
 // ── Public Winner API ──
@@ -220,13 +273,14 @@ export function playCard(
 
   let winnerPosition: PlayerPosition | null = null;
   if (isComplete) {
-    winnerPosition = determineTrickWinner(newCards, trick.trumpSuit);
+    winnerPosition = determineTrickWinner(newCards, trick.trumpSuit, trick.contractType);
   }
 
   return Object.freeze({
     id: trick.id,
     leadingPlayerPosition: trick.leadingPlayerPosition,
     trumpSuit: trick.trumpSuit,
+    contractType: trick.contractType,
     cards: Object.freeze(newCards),
     state: (isComplete ? "completed" : "in_progress") as TrickState,
     winnerPosition,

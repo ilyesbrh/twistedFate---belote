@@ -65,7 +65,12 @@ export function placeBidInRound(round: Round, bid: Bid, idGenerator: IdGenerator
   if (updatedBidding.state === "completed") {
     const contract = getContract(updatedBidding, idGenerator);
     const firstTrickLeader = getNextPlayerPosition(round.dealerPosition);
-    const firstTrick = createTrick(firstTrickLeader, contract.suit, idGenerator);
+    const firstTrick = createTrick(
+      firstTrickLeader,
+      contract.suit,
+      contract.contractType,
+      idGenerator,
+    );
 
     return Object.freeze({
       id: round.id,
@@ -176,7 +181,12 @@ export function playCardInRound(
     }
 
     // More tricks to play — create next trick with winner as leader
-    const nextTrick = createTrick(trickWinner, round.contract.suit, idGenerator);
+    const nextTrick = createTrick(
+      trickWinner,
+      round.contract.suit,
+      round.contract.contractType,
+      idGenerator,
+    );
 
     return Object.freeze({
       id: round.id,
