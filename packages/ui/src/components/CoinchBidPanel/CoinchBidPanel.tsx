@@ -82,46 +82,39 @@ export function CoinchBidPanel({ biddingRound, validBidValues, onBid }: CoinchBi
 
   return (
     <div className={styles.panel} data-testid="bid-panel">
-      {/* ── Contract-type tabs ── */}
+      {/* ── Contract-type selector (4 equal buttons, same style as suit/value pickers) ── */}
       {!postCoinche && (
-        <div className={styles.tabs}>
-          <button
-            className={`${styles.tab} ${tab === "suit" ? styles.tabActive : ""}`}
-            onClick={() => switchTab("suit")}
-            aria-pressed={tab === "suit"}
-            aria-label="Suit contract"
-          >
-            <span className={styles.tabIcon}>♠♥</span>
-            Suit
-          </button>
-          <button
-            className={`${styles.tab} ${tab === "sans-atout" ? styles.tabActive : ""}`}
-            onClick={() => switchTab("sans-atout")}
-            aria-pressed={tab === "sans-atout"}
-            aria-label="Sans-Atout contract"
-          >
-            <span className={styles.tabIcon}>—</span>
-            SA
-          </button>
-          <button
-            className={`${styles.tab} ${tab === "tout-atout" ? styles.tabActive : ""}`}
-            onClick={() => switchTab("tout-atout")}
-            aria-pressed={tab === "tout-atout"}
-            aria-label="Tout-Atout contract"
-          >
-            <span className={styles.tabIcon}>★</span>
-            TA
-          </button>
-          <button
-            className={`${styles.tab} ${tab === "capot" ? styles.tabActive : ""}`}
-            onClick={() => switchTab("capot")}
-            aria-pressed={tab === "capot"}
-            aria-label="Capot contract"
-          >
-            <span className={styles.tabIcon}>∞</span>
-            Capot
-          </button>
-        </div>
+        <>
+          <div className={styles.contractRow}>
+            {(
+              [
+                { id: "suit", label: "Suit", icon: "♠♥" },
+                { id: "sans-atout", label: "SA", icon: "—" },
+                { id: "tout-atout", label: "TA", icon: "★" },
+                { id: "capot", label: "Capot", icon: "∞" },
+              ] as const
+            ).map(({ id, label, icon }) => (
+              <button
+                key={id}
+                className={`${styles.btn} ${styles.contractBtn} ${tab === id ? styles.contractBtnSelected : ""}`}
+                onClick={() => switchTab(id)}
+                aria-pressed={tab === id}
+                aria-label={
+                  id === "sans-atout"
+                    ? "Sans-Atout contract"
+                    : id === "tout-atout"
+                      ? "Tout-Atout contract"
+                      : `${label} contract`
+                }
+                data-touch="primary"
+              >
+                <span className={styles.contractIcon}>{icon}</span>
+                <span className={styles.contractLabel}>{label}</span>
+              </button>
+            ))}
+          </div>
+          <div className={styles.sep} aria-hidden="true" />
+        </>
       )}
 
       {/* ── Suit picker (suit and capot tabs) ── */}
