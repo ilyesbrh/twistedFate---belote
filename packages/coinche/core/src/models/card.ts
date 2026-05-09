@@ -4,6 +4,8 @@ export type Suit = "hearts" | "diamonds" | "clubs" | "spades";
 
 export type Rank = "7" | "8" | "9" | "10" | "jack" | "queen" | "king" | "ace";
 
+export type ContractType = "suit" | "sans-atout" | "tout-atout";
+
 export interface Card {
   readonly id: string;
   readonly suit: Suit;
@@ -45,6 +47,28 @@ export const NON_TRUMP_POINTS: Readonly<Record<Rank, number>> = {
   ace: 11,
 };
 
+export const SANS_ATOUT_POINTS: Readonly<Record<Rank, number>> = {
+  "7": 0,
+  "8": 0,
+  "9": 0,
+  "10": 10,
+  jack: 0,
+  queen: 3,
+  king: 4,
+  ace: 19,
+};
+
+export const TOUT_ATOUT_POINTS: Readonly<Record<Rank, number>> = {
+  "7": 0,
+  "8": 0,
+  "9": 9,
+  "10": 5,
+  jack: 14,
+  queen: 1,
+  king: 3,
+  ace: 6,
+};
+
 export const TRUMP_ORDER: readonly Rank[] = [
   "7",
   "8",
@@ -80,6 +104,21 @@ export function getCardPoints(card: Card, trumpSuit: Suit | null): number {
     return TRUMP_POINTS[card.rank];
   }
   return NON_TRUMP_POINTS[card.rank];
+}
+
+export function getCoincheCardPoints(
+  card: Card,
+  trumpSuit: Suit | null,
+  contractType: ContractType,
+): number {
+  switch (contractType) {
+    case "sans-atout":
+      return SANS_ATOUT_POINTS[card.rank];
+    case "tout-atout":
+      return TOUT_ATOUT_POINTS[card.rank];
+    case "suit":
+      return getCardPoints(card, trumpSuit);
+  }
 }
 
 export function getCardRankOrder(card: Card, trumpSuit: Suit | null): number {

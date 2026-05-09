@@ -3,15 +3,18 @@ export {
   ALL_RANKS,
   TRUMP_POINTS,
   NON_TRUMP_POINTS,
+  SANS_ATOUT_POINTS,
+  TOUT_ATOUT_POINTS,
   TRUMP_ORDER,
   NON_TRUMP_ORDER,
   createCard,
   getCardPoints,
+  getCoincheCardPoints,
   getCardRankOrder,
   createDeck,
   shuffleDeck,
 } from "./card.js";
-export type { Suit, Rank, Card } from "./card.js";
+export type { Suit, Rank, Card, ContractType } from "./card.js";
 
 export { createPlayer, setPlayerHand, createTeam, dealCards } from "./player.js";
 export type { PlayerPosition, Player, Team } from "./player.js";
@@ -22,6 +25,8 @@ export {
   BID_VALUES,
   createPassBid,
   createSuitBid,
+  createSansAtoutBid,
+  createToutAtoutBid,
   createCoincheBid,
   createSurcoincheBid,
   createBiddingRound,

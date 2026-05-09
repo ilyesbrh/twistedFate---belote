@@ -79,6 +79,7 @@ function makeContract(
     value,
     bidderPosition,
     coincheLevel,
+    contractType: "suit" as const,
   });
 }
 
@@ -132,7 +133,7 @@ describe("calculateTrickPoints", () => {
       ],
       0,
     );
-    expect(calculateTrickPoints(trick, "hearts")).toBe(28); // 11+10+4+3
+    expect(calculateTrickPoints(trick, "hearts", "suit")).toBe(28); // 11+10+4+3
   });
 
   it("should sum card points for a trick with all trump cards", () => {
@@ -147,7 +148,7 @@ describe("calculateTrickPoints", () => {
       ],
       0,
     );
-    expect(calculateTrickPoints(trick, "hearts")).toBe(55); // 20+14+11+10
+    expect(calculateTrickPoints(trick, "hearts", "suit")).toBe(55); // 20+14+11+10
   });
 
   it("should use trump scoring for trump cards and non-trump for others", () => {
@@ -162,7 +163,7 @@ describe("calculateTrickPoints", () => {
       ],
       0,
     );
-    expect(calculateTrickPoints(trick, "hearts")).toBe(25); // 14+11+0+0
+    expect(calculateTrickPoints(trick, "hearts", "suit")).toBe(25); // 14+11+0+0
   });
 
   it("should return 0 for a trick with all zero-point cards", () => {
@@ -176,7 +177,7 @@ describe("calculateTrickPoints", () => {
       ],
       0,
     );
-    expect(calculateTrickPoints(trick, "hearts")).toBe(0);
+    expect(calculateTrickPoints(trick, "hearts", "suit")).toBe(0);
   });
 
   it("should correctly score trump jack at 20 points (not non-trump 2)", () => {
@@ -191,12 +192,14 @@ describe("calculateTrickPoints", () => {
       ],
       0,
     );
-    expect(calculateTrickPoints(trick, "hearts")).toBe(20);
+    expect(calculateTrickPoints(trick, "hearts", "suit")).toBe(20);
   });
 
   it("should throw if trick is not completed", () => {
     const trick = makeInProgressTrick("hearts");
-    expect(() => calculateTrickPoints(trick, "hearts")).toThrow(/not completed|in_progress/i);
+    expect(() => calculateTrickPoints(trick, "hearts", "suit")).toThrow(
+      /not completed|in_progress/i,
+    );
   });
 });
 
@@ -313,7 +316,7 @@ describe("calculateTeamPoints", () => {
       ),
     ];
     // Total card points: 55+7+28+2+28+2+28+2 = 152 ✓
-    const result = calculateTeamPoints(tricks, trumpSuit, 0);
+    const result = calculateTeamPoints(tricks, trumpSuit, "suit", 0);
     expect(result.contractingTeamPoints).toBe(162); // 152 + 10 last trick bonus
     expect(result.opponentTeamPoints).toBe(0);
   });
@@ -406,7 +409,7 @@ describe("calculateTeamPoints", () => {
         1,
       ),
     ];
-    const result = calculateTeamPoints(tricks, trumpSuit, 0);
+    const result = calculateTeamPoints(tricks, trumpSuit, "suit", 0);
     expect(result.contractingTeamPoints).toBe(0);
     expect(result.opponentTeamPoints).toBe(162);
   });
@@ -505,7 +508,7 @@ describe("calculateTeamPoints", () => {
         3,
       ),
     ];
-    const result = calculateTeamPoints(tricks, trumpSuit, 0);
+    const result = calculateTeamPoints(tricks, trumpSuit, "suit", 0);
     expect(result.contractingTeamPoints).toBe(92);
     expect(result.opponentTeamPoints).toBe(70); // 60 + 10 last trick bonus
   });
@@ -530,7 +533,7 @@ describe("calculateTeamPoints", () => {
         0,
       ),
     );
-    const result = calculateTeamPoints(tricks, trumpSuit, 0);
+    const result = calculateTeamPoints(tricks, trumpSuit, "suit", 0);
     // Contracting: 11 (card pts from last trick) + 10 (bonus) = 21
     expect(result.contractingTeamPoints).toBe(21);
   });
@@ -542,7 +545,7 @@ describe("calculateTeamPoints", () => {
       tricks.push(fillerTrick(trumpSuit, 0));
     }
     tricks.push(fillerTrick(trumpSuit, 1));
-    const result = calculateTeamPoints(tricks, trumpSuit, 0);
+    const result = calculateTeamPoints(tricks, trumpSuit, "suit", 0);
     // Opponent: 0 (card pts) + 10 (bonus) = 10
     expect(result.opponentTeamPoints).toBe(10);
   });
@@ -632,13 +635,13 @@ describe("calculateTeamPoints", () => {
         3,
       ),
     ];
-    const result = calculateTeamPoints(tricks, trumpSuit, 0);
+    const result = calculateTeamPoints(tricks, trumpSuit, "suit", 0);
     expect(result.contractingTeamPoints + result.opponentTeamPoints).toBe(162);
   });
 
   it("should throw if fewer than 8 tricks provided", () => {
     const tricks = [fillerTrick("hearts", 0)];
-    expect(() => calculateTeamPoints(tricks, "hearts", 0)).toThrow(/8 tricks/i);
+    expect(() => calculateTeamPoints(tricks, "hearts", "suit", 0)).toThrow(/8 tricks/i);
   });
 
   it("should throw if any trick is not completed", () => {
@@ -647,7 +650,9 @@ describe("calculateTeamPoints", () => {
       tricks.push(fillerTrick("hearts", 0));
     }
     tricks.push(makeInProgressTrick("hearts"));
-    expect(() => calculateTeamPoints(tricks, "hearts", 0)).toThrow(/not completed|in_progress/i);
+    expect(() => calculateTeamPoints(tricks, "hearts", "suit", 0)).toThrow(
+      /not completed|in_progress/i,
+    );
   });
 });
 

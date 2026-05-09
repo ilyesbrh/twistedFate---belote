@@ -1,10 +1,10 @@
 import type { IdGenerator } from "../utils/id.js";
-import type { Suit } from "./card.js";
+import type { ContractType, Suit } from "./card.js";
 import { ALL_SUITS } from "./card.js";
 import type { PlayerPosition } from "./player.js";
 import { getNextPlayerPosition, isOnSameTeam } from "./player-helpers.js";
 
-export type BidType = "pass" | "suit" | "coinche" | "surcoinche";
+export type BidType = "pass" | "suit" | "sans-atout" | "tout-atout" | "coinche" | "surcoinche";
 
 export type BiddingState = "in_progress" | "completed" | "all_passed";
 
@@ -37,6 +37,7 @@ export interface Contract {
   readonly value: BidValue;
   readonly bidderPosition: PlayerPosition;
   readonly coincheLevel: 1 | 2 | 4;
+  readonly contractType: ContractType;
 }
 
 // ── Helpers (re-exported from shared module) ──
@@ -67,6 +68,34 @@ export function createSuitBid(
     playerPosition,
     value,
     suit,
+  });
+}
+
+export function createSansAtoutBid(
+  playerPosition: PlayerPosition,
+  value: BidValue,
+  idGenerator: IdGenerator,
+): Bid {
+  return Object.freeze({
+    id: idGenerator.generateId("bid"),
+    type: "sans-atout" as const,
+    playerPosition,
+    value,
+    suit: null,
+  });
+}
+
+export function createToutAtoutBid(
+  playerPosition: PlayerPosition,
+  value: BidValue,
+  idGenerator: IdGenerator,
+): Bid {
+  return Object.freeze({
+    id: idGenerator.generateId("bid"),
+    type: "tout-atout" as const,
+    playerPosition,
+    value,
+    suit: null,
   });
 }
 
@@ -159,6 +188,24 @@ export function isValidBid(round: BiddingRound, bid: Bid): boolean {
       return true;
     }
 
+    case "sans-atout":
+    case "tout-atout": {
+      if (bid.value === null) {
+        return false;
+      }
+      if (!isValidBidValue(bid.value)) {
+        return false;
+      }
+      if (
+        round.highestBid !== null &&
+        round.highestBid.value !== null &&
+        bid.value <= round.highestBid.value
+      ) {
+        return false;
+      }
+      return true;
+    }
+
     case "coinche": {
       if (round.highestBid === null) {
         return false;
@@ -203,6 +250,18 @@ export function getValidBids(
     }
   }
 
+  // Try SA/TA bids (each valid value)
+  for (const value of BID_VALUES) {
+    const saBid = createSansAtoutBid(playerPosition, value, idGenerator);
+    if (isValidBid(biddingRound, saBid)) {
+      validBids.push(saBid);
+    }
+    const taBid = createToutAtoutBid(playerPosition, value, idGenerator);
+    if (isValidBid(biddingRound, taBid)) {
+      validBids.push(taBid);
+    }
+  }
+
   // Try coinche
   const coincheBid = createCoincheBid(playerPosition, idGenerator);
   if (isValidBid(biddingRound, coincheBid)) {
@@ -239,6 +298,8 @@ export function placeBid(round: BiddingRound, bid: Bid): BiddingRound {
       newConsecutivePasses += 1;
       break;
     case "suit":
+    case "sans-atout":
+    case "tout-atout":
       newHighestBid = bid;
       newConsecutivePasses = 0;
       break;
@@ -303,8 +364,22 @@ export function getContract(round: BiddingRound, idGenerator: IdGenerator): Cont
   if (highestBid === null) {
     throw new Error("Cannot extract contract: no highest bid found");
   }
-  if (highestBid.suit === null || highestBid.value === null) {
-    throw new Error("Cannot extract contract: highest bid has no suit or value");
+  if (highestBid.value === null) {
+    throw new Error("Cannot extract contract: highest bid has no value");
+  }
+
+  const contractType: ContractType =
+    highestBid.type === "sans-atout"
+      ? "sans-atout"
+      : highestBid.type === "tout-atout"
+        ? "tout-atout"
+        : "suit";
+
+  // For SA/TA bids suit is null; use "hearts" as sentinel (scoring ignores it for SA/TA).
+  const suit: Suit = highestBid.suit ?? "hearts";
+
+  if (contractType === "suit" && highestBid.suit === null) {
+    throw new Error("Cannot extract contract: suit bid has no suit");
   }
 
   let coincheLevel: 1 | 2 | 4 = 1;
@@ -316,9 +391,10 @@ export function getContract(round: BiddingRound, idGenerator: IdGenerator): Cont
 
   return Object.freeze({
     id: idGenerator.generateId("contract"),
-    suit: highestBid.suit,
+    suit,
     value: highestBid.value,
     bidderPosition: highestBid.playerPosition,
     coincheLevel,
+    contractType,
   });
 }

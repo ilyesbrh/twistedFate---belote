@@ -1,5 +1,5 @@
-import type { Suit } from "./card.js";
-import { getCardPoints } from "./card.js";
+import type { ContractType, Suit } from "./card.js";
+import { getCoincheCardPoints } from "./card.js";
 import type { PlayerPosition } from "./player.js";
 import { isOnSameTeam } from "./player-helpers.js";
 import type { Trick } from "./trick.js";
@@ -41,7 +41,11 @@ export function roundToNearestTen(points: number): number {
 
 // ── calculateTrickPoints ──
 
-export function calculateTrickPoints(trick: Trick, trumpSuit: Suit): number {
+export function calculateTrickPoints(
+  trick: Trick,
+  trumpSuit: Suit | null,
+  contractType: ContractType,
+): number {
   if (trick.state !== "completed") {
     throw new Error(
       `Cannot calculate points: trick state is "${trick.state}", expected "completed"`,
@@ -50,7 +54,7 @@ export function calculateTrickPoints(trick: Trick, trumpSuit: Suit): number {
 
   let total = 0;
   for (const pc of trick.cards) {
-    total += getCardPoints(pc.card, trumpSuit);
+    total += getCoincheCardPoints(pc.card, trumpSuit, contractType);
   }
   return total;
 }
@@ -59,14 +63,15 @@ export function calculateTrickPoints(trick: Trick, trumpSuit: Suit): number {
 
 export function calculateRunningPoints(
   completedTricks: readonly Trick[],
-  trumpSuit: Suit,
+  trumpSuit: Suit | null,
+  contractType: ContractType,
   bidderPosition: PlayerPosition,
 ): TeamPoints {
   let contractingTeamPoints = 0;
   let opponentTeamPoints = 0;
   for (const trick of completedTricks) {
     if (trick.state !== "completed") continue;
-    const pts = calculateTrickPoints(trick, trumpSuit);
+    const pts = calculateTrickPoints(trick, trumpSuit, contractType);
     if (trick.winnerPosition !== null && isOnSameTeam(trick.winnerPosition, bidderPosition)) {
       contractingTeamPoints += pts;
     } else {
@@ -80,7 +85,8 @@ export function calculateRunningPoints(
 
 export function calculateTeamPoints(
   tricks: readonly Trick[],
-  trumpSuit: Suit,
+  trumpSuit: Suit | null,
+  contractType: ContractType,
   bidderPosition: PlayerPosition,
 ): TeamPoints {
   if (tricks.length !== 8) {
@@ -99,7 +105,7 @@ export function calculateTeamPoints(
   let opponentTeamPoints = 0;
 
   for (const trick of tricks) {
-    const trickPoints = calculateTrickPoints(trick, trumpSuit);
+    const trickPoints = calculateTrickPoints(trick, trumpSuit, contractType);
     if (trick.winnerPosition !== null && isOnSameTeam(trick.winnerPosition, bidderPosition)) {
       contractingTeamPoints += trickPoints;
     } else {
@@ -160,16 +166,20 @@ export function detectBeloteRebelote(
 // ── calculateRoundScore ──
 
 export function calculateRoundScore(tricks: readonly Trick[], contract: Contract): RoundScore {
+  const trumpSuit = contract.contractType === "suit" ? contract.suit : null;
   const { contractingTeamPoints, opponentTeamPoints } = calculateTeamPoints(
     tricks,
-    contract.suit,
+    trumpSuit,
+    contract.contractType,
     contract.bidderPosition,
   );
 
   const contractingTeamRoundedPoints = roundToNearestTen(contractingTeamPoints);
   const opponentTeamRoundedPoints = roundToNearestTen(opponentTeamPoints);
 
-  const beloteBonusTeam = detectBeloteRebelote(tricks, contract.suit, contract.bidderPosition);
+  // Belote/rebelote only applies to suit contracts (requires a trump suit).
+  const beloteBonusTeam =
+    trumpSuit !== null ? detectBeloteRebelote(tricks, trumpSuit, contract.bidderPosition) : null;
 
   // Belote bonus counts toward meeting the contract.
   const contractingTotalWithBelote =

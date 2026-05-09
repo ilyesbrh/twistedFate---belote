@@ -68,6 +68,7 @@ function contract(
     value,
     bidderPosition: bidder,
     coincheLevel: level,
+    contractType: "suit" as const,
   });
 }
 

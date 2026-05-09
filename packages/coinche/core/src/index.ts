@@ -25,6 +25,8 @@ export {
   BID_VALUES,
   createPassBid,
   createSuitBid,
+  createSansAtoutBid,
+  createToutAtoutBid,
   createCoincheBid,
   createSurcoincheBid,
   createBiddingRound,
