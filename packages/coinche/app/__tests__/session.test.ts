@@ -317,6 +317,69 @@ describe("GameSession — place_bid (all human)", () => {
 });
 
 // ==============================================================
+// GameSession — SA/TA/Capot bid types
+// ==============================================================
+
+describe("GameSession — SA/TA/Capot bid types", () => {
+  it("accepts a sans-atout bid and sets contractType to sans-atout", () => {
+    const session = new GameSession(makeConfig());
+    const events = collectEvents(session);
+    startGame(session);
+    startRound(session);
+    session.dispatch(createPlaceBidCommand(1 as PlayerPosition, "sans-atout", 90));
+    session.dispatch(createPlaceBidCommand(2 as PlayerPosition, "pass"));
+    session.dispatch(createPlaceBidCommand(3 as PlayerPosition, "pass"));
+    session.dispatch(createPlaceBidCommand(0 as PlayerPosition, "pass"));
+    expect(session.state).toBe("round_playing");
+    const biddingDone = events.find(
+      (e): e is import("../src/events.js").BiddingCompletedEvent => e.type === "bidding_completed",
+    );
+    expect(biddingDone?.contract.contractType).toBe("sans-atout");
+  });
+
+  it("accepts a tout-atout bid and sets contractType to tout-atout", () => {
+    const session = new GameSession(makeConfig());
+    const events = collectEvents(session);
+    startGame(session);
+    startRound(session);
+    session.dispatch(createPlaceBidCommand(1 as PlayerPosition, "tout-atout", 100));
+    session.dispatch(createPlaceBidCommand(2 as PlayerPosition, "pass"));
+    session.dispatch(createPlaceBidCommand(3 as PlayerPosition, "pass"));
+    session.dispatch(createPlaceBidCommand(0 as PlayerPosition, "pass"));
+    expect(session.state).toBe("round_playing");
+    const biddingDone = events.find(
+      (e): e is import("../src/events.js").BiddingCompletedEvent => e.type === "bidding_completed",
+    );
+    expect(biddingDone?.contract.contractType).toBe("tout-atout");
+  });
+
+  it("accepts a capot bid and ends bidding immediately with isCapot=true", () => {
+    const session = new GameSession(makeConfig());
+    const events = collectEvents(session);
+    startGame(session);
+    startRound(session);
+    // Capot ends bidding immediately — no subsequent bids needed
+    session.dispatch(createPlaceBidCommand(1 as PlayerPosition, "capot", undefined, "spades"));
+    expect(session.state).toBe("round_playing");
+    const biddingDone = events.find(
+      (e): e is import("../src/events.js").BiddingCompletedEvent => e.type === "bidding_completed",
+    );
+    expect(biddingDone?.contract.isCapot).toBe(true);
+    expect(biddingDone?.contract.suit).toBe("spades");
+  });
+
+  it("emits bid_placed event with correct type for SA bid", () => {
+    const session = new GameSession(makeConfig());
+    const events = collectEvents(session);
+    startGame(session);
+    startRound(session);
+    session.dispatch(createPlaceBidCommand(1 as PlayerPosition, "sans-atout", 90));
+    const bidEvent = events.find((e) => e.type === "bid_placed");
+    expect((bidEvent as { bid?: { type: string } })?.bid?.type).toBe("sans-atout");
+  });
+});
+
+// ==============================================================
 // GameSession — play_card (all-human game)
 // ==============================================================
 
