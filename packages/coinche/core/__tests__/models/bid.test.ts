@@ -635,14 +635,19 @@ describe("getValidBids", () => {
     expect(passBids).toHaveLength(1);
   });
 
-  it("should include all suit×value combos when no bid placed (32 suit bids + 1 pass = 33)", () => {
+  it("should include suit, SA, TA bids and pass when no bid placed", () => {
     const gen = createIdGenerator({ seed: 101 });
     const round = createBiddingRound(0, gen);
-    // Current player is position 1, no bids yet → all 8 values × 4 suits + 1 pass
+    // Current player is position 1, no bids yet
+    // 8 values × 4 suits = 32 suit bids, 8 SA, 8 TA, 1 pass = 49
     const validBids = getValidBids(round, 1, gen);
     const suitBids = validBids.filter((b) => b.type === "suit");
+    const saBids = validBids.filter((b) => b.type === "sans-atout");
+    const taBids = validBids.filter((b) => b.type === "tout-atout");
     expect(suitBids).toHaveLength(32);
-    expect(validBids).toHaveLength(33); // 32 suit + 1 pass
+    expect(saBids).toHaveLength(8);
+    expect(taBids).toHaveLength(8);
+    expect(validBids).toHaveLength(49); // 32 suit + 8 SA + 8 TA + 1 pass
   });
 
   it("should only include suit bids strictly above current highest value", () => {
