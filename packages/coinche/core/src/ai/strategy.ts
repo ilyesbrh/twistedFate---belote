@@ -1,5 +1,10 @@
-import type { Card, Suit } from "../models/card.js";
-import { getCardPoints, getCardRankOrder, TRUMP_POINTS } from "../models/card.js";
+import type { Card, ContractType, Suit } from "../models/card.js";
+import {
+  getCardPoints,
+  getCardRankOrder,
+  getCoincheCardPoints,
+  TRUMP_POINTS,
+} from "../models/card.js";
 import { ALL_SUITS } from "../models/card.js";
 import type { PlayerPosition } from "../models/player.js";
 import type { Trick } from "../models/trick.js";
@@ -141,7 +146,13 @@ function sortByRankAsc(cards: readonly Card[], trumpSuit: Suit | null): Card[] {
 
 // ── Card Play: Leading ──
 
-function chooseLeadCard(validPlays: readonly Card[], trumpSuit: Suit): Card {
+function chooseLeadCard(validPlays: readonly Card[], trumpSuit: Suit | null): Card {
+  if (trumpSuit === null) {
+    // SA: no trump — play highest-rank non-trump card
+    const sorted = sortByRankAsc(validPlays, null);
+    return lastElement(sorted);
+  }
+
   // Separate trump and non-trump
   const nonTrump = validPlays.filter((c) => c.suit !== trumpSuit);
 
@@ -255,12 +266,109 @@ function chooseDiscardCard(validPlays: readonly Card[]): Card {
   return firstElement(sorted);
 }
 
+// ── Card Play: SA (sans-atout) ──
+
+function chooseCardSA(
+  validPlays: readonly Card[],
+  trick: Trick,
+  playerPosition: PlayerPosition,
+): Card {
+  // Leading
+  if (trick.cards.length === 0) {
+    // Play highest SA-point card when leading
+    const sorted = [...validPlays].sort(
+      (a, b) =>
+        getCoincheCardPoints(b, null, "sans-atout") - getCoincheCardPoints(a, null, "sans-atout"),
+    );
+    return firstElement(sorted);
+  }
+
+  const partnerPosition = getPartnerPosition(playerPosition);
+  const currentWinner = getCurrentTrickWinner(trick);
+  const partnerIsWinning = currentWinner !== null && currentWinner === partnerPosition;
+
+  if (partnerIsWinning) {
+    // Play lowest-value card
+    const sorted = [...validPlays].sort(
+      (a, b) =>
+        getCoincheCardPoints(a, null, "sans-atout") - getCoincheCardPoints(b, null, "sans-atout"),
+    );
+    return firstElement(sorted);
+  }
+
+  // Play highest SA-point card to win
+  const sorted = [...validPlays].sort(
+    (a, b) =>
+      getCoincheCardPoints(b, null, "sans-atout") - getCoincheCardPoints(a, null, "sans-atout"),
+  );
+  return firstElement(sorted);
+}
+
+// ── Card Play: TA (tout-atout) ──
+
+function chooseCardTA(
+  validPlays: readonly Card[],
+  trick: Trick,
+  playerPosition: PlayerPosition,
+): Card {
+  // Leading
+  if (trick.cards.length === 0) {
+    // Play highest TRUMP_ORDER rank (each card ranks as if it's trump)
+    const sorted = [...validPlays].sort(
+      (a, b) => getCardRankOrder(b, b.suit) - getCardRankOrder(a, a.suit),
+    );
+    return firstElement(sorted);
+  }
+
+  const partnerPosition = getPartnerPosition(playerPosition);
+  // For TA trick winner determination, use trump-rank of each card in its own suit
+  const trickWinner = ((): PlayerPosition | null => {
+    if (trick.cards.length === 0) return null;
+    const first = trick.cards[0];
+    if (first === undefined) return null;
+    const ledSuit = first.card.suit;
+    let best = first;
+    for (let i = 1; i < trick.cards.length; i++) {
+      const pc = trick.cards[i];
+      if (pc === undefined) continue;
+      const cr = getCardRankOrder(pc.card, pc.card.suit);
+      const br = getCardRankOrder(best.card, best.card.suit);
+      // In TA: highest rank in its own suit wins; if same, first (led) suit wins
+      if (pc.card.suit === ledSuit) {
+        if (cr > br) best = pc;
+      } else if (best.card.suit !== ledSuit) {
+        // Both off-led-suit: higher wins
+        if (cr > br) best = pc;
+      }
+      // pc is off-led-suit and best is on-led-suit: best keeps winning
+    }
+    return best.playerPosition;
+  })();
+
+  const partnerIsWinning = trickWinner !== null && trickWinner === partnerPosition;
+
+  if (partnerIsWinning) {
+    // Play lowest-rank card
+    const sorted = [...validPlays].sort(
+      (a, b) => getCardRankOrder(a, a.suit) - getCardRankOrder(b, b.suit),
+    );
+    return firstElement(sorted);
+  }
+
+  // Play highest TRUMP_ORDER rank to win
+  const sorted = [...validPlays].sort(
+    (a, b) => getCardRankOrder(b, b.suit) - getCardRankOrder(a, a.suit),
+  );
+  return firstElement(sorted);
+}
+
 // ── Public API: Card Play ──
 
 export function chooseCard(
   hand: readonly Card[],
   trick: Trick,
-  trumpSuit: Suit,
+  trumpSuit: Suit | null,
+  contractType: ContractType,
   playerPosition: PlayerPosition,
 ): Card {
   const validPlays = getValidPlays(trick, playerPosition, hand);
@@ -273,9 +381,21 @@ export function chooseCard(
     return firstElement(validPlays);
   }
 
+  // Dispatch by contract type
+  if (contractType === "sans-atout") {
+    return chooseCardSA(validPlays, trick, playerPosition);
+  }
+
+  if (contractType === "tout-atout") {
+    return chooseCardTA(validPlays, trick, playerPosition);
+  }
+
+  // "suit" contract — existing logic
+  const realTrump = trumpSuit as Suit; // contractType === "suit" guarantees non-null
+
   // Leading: first card in trick
   if (trick.cards.length === 0) {
-    return chooseLeadCard(validPlays, trumpSuit);
+    return chooseLeadCard(validPlays, realTrump);
   }
 
   const firstCard = trick.cards[0];
@@ -287,13 +407,13 @@ export function chooseCard(
   // Following suit
   const suitCards = validPlays.filter((c) => c.suit === ledSuit);
   if (suitCards.length > 0) {
-    return chooseFollowSuitCard(suitCards, trick, trumpSuit, playerPosition);
+    return chooseFollowSuitCard(suitCards, trick, realTrump, playerPosition);
   }
 
   // Must trump
-  const trumpCards = validPlays.filter((c) => c.suit === trumpSuit);
+  const trumpCards = validPlays.filter((c) => c.suit === realTrump);
   if (trumpCards.length > 0) {
-    return chooseTrumpCard(trumpCards, trick, trumpSuit);
+    return chooseTrumpCard(trumpCards, trick, realTrump);
   }
 
   // Discarding
@@ -316,7 +436,16 @@ export function chooseCardForRound(round: Round, playerPosition: PlayerPosition)
     throw new Error(`No player at position ${String(playerPosition)}`);
   }
 
-  return chooseCard(player.hand, round.currentTrick, round.contract.suit, playerPosition);
+  const contract = round.contract;
+  const trumpSuit = contract.contractType === "suit" ? contract.suit : null;
+
+  return chooseCard(
+    player.hand,
+    round.currentTrick,
+    trumpSuit,
+    contract.contractType,
+    playerPosition,
+  );
 }
 
 // ── Public API: Bidding ──

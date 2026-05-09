@@ -65,7 +65,7 @@ describe("chooseCard — Leading", () => {
     const hand = [sevenHearts, eightClubs, aceSpades];
 
     const trick = createTrick(0, "hearts", "suit", idGen);
-    const chosen = chooseCard(hand, trick, "hearts", 0 as PlayerPosition);
+    const chosen = chooseCard(hand, trick, "hearts", "suit", 0 as PlayerPosition);
     expect(chosen.id).toBe(aceSpades.id);
   });
 
@@ -76,7 +76,7 @@ describe("chooseCard — Leading", () => {
     const hand = [tenClubs, aceSpades, sevenDiamonds];
 
     const trick = createTrick(0, "hearts", "suit", idGen);
-    const chosen = chooseCard(hand, trick, "hearts", 0 as PlayerPosition);
+    const chosen = chooseCard(hand, trick, "hearts", "suit", 0 as PlayerPosition);
     expect(chosen.id).toBe(aceSpades.id);
   });
 
@@ -87,7 +87,7 @@ describe("chooseCard — Leading", () => {
     const hand = [h7, h8, hQ];
 
     const trick = createTrick(0, "hearts", "suit", idGen);
-    const chosen = chooseCard(hand, trick, "hearts", 0 as PlayerPosition);
+    const chosen = chooseCard(hand, trick, "hearts", "suit", 0 as PlayerPosition);
     // Should play some trump — all are trump
     expect(chosen.suit).toBe("hearts");
   });
@@ -99,7 +99,7 @@ describe("chooseCard — Leading", () => {
     const hand = [hJ, sA, d7];
 
     const trick = createTrick(0, "hearts", "suit", idGen);
-    const chosen = chooseCard(hand, trick, "hearts", 0 as PlayerPosition);
+    const chosen = chooseCard(hand, trick, "hearts", "suit", 0 as PlayerPosition);
     expect(chosen.suit).not.toBe("hearts");
   });
 
@@ -110,7 +110,7 @@ describe("chooseCard — Leading", () => {
     const hand = [s7, d8, c9];
 
     const trick = createTrick(0, "hearts", "suit", idGen);
-    const chosen = chooseCard(hand, trick, "hearts", 0 as PlayerPosition);
+    const chosen = chooseCard(hand, trick, "hearts", "suit", 0 as PlayerPosition);
     // Any of the 0-point cards is acceptable
     expect(hand.some((c) => c.id === chosen.id)).toBe(true);
   });
@@ -123,7 +123,7 @@ describe("chooseCard — Leading", () => {
     const hand = [sA, hJ, d10, cK];
 
     const trick = createTrick(0, "hearts", "suit", idGen);
-    const chosen = chooseCard(hand, trick, "hearts", 0 as PlayerPosition);
+    const chosen = chooseCard(hand, trick, "hearts", "suit", 0 as PlayerPosition);
     expect(isValidPlay(trick, chosen, 0 as PlayerPosition, hand)).toBe(true);
   });
 });
@@ -146,7 +146,7 @@ describe("chooseCard — Following suit", () => {
     const s10 = card("spades", "10");
     const hand = [sA, s10, sK];
 
-    const chosen = chooseCard(hand, t1, "hearts", 1 as PlayerPosition);
+    const chosen = chooseCard(hand, t1, "hearts", "suit", 1 as PlayerPosition);
     // Should pick king (4 pts) over 10 (10 pts) or ace (11 pts)
     expect(chosen.id).toBe(sK.id);
   });
@@ -162,7 +162,7 @@ describe("chooseCard — Following suit", () => {
     const s8 = card("spades", "8");
     const hand = [s8, s7];
 
-    const chosen = chooseCard(hand, t1, "hearts", 1 as PlayerPosition);
+    const chosen = chooseCard(hand, t1, "hearts", "suit", 1 as PlayerPosition);
     // Should dump lowest value card: both are 0 pts, pick lowest rank
     expect(chosen.id).toBe(s7.id);
   });
@@ -181,7 +181,7 @@ describe("chooseCard — Following suit", () => {
     const s8 = card("spades", "8");
     const hand = [sA, s8];
 
-    const chosen = chooseCard(hand, t2, "hearts", 2 as PlayerPosition);
+    const chosen = chooseCard(hand, t2, "hearts", "suit", 2 as PlayerPosition);
     // Should play low since partner is winning
     expect(chosen.id).toBe(s8.id);
   });
@@ -197,7 +197,7 @@ describe("chooseCard — Following suit", () => {
     const s7 = card("spades", "7");
     const hand = [s7, sA];
 
-    const chosen = chooseCard(hand, t1, "hearts", 1 as PlayerPosition);
+    const chosen = chooseCard(hand, t1, "hearts", "suit", 1 as PlayerPosition);
     // Ace is the cheapest winner (it's the only winner here)
     expect(chosen.id).toBe(sA.id);
   });
@@ -212,7 +212,7 @@ describe("chooseCard — Following suit", () => {
     const d7 = card("diamonds", "7"); // can't play this (must follow suit)
     const hand = [sK, d7];
 
-    const chosen = chooseCard(hand, t1, "hearts", 1 as PlayerPosition);
+    const chosen = chooseCard(hand, t1, "hearts", "suit", 1 as PlayerPosition);
     expect(chosen.id).toBe(sK.id);
   });
 
@@ -226,7 +226,7 @@ describe("chooseCard — Following suit", () => {
     const d10 = card("diamonds", "10");
     const hand = [sK, s7, d10];
 
-    const chosen = chooseCard(hand, t1, "hearts", 1 as PlayerPosition);
+    const chosen = chooseCard(hand, t1, "hearts", "suit", 1 as PlayerPosition);
     expect(isValidPlay(t1, chosen, 1 as PlayerPosition, hand)).toBe(true);
   });
 });
@@ -250,7 +250,7 @@ describe("chooseCard — Must trump", () => {
     const hA = card("hearts", "ace");
     const hand = [hA, hQ];
 
-    const chosen = chooseCard(hand, t2, "hearts", 2 as PlayerPosition);
+    const chosen = chooseCard(hand, t2, "hearts", "suit", 2 as PlayerPosition);
     expect(chosen.id).toBe(hQ.id);
   });
 
@@ -268,7 +268,7 @@ describe("chooseCard — Must trump", () => {
     const h8 = card("hearts", "8");
     const hand = [h8, h7];
 
-    const chosen = chooseCard(hand, t2, "hearts", 2 as PlayerPosition);
+    const chosen = chooseCard(hand, t2, "hearts", "suit", 2 as PlayerPosition);
     expect(chosen.id).toBe(h7.id);
   });
 
@@ -283,7 +283,7 @@ describe("chooseCard — Must trump", () => {
     const hJ = card("hearts", "jack");
     const hand = [h7, hJ];
 
-    const chosen = chooseCard(hand, t1, "hearts", 1 as PlayerPosition);
+    const chosen = chooseCard(hand, t1, "hearts", "suit", 1 as PlayerPosition);
     // Should play a trump — lowest is preferred
     expect(chosen.suit).toBe("hearts");
   });
@@ -303,7 +303,7 @@ describe("chooseCard — Must trump", () => {
     const h9 = card("hearts", "9");
     const hand = [h9, hA, hK];
 
-    const chosen = chooseCard(hand, t2, "hearts", 2 as PlayerPosition);
+    const chosen = chooseCard(hand, t2, "hearts", "suit", 2 as PlayerPosition);
     expect(chosen.id).toBe(hK.id);
   });
 
@@ -317,7 +317,7 @@ describe("chooseCard — Must trump", () => {
     const dK = card("diamonds", "king");
     const hand = [h7, h9, dK];
 
-    const chosen = chooseCard(hand, t1, "hearts", 1 as PlayerPosition);
+    const chosen = chooseCard(hand, t1, "hearts", "suit", 1 as PlayerPosition);
     expect(isValidPlay(t1, chosen, 1 as PlayerPosition, hand)).toBe(true);
   });
 });
@@ -338,7 +338,7 @@ describe("chooseCard — Discarding", () => {
     const d10 = card("diamonds", "10"); // 10 pts
     const hand = [dK, c7, d10];
 
-    const chosen = chooseCard(hand, t1, "hearts", 1 as PlayerPosition);
+    const chosen = chooseCard(hand, t1, "hearts", "suit", 1 as PlayerPosition);
     expect(chosen.id).toBe(c7.id);
   });
 
@@ -351,7 +351,7 @@ describe("chooseCard — Discarding", () => {
     const cQ = card("clubs", "queen"); // 3 pts
     const hand = [cQ, d8];
 
-    const chosen = chooseCard(hand, t1, "hearts", 1 as PlayerPosition);
+    const chosen = chooseCard(hand, t1, "hearts", "suit", 1 as PlayerPosition);
     expect(chosen.id).toBe(d8.id);
   });
 
@@ -363,7 +363,7 @@ describe("chooseCard — Discarding", () => {
     const d7 = card("diamonds", "7");
     const hand = [d7];
 
-    const chosen = chooseCard(hand, t1, "hearts", 1 as PlayerPosition);
+    const chosen = chooseCard(hand, t1, "hearts", "suit", 1 as PlayerPosition);
     expect(chosen.id).toBe(d7.id);
   });
 
@@ -376,7 +376,7 @@ describe("chooseCard — Discarding", () => {
     const c7 = card("clubs", "7");
     const hand = [dK, c7];
 
-    const chosen = chooseCard(hand, t1, "hearts", 1 as PlayerPosition);
+    const chosen = chooseCard(hand, t1, "hearts", "suit", 1 as PlayerPosition);
     expect(isValidPlay(t1, chosen, 1 as PlayerPosition, hand)).toBe(true);
   });
 });
@@ -463,6 +463,8 @@ describe("chooseCardForRound", () => {
         value: 90 as const,
         bidderPosition: 1 as PlayerPosition,
         coincheLevel: 1 as const,
+        contractType: "suit" as const,
+        isCapot: false,
       }),
       tricks: Object.freeze([]),
       currentTrick: null, // No current trick
@@ -517,6 +519,8 @@ describe("chooseCardForRound", () => {
         value: 90 as const,
         bidderPosition: 1 as PlayerPosition,
         coincheLevel: 1 as const,
+        contractType: "suit" as const,
+        isCapot: false,
       }),
       tricks: Object.freeze([]),
       currentTrick,
@@ -570,6 +574,8 @@ describe("chooseCardForRound", () => {
         value: 90 as const,
         bidderPosition: 1 as PlayerPosition,
         coincheLevel: 1 as const,
+        contractType: "suit" as const,
+        isCapot: false,
       }),
       tricks: Object.freeze([]),
       currentTrick,
@@ -911,5 +917,135 @@ describe("evaluateHandForSuit", () => {
     const score = evaluateHandForSuit(hand, "hearts");
     // All 8 cards: 0+0+14+10+20+3+4+11 = 62 trump pts + 8*5 = 40 length bonus = 102
     expect(score).toBe(102);
+  });
+});
+
+// ==============================================================
+// chooseCard — SA (sans-atout) contract
+// ==============================================================
+
+describe("chooseCard — SA contract", () => {
+  it("should play highest SA-point card when leading (ace over 10)", () => {
+    // SA points: ace=19, 10=10, jack=0, 7=0
+    const sA = card("spades", "ace"); // 19 pts
+    const s10 = card("spades", "10"); // 10 pts
+    const s7 = card("spades", "7"); // 0 pts
+    const hand = [s10, s7, sA];
+
+    // SA trick: trumpSuit is still stored (e.g. "hearts") but contractType=sans-atout
+    const trick = createTrick(0, "hearts", "sans-atout", idGen);
+    const chosen = chooseCard(hand, trick, null, "sans-atout", 0 as PlayerPosition);
+    expect(chosen.id).toBe(sA.id); // Ace has highest SA value (19)
+  });
+
+  it("should play highest SA-point card when can win the trick", () => {
+    // Player 0 led spades 7. Player 1 must follow spades — has ace and 10.
+    const trick = createTrick(0, "hearts", "sans-atout", idGen);
+    const lead = card("spades", "7");
+    const t1 = playCard(trick, lead, 0, [lead]);
+
+    const sA = card("spades", "ace"); // 19 SA pts, NON_TRUMP_ORDER rank 7
+    const s10 = card("spades", "10"); // 10 SA pts, NON_TRUMP_ORDER rank 6
+    const hand = [s10, sA];
+
+    // Both are valid plays (follow suit). Should pick ace (highest SA point).
+    const chosen = chooseCard(hand, t1, null, "sans-atout", 1 as PlayerPosition);
+    expect(chosen.id).toBe(sA.id);
+  });
+
+  it("should play lowest SA-point card when partner is winning", () => {
+    // Player 0 leads spades ace (SA: 19 pts, rank 7 = highest). Player 1 plays low.
+    // Player 2 (partner of 0) must follow.
+    const trick = createTrick(0, "hearts", "sans-atout", idGen);
+    const lead = card("spades", "ace");
+    const t1 = playCard(trick, lead, 0, [lead]);
+    const p1Card = card("spades", "7");
+    const t2 = playCard(t1, p1Card, 1, [p1Card]);
+
+    // Player 2 has spades 10 (10 SA pts) and spades 8 (0 SA pts). Partner (0) is winning.
+    const s10 = card("spades", "10");
+    const s8 = card("spades", "8");
+    const hand = [s10, s8];
+
+    const chosen = chooseCard(hand, t2, null, "sans-atout", 2 as PlayerPosition);
+    expect(chosen.id).toBe(s8.id); // Play low when partner is winning
+  });
+
+  it("should always return a valid play in SA", () => {
+    const trick = createTrick(0, "hearts", "sans-atout", idGen);
+    const lead = card("spades", "ace");
+    const t1 = playCard(trick, lead, 0, [lead]);
+
+    const sK = card("spades", "king");
+    const s7 = card("spades", "7");
+    const d10 = card("diamonds", "10");
+    const hand = [sK, s7, d10];
+
+    const chosen = chooseCard(hand, t1, null, "sans-atout", 1 as PlayerPosition);
+    expect(isValidPlay(t1, chosen, 1 as PlayerPosition, hand)).toBe(true);
+  });
+});
+
+// ==============================================================
+// chooseCard — TA (tout-atout) contract
+// ==============================================================
+
+describe("chooseCard — TA contract", () => {
+  it("should play highest TRUMP_ORDER rank when leading (jack beats all)", () => {
+    // TRUMP_ORDER: 7,8,queen,king,10,ace,9,jack (jack = rank 7, highest)
+    const hJ = card("hearts", "jack"); // trump-rank 7 in hearts
+    const hA = card("hearts", "ace"); // trump-rank 5 in hearts
+    const h7 = card("hearts", "7"); // trump-rank 0 in hearts
+    const hand = [h7, hA, hJ];
+
+    const trick = createTrick(0, "hearts", "tout-atout", idGen);
+    const chosen = chooseCard(hand, trick, null, "tout-atout", 0 as PlayerPosition);
+    expect(chosen.id).toBe(hJ.id); // Jack is highest TRUMP_ORDER rank
+  });
+
+  it("should play jack over other ranks in TA", () => {
+    // All hearts, different TA ranks. Jack (rank 7) > 9 (rank 6) > ace (rank 5).
+    const hJ = card("hearts", "jack");
+    const h9 = card("hearts", "9");
+    const hQ = card("hearts", "queen"); // trump-rank 2
+    const hand = [hQ, h9, hJ];
+
+    const trick = createTrick(0, "hearts", "tout-atout", idGen);
+    const chosen = chooseCard(hand, trick, null, "tout-atout", 0 as PlayerPosition);
+    expect(chosen.id).toBe(hJ.id);
+  });
+
+  it("should play lowest-rank card when partner is winning in TA", () => {
+    // Player 0 leads spades jack (trump-rank 7, highest). Player 1 has no spades.
+    // Player 2 (partner of 0) must play — partner is winning.
+    const trick = createTrick(0, "spades", "tout-atout", idGen);
+    const lead = card("spades", "jack");
+    const t1 = playCard(trick, lead, 0, [lead]);
+    // Player 1 has no spades but can't overtrump jack, plays lowest
+    const h7 = card("hearts", "7"); // trump-rank 0
+    const t2 = playCard(t1, h7, 1, [h7]);
+
+    // Player 2 has hearts 9 (trump-rank 6) and hearts 7 (trump-rank 0). Partner (0) is winning.
+    const h9 = card("hearts", "9");
+    const h7p2 = card("hearts", "7");
+    const hand = [h9, h7p2];
+
+    const chosen = chooseCard(hand, t2, null, "tout-atout", 2 as PlayerPosition);
+    // Partner is winning — play lowest rank
+    expect(chosen.id).toBe(h7p2.id);
+  });
+
+  it("should always return a valid play in TA", () => {
+    const trick = createTrick(0, "hearts", "tout-atout", idGen);
+    const lead = card("hearts", "ace");
+    const t1 = playCard(trick, lead, 0, [lead]);
+
+    const hJ = card("hearts", "jack");
+    const h9 = card("hearts", "9");
+    const h7 = card("hearts", "7");
+    const hand = [hJ, h9, h7];
+
+    const chosen = chooseCard(hand, t1, null, "tout-atout", 1 as PlayerPosition);
+    expect(isValidPlay(t1, chosen, 1 as PlayerPosition, hand)).toBe(true);
   });
 });
