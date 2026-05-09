@@ -325,12 +325,18 @@ export function useCoinchGameSession(): GameSessionState {
 
       if (event.type === "round_completed") {
         const bidderPos = event.round.contract?.bidderPosition ?? 0;
+        const rs = event.roundScore as unknown as RoundScore & {
+          announcementWinner?: "ns" | "ew" | null;
+          announcementPoints?: number;
+        };
         setTimeout((): void => {
           setLastRoundResult({
             wasCancelled: false,
             contract: event.round.contract as unknown as Contract | null,
             bidderName: getProfile(bidderPos).name,
-            roundScore: event.roundScore as unknown as RoundScore,
+            roundScore: rs as unknown as RoundScore,
+            announcementWinner: rs.announcementWinner,
+            announcementPoints: rs.announcementPoints,
           });
         }, 2000);
       }

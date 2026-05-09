@@ -23,6 +23,8 @@ function makeNormalResult(
     contractingTeamFinalScore: number;
     opponentTeamFinalScore: number;
     beloteBonusTeam: "contracting" | "opponent" | null;
+    announcementWinner: "ns" | "ew" | null;
+    announcementPoints: number;
   }> = {},
 ): LastRoundResult {
   const {
@@ -36,6 +38,8 @@ function makeNormalResult(
     contractingTeamFinalScore = 182,
     opponentTeamFinalScore = 0,
     beloteBonusTeam = null,
+    announcementWinner,
+    announcementPoints,
   } = overrides;
 
   return {
@@ -58,6 +62,8 @@ function makeNormalResult(
       opponentTeamFinalScore,
       beloteBonusTeam,
     },
+    announcementWinner,
+    announcementPoints,
   };
 }
 
@@ -225,6 +231,57 @@ describe("RoundSummary", () => {
         result: makeNormalResult({ beloteBonusTeam: null }),
       });
       expect(screen.queryByText("Belote")).not.toBeInTheDocument();
+    });
+
+    it("does not show Annonces row when announcementPoints is absent", () => {
+      renderRoundSummary({
+        result: makeNormalResult({ announcementWinner: null, announcementPoints: undefined }),
+      });
+      expect(screen.queryByText("Annonces")).not.toBeInTheDocument();
+    });
+
+    it("does not show Annonces row when announcementPoints is 0", () => {
+      renderRoundSummary({
+        result: makeNormalResult({ announcementWinner: "ns", announcementPoints: 0 }),
+      });
+      expect(screen.queryByText("Annonces")).not.toBeInTheDocument();
+    });
+
+    it("shows Annonces row with +50 for NS when NS wins announcements", () => {
+      renderRoundSummary({
+        result: makeNormalResult({
+          bidderPosition: 0, // NS is contracting
+          announcementWinner: "ns",
+          announcementPoints: 50,
+        }),
+      });
+      expect(screen.getByText("Annonces")).toBeInTheDocument();
+      expect(screen.getByText("+50")).toBeInTheDocument();
+    });
+
+    it("shows Annonces row with +100 for EW when EW wins announcements", () => {
+      renderRoundSummary({
+        result: makeNormalResult({
+          bidderPosition: 0, // NS is contracting, EW is opponent
+          announcementWinner: "ew",
+          announcementPoints: 100,
+        }),
+      });
+      expect(screen.getByText("Annonces")).toBeInTheDocument();
+      expect(screen.getByText("+100")).toBeInTheDocument();
+    });
+
+    it("shows Annonces row with dash for the losing team", () => {
+      renderRoundSummary({
+        result: makeNormalResult({
+          bidderPosition: 0,
+          announcementWinner: "ns",
+          announcementPoints: 50,
+        }),
+      });
+      // NS gets +50, EW gets "—"
+      const dashes = screen.getAllByText("—");
+      expect(dashes.length).toBeGreaterThanOrEqual(1);
     });
 
     it("shows round final scores", () => {

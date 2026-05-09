@@ -74,6 +74,10 @@ export interface LastRoundResult {
   contract: Contract | null;
   bidderName: string;
   roundScore: RoundScore | null;
+  /** NS or EW team that won the announcement comparison (Coinche only). */
+  announcementWinner?: "ns" | "ew" | null;
+  /** Total announcement bonus points (Coinche only). */
+  announcementPoints?: number;
 }
 
 // ── Bid Reveal (one-shot animation when bidding closes) ──────────────────

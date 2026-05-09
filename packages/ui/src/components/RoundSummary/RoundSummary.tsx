@@ -65,7 +65,13 @@ export function RoundSummary({
           <p className={styles.cancelledMsg}>All players passed — no points scored.</p>
         ) : contract !== null && roundScore !== null ? (
           /* ── Normal round body ── */
-          <NormalRoundBody contract={contract} bidderName={bidderName} roundScore={roundScore} />
+          <NormalRoundBody
+            contract={contract}
+            bidderName={bidderName}
+            roundScore={roundScore}
+            announcementWinner={result.announcementWinner}
+            announcementPoints={result.announcementPoints}
+          />
         ) : null}
 
         {/* ── Game totals ── */}
@@ -119,9 +125,17 @@ interface NormalRoundBodyProps {
   contract: NonNullable<LastRoundResult["contract"]>;
   bidderName: string;
   roundScore: NonNullable<LastRoundResult["roundScore"]>;
+  announcementWinner?: "ns" | "ew" | null;
+  announcementPoints?: number;
 }
 
-function NormalRoundBody({ contract, bidderName, roundScore }: NormalRoundBodyProps): ReactElement {
+function NormalRoundBody({
+  contract,
+  bidderName,
+  roundScore,
+  announcementWinner,
+  announcementPoints = 0,
+}: NormalRoundBodyProps): ReactElement {
   const { suit, value, coincheLevel, bidderPosition } = contract;
   const {
     contractMet,
@@ -150,6 +164,10 @@ function NormalRoundBody({ contract, bidderName, roundScore }: NormalRoundBodyPr
   const ewBelote =
     (beloteBonusTeam === "contracting" && !nsIsContracting) ||
     (beloteBonusTeam === "opponent" && nsIsContracting);
+
+  // Announcement bonus mapping
+  const nsAnnouncement = announcementWinner === "ns";
+  const ewAnnouncement = announcementWinner === "ew";
 
   // Coinche label
   const coincheLabel =
@@ -207,6 +225,18 @@ function NormalRoundBody({ contract, bidderName, roundScore }: NormalRoundBodyPr
             </span>
             <span className={`${styles.scoreVal} ${ewBelote ? styles.bonusVal : ""}`}>
               {ewBelote ? "+20" : "—"}
+            </span>
+          </div>
+        )}
+        {/* Announcements bonus row — only when announcements were scored */}
+        {announcementPoints > 0 && (
+          <div className={styles.scoreRow}>
+            <span className={styles.rowLabel}>Annonces</span>
+            <span className={`${styles.scoreVal} ${nsAnnouncement ? styles.bonusVal : ""}`}>
+              {nsAnnouncement ? `+${String(announcementPoints)}` : "—"}
+            </span>
+            <span className={`${styles.scoreVal} ${ewAnnouncement ? styles.bonusVal : ""}`}>
+              {ewAnnouncement ? `+${String(announcementPoints)}` : "—"}
             </span>
           </div>
         )}
