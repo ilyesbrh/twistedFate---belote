@@ -68,3 +68,11 @@ export type { RoundPhase, Round } from "./round.js";
 
 export { DEFAULT_TARGET_SCORE, createGame, addCompletedRound } from "./game.js";
 export type { GameState, Game } from "./game.js";
+
+export {
+  findAnnouncements,
+  compareAnnouncements,
+  resolveAnnouncementWinner,
+  calculateAnnouncementTotal,
+} from "./announcements.js";
+export type { AnnouncementKind, Announcement } from "./announcements.js";

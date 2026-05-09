@@ -76,4 +76,12 @@ export type { RoundPhase, Round } from "./models/index.js";
 export { DEFAULT_TARGET_SCORE, createGame, addCompletedRound } from "./models/index.js";
 export type { GameState, Game } from "./models/index.js";
 
+export {
+  findAnnouncements,
+  compareAnnouncements,
+  resolveAnnouncementWinner,
+  calculateAnnouncementTotal,
+} from "./models/index.js";
+export type { AnnouncementKind, Announcement } from "./models/index.js";
+
 export { chooseCard, chooseCardForRound, chooseBid, evaluateHandForSuit } from "./ai/index.js";
