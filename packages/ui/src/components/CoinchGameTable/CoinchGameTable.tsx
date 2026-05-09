@@ -8,5 +8,12 @@ interface CoinchGameTableProps {
 
 export function CoinchGameTable({ onPlayAgain }: CoinchGameTableProps): ReactElement {
   const state = useCoinchGameSession();
-  return <GameTableView state={state} onPlayAgain={onPlayAgain} />;
+  return (
+    <GameTableView
+      state={state}
+      onPlayAgain={onPlayAgain}
+      gameName="Coinche"
+      gameSubtitle="SA · TA · Coinché"
+    />
+  );
 }

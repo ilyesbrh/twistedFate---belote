@@ -28,10 +28,12 @@ export function GameTable({ onPlayAgain }: GameTableProps) {
 interface GameTableViewProps {
   state: GameSessionState;
   onPlayAgain: () => void;
+  gameName?: string;
+  gameSubtitle?: string;
 }
 
 /** Pure-presentation game table — accepts any GameSessionState (AI or online). */
-export function GameTableView({ state, onPlayAgain }: GameTableViewProps) {
+export function GameTableView({ state, onPlayAgain, gameName, gameSubtitle }: GameTableViewProps) {
   const [chatOpen, setChatOpen] = useState(false);
 
   const south = state.players.find((p) => p.position === "south")!;
@@ -185,6 +187,8 @@ export function GameTableView({ state, onPlayAgain }: GameTableViewProps) {
           players={state.players}
           targetScore={state.targetScore}
           onPlay={state.startGame}
+          gameName={gameName}
+          gameSubtitle={gameSubtitle}
         />
       )}
 

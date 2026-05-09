@@ -5,15 +5,22 @@ interface StartScreenProps {
   players: unknown[];
   targetScore: number;
   onPlay: () => void;
+  gameName?: string;
+  gameSubtitle?: string;
 }
 
-export function StartScreen({ targetScore, onPlay }: StartScreenProps): ReactElement {
+export function StartScreen({
+  targetScore,
+  onPlay,
+  gameName = "Belote",
+  gameSubtitle = "— Coinchée —",
+}: StartScreenProps): ReactElement {
   return (
     <div className={styles.overlay}>
       <div className={styles.card}>
         <HeroFan />
-        <h2 className={styles.title}>Belote</h2>
-        <p className={styles.subtitle}>— Coinchée —</p>
+        <h2 className={styles.title}>{gameName}</h2>
+        <p className={styles.subtitle}>{gameSubtitle}</p>
         <p className={styles.target}>
           first to <strong>{String(targetScore)}</strong> points wins
         </p>
