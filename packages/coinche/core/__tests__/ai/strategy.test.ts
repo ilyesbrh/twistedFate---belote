@@ -1256,3 +1256,72 @@ describe("chooseBid — SA/TA contract selection", () => {
     expect(() => placeBid(round, bid)).not.toThrow();
   });
 });
+
+// ==============================================================
+// chooseBid — Capot contract selection
+// ==============================================================
+
+describe("chooseBid — Capot contract selection", () => {
+  it("bids capot in hearts when holding all trumps + all side aces (dominant suit hand)", () => {
+    const gen = createIdGenerator({ seed: 500 });
+    const round = createBiddingRound(0, gen);
+
+    // All 8 hearts (total trump value = J20+9=14+A=11+10=10+K=4+Q=3+8=0+7=0 = 62 + 8×5 = 102)
+    // + side aces (3×11 = 33) → suit score = 135 → should trigger capot
+    const hand = [
+      card("hearts", "jack"),
+      card("hearts", "9"),
+      card("hearts", "ace"),
+      card("hearts", "10"),
+      card("hearts", "king"),
+      card("spades", "ace"),
+      card("diamonds", "ace"),
+      card("clubs", "ace"),
+    ];
+
+    const bid = chooseBid(hand, round, 1 as PlayerPosition, gen);
+    expect(bid.type).toBe("capot");
+    expect(bid.suit).toBe("hearts");
+  });
+
+  it("does not bid capot with a moderate-strength hand", () => {
+    const gen = createIdGenerator({ seed: 501 });
+    const round = createBiddingRound(0, gen);
+
+    // Decent hand but not capot-level — J+9+A of spades + 5 weak cards
+    const hand = [
+      card("spades", "jack"),
+      card("spades", "9"),
+      card("spades", "ace"),
+      card("hearts", "7"),
+      card("hearts", "8"),
+      card("diamonds", "7"),
+      card("clubs", "8"),
+      card("clubs", "7"),
+    ];
+
+    const bid = chooseBid(hand, round, 1 as PlayerPosition, gen);
+    expect(bid.type).not.toBe("capot");
+  });
+
+  it("capot bid is compatible with placeBid (no throw)", () => {
+    const gen = createIdGenerator({ seed: 502 });
+    const round = createBiddingRound(0, gen);
+
+    const hand = [
+      card("hearts", "jack"),
+      card("hearts", "9"),
+      card("hearts", "ace"),
+      card("hearts", "10"),
+      card("hearts", "king"),
+      card("spades", "ace"),
+      card("diamonds", "ace"),
+      card("clubs", "ace"),
+    ];
+
+    const bid = chooseBid(hand, round, 1 as PlayerPosition, gen);
+    if (bid.type === "capot") {
+      expect(() => placeBid(round, bid)).not.toThrow();
+    }
+  });
+});

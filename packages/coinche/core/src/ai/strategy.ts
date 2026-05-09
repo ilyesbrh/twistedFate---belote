@@ -18,6 +18,7 @@ import {
   createSuitBid,
   createSansAtoutBid,
   createToutAtoutBid,
+  createCapotBid,
 } from "../models/bid.js";
 import type { BidValue } from "../models/bid.js";
 import type { Round } from "../models/round.js";
@@ -34,6 +35,12 @@ const ACE_SUPPORT_VALUE = 11;
  * Example: opening at 80 requires strength >= 52 (a J+9+A hand scores ~60 → bids).
  */
 const BID_STRENGTH_RATIO = 0.65;
+/**
+ * Minimum suit score to bid capot.
+ * evaluateHandForSuit for J+9+A+10+K of trump (5 cards) + 3 side aces ≈ 84 + 33 = 117.
+ * Threshold set at 110 so the AI bids capot only when holding dominant trump + multiple aces.
+ */
+const CAPOT_THRESHOLD = 110;
 
 // ── Hand Evaluation ──
 
@@ -506,6 +513,11 @@ export function chooseBid(
   // Evaluate SA and TA
   const saScore = evaluateHandForSansAtout(hand);
   const taScore = evaluateHandForToutAtout(hand);
+
+  // Check for capot: bid capot in the best suit when dominant enough
+  if (bestSuit !== null && bestSuitScore >= CAPOT_THRESHOLD) {
+    return createCapotBid(playerPosition, bestSuit, idGenerator);
+  }
 
   // Pick the best contract type (SA/TA must beat suit by 1.15× to be preferred)
   type ContractChoice = "suit" | "sans-atout" | "tout-atout";
