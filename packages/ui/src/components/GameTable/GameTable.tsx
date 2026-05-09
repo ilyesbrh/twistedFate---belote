@@ -83,7 +83,7 @@ export function GameTableView({
           themScore={state.themScore}
           usTotalScore={state.usTotalScore}
           themTotalScore={state.themTotalScore}
-          trumpSuit={state.trumpSuit ?? "spades"}
+          trumpSuit={state.trumpSuit ?? undefined}
           dealerName={state.dealerName}
           contractValue={state.contract?.value ?? null}
           contractCoincheLevel={state.contract?.coincheLevel ?? 1}

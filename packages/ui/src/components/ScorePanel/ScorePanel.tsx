@@ -7,7 +7,7 @@ interface ScorePanelProps {
   themScore: number;
   usTotalScore: number;
   themTotalScore: number;
-  trumpSuit: Suit;
+  trumpSuit?: Suit;
   dealerName: string;
   /** Current contract value (null when no contract yet, e.g. still bidding). */
   contractValue?: number | null;
@@ -40,7 +40,7 @@ export function ScorePanel({
   contractType,
   isCapot = false,
 }: ScorePanelProps) {
-  const isRedSuit = RED_SUITS.includes(trumpSuit);
+  const isRedSuit = trumpSuit !== undefined && RED_SUITS.includes(trumpSuit);
   const isSA = contractType === "sans-atout";
   const isTA = contractType === "tout-atout";
   const levelLabel =
@@ -80,7 +80,7 @@ export function ScorePanel({
 
       {/* Trump suit icon — replaced with SA/TA/Cap for Coinche special contracts */}
       <span className={`${styles.trump} ${isRedSuit && !isSA && !isTA ? styles.trumpRed : styles.trumpBlack}`}>
-        {isCapot ? "Cap" : isSA ? "SA" : isTA ? "TA" : SUIT_SYMBOLS[trumpSuit]}
+        {isCapot ? "Cap" : isSA ? "SA" : isTA ? "TA" : trumpSuit !== undefined ? SUIT_SYMBOLS[trumpSuit] : "—"}
       </span>
 
       {/* Coinche level badge */}

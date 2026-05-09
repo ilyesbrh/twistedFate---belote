@@ -58,6 +58,24 @@ describe("ScorePanel", () => {
     expect(screen.getByTestId("score-panel")).toBeInTheDocument();
   });
 
+  describe("no contract yet (bidding phase)", () => {
+    it("shows '—' when no trumpSuit and no contractType (pre-contract)", () => {
+      render(
+        <ScorePanel
+          target={1000}
+          usScore={0}
+          themScore={0}
+          usTotalScore={0}
+          themTotalScore={0}
+          dealerName="ElenaP"
+        />,
+      );
+      expect(screen.getByText("—")).toBeInTheDocument();
+      // Should NOT show a suit symbol fallback
+      expect(screen.queryByText("♠")).not.toBeInTheDocument();
+    });
+  });
+
   describe("Coinche contract type display", () => {
     it("shows 'SA' instead of suit symbol for sans-atout contract", () => {
       render(
