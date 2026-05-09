@@ -492,6 +492,23 @@ it into properly-named packages.
 - Shared packages contain only code that's actually used by ≥2 games.
 - ESLint boundary rule still passing.
 
+> **Note (added 2026-05-09): URL-based architecture.** The shell-vs-game
+> boundary is realised through **URL routing**, not through an
+> `App.tsx`-level switch on `gameId`. Each game ships at its own URL
+> sub-tree (`/belote/tunisian/*`, `/belote/coinche/*`, `/rami/*`) and
+> exports a single `RouteTree` component that the shell mounts via
+> `lazy()` for per-game bundle splitting. The shell owns `/`,
+> `/auth/*`, `/profile`, `/friends`, `/history`. See
+> `docs/GAME_PACKAGE_GUIDELINE.md` §6 for the full contract and
+> `.claude/skills/shell-router-integration/SKILL.md` for the
+> mount procedure. The router library is `wouter` (~2 KB, hooks-first).
+>
+> Phase 0 should also include introducing `wouter` and refactoring
+> the existing `packages/ui` so the current Tunisian Belote game lives
+> at `/belote/tunisian/*`. This is the load-bearing change that makes
+> every subsequent game a simple route-mount instead of a navigation
+> rewrite.
+
 ---
 
 ## 4. Decisions, locked

@@ -59,6 +59,7 @@ packages/<game>/
 └── ui/                            # React components + hooks
     ├── package.json               # name: "@<game>/ui"
     ├── src/
+    │   ├── RouteTree.tsx          # ★ THE shell entry point — see §6
     │   ├── components/
     │   │   └── <X>/
     │   │       ├── <X>.tsx
@@ -69,6 +70,12 @@ packages/<game>/
     │   │   └── use<Game>OnlineSession.ts
     │   ├── messages/
     │   │   └── <game>Messages.ts
+    │   ├── screens/               # one file per route under the game's basename
+    │   │   ├── HomeScreen.tsx     # at /<basename>/
+    │   │   ├── SoloScreen.tsx     # at /<basename>/solo
+    │   │   ├── LobbyScreen.tsx    # at /<basename>/lobby/:code?
+    │   │   ├── RandomScreen.tsx   # at /<basename>/random
+    │   │   └── PlayScreen.tsx     # at /<basename>/play/:sessionId
     │   └── index.ts
     └── __tests__/
         └── <Component>.test.tsx
@@ -240,19 +247,20 @@ mechanism. No factory lookup, no plugin loader. Each game self-registers.
 
 ## 5. UI package — what's per-game vs shared
 
-| Component                                                                       | Lives in                                              | Why                                                                   |
-| ------------------------------------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------- |
-| `MenuFelt`, `IdentityChip`, `ChatPanel`, `InstallPrompt`, `PlayerAvatar` chrome | `@cards/ui-shell` (eventually) — `@belote/ui` for now | Game-agnostic                                                         |
-| Theme tokens, paper/wood textures                                               | `@cards/ui-shell`                                     | Game-agnostic                                                         |
-| Auth screens, friends screen, history screen, profile screen                    | `@cards/identity` (eventually)                        | Game-agnostic                                                         |
-| Lobby, matchmaking screen, game picker                                          | `@cards/lobby` (eventually)                           | Game-agnostic                                                         |
-| `GameTable` layout (zones, seats)                                               | **Per-game**                                          | Layout assumptions vary (4-seat trick zone vs 6-seat melding tableau) |
-| `BidPanel` / `MeldPanel` / action panels                                        | **Per-game**                                          | Game-shaped UI                                                        |
-| `ScorePanel` (game-specific scoreline)                                          | **Per-game**                                          | Game-shaped data                                                      |
-| `RoundSummary`                                                                  | **Per-game**                                          | Game-shaped data                                                      |
-| `useGameSession` hook                                                           | **Per-game**                                          | Game-shaped state                                                     |
-| `useOnlineGameSession` hook                                                     | **Per-game**                                          | Game-shaped wire decoding                                             |
-| Game-event-to-message mapper                                                    | **Per-game**                                          | Game-shaped events                                                    |
+| Component                                                                       | Lives in                                              | Why                                                                                            |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `RouteTree` (the game's URL sub-tree)                                           | **Per-game** (see §6)                                 | Each game owns its own routes under `/<family>/<variant>/*`                                    |
+| `MenuFelt`, `IdentityChip`, `ChatPanel`, `InstallPrompt`, `PlayerAvatar` chrome | `@cards/ui-shell` (eventually) — `@belote/ui` for now | Game-agnostic                                                                                  |
+| Theme tokens, paper/wood textures                                               | `@cards/ui-shell`                                     | Game-agnostic                                                                                  |
+| Top-level router + home screen + game-family tiles                              | `@cards/ui-shell`                                     | Mounts each game's `RouteTree` lazily; owns `/`, `/auth/*`, `/profile`, `/friends`, `/history` |
+| Auth screens, friends screen, history screen, profile screen                    | `@cards/identity` (eventually)                        | Game-agnostic                                                                                  |
+| `GameTable` layout (zones, seats)                                               | **Per-game**                                          | Layout assumptions vary (4-seat trick zone vs 6-seat melding tableau)                          |
+| `BidPanel` / `MeldPanel` / action panels                                        | **Per-game**                                          | Game-shaped UI                                                                                 |
+| `ScorePanel` (game-specific scoreline)                                          | **Per-game**                                          | Game-shaped data                                                                               |
+| `RoundSummary`                                                                  | **Per-game**                                          | Game-shaped data                                                                               |
+| `useGameSession` hook                                                           | **Per-game**                                          | Game-shaped state                                                                              |
+| `useOnlineGameSession` hook                                                     | **Per-game**                                          | Game-shaped wire decoding                                                                      |
+| Game-event-to-message mapper                                                    | **Per-game**                                          | Game-shaped events                                                                             |
 
 If a component starts shared and gains its first `gameId`-aware
 branch, **un-share it**. Move it back into the game packages,
@@ -260,7 +268,150 @@ duplicating as needed.
 
 ---
 
-## 6. Wire types
+## 6. URL routing & shell integration
+
+The platform is **URL-addressed**. Each game lives at its own URL
+sub-tree, mounted by the shell. The browser address bar is the
+source of truth for "what is the user playing right now"; there is
+no global "current game" state hidden in React context.
+
+### URL hierarchy
+
+```
+/                              ← shell home (game-family tiles)
+/auth/login, /auth/signup      ← shell-owned auth
+/profile, /friends, /history   ← shell-owned identity screens
+
+/belote                        ← Belote-family landing (variants list)
+/belote/tunisian/*             ← Tunisian Belote game
+/belote/coinche/*              ← Coinche game
+
+/rami/*                        ← Rami (single variant in family)
+/uno/*                         ← Uno
+/skyjo/*                       ← Skyjo
+```
+
+Family grouping (e.g. `/belote/`) is **navigational**, not
+architectural. Games inside the same family share **zero** code per
+`PLATFORM_MANIFESTO.md` Rule 1. The grouping is purely a UX/discovery
+convenience for users who think "I want to play a Belote-style game".
+
+### The `RouteTree` contract
+
+Each game's UI package MUST export a single `RouteTree` component
+that the shell mounts. The shell never reaches inside a game's
+package for anything else.
+
+```ts
+// packages/<game>/ui/src/RouteTree.tsx
+import { Router, Route, Switch } from "wouter";
+import { HomeScreen } from "./screens/HomeScreen.js";
+import { SoloScreen } from "./screens/SoloScreen.js";
+import { LobbyScreen } from "./screens/LobbyScreen.js";
+import { RandomScreen } from "./screens/RandomScreen.js";
+import { PlayScreen } from "./screens/PlayScreen.js";
+
+export function RouteTree({ basename }: { readonly basename: string }) {
+  return (
+    <Router base={basename}>
+      <Switch>
+        <Route path="/" component={HomeScreen} />
+        <Route path="/solo" component={SoloScreen} />
+        <Route path="/lobby/:code?" component={LobbyScreen} />
+        <Route path="/random" component={RandomScreen} />
+        <Route path="/play/:sessionId" component={PlayScreen} />
+      </Switch>
+    </Router>
+  );
+}
+```
+
+**Contract rules** (binding):
+
+- Exported as named `RouteTree` from the package's `index.ts` barrel.
+- Single prop: `basename: string` — the URL prefix at which it's mounted.
+- Internally uses `wouter` (the platform's chosen router library).
+- Owns its own route paths under the basename.
+- May import from `@cards/ui-shell` (theme, chrome, identity context).
+- May NOT import from another game's UI package.
+- Routes that need a session are guarded inside the screen components,
+  not at the route-tree level (so deep links to `/play/:sessionId`
+  redirect to lobby if the session has expired).
+
+### Mounting a game in the shell
+
+```tsx
+// @cards/ui-shell/src/PlatformRouter.tsx
+import { Router, Route, Switch } from "wouter";
+import { lazy, Suspense } from "react";
+
+const TunisianRouteTree = lazy(() => import("@belote/ui").then((m) => ({ default: m.RouteTree })));
+const CoincheRouteTree = lazy(() => import("@coinche/ui").then((m) => ({ default: m.RouteTree })));
+
+export function PlatformRouter() {
+  return (
+    <Router>
+      <Switch>
+        <Route path="/" component={HomeScreen} />
+        <Route path="/auth/:rest*" component={AuthScreens} />
+        <Route path="/profile" component={ProfileScreen} />
+        <Route path="/friends" component={FriendsScreen} />
+        <Route path="/history" component={HistoryScreen} />
+
+        {/* Belote family */}
+        <Route path="/belote/tunisian/:rest*">
+          <Suspense fallback={<GameLoadingSpinner />}>
+            <TunisianRouteTree basename="/belote/tunisian" />
+          </Suspense>
+        </Route>
+        <Route path="/belote/coinche/:rest*">
+          <Suspense fallback={<GameLoadingSpinner />}>
+            <CoincheRouteTree basename="/belote/coinche" />
+          </Suspense>
+        </Route>
+
+        {/* Add more games here as they ship */}
+      </Switch>
+    </Router>
+  );
+}
+```
+
+**Mounting rules**:
+
+- **Lazy import per game.** A user playing only Coinche never
+  downloads the Tunisian Belote bundle. Bundle splitting is the main
+  reason to keep this discipline.
+- **Wildcard match** (`:rest*`) at the mount point so the game's
+  internal router sees every sub-path.
+- **`<Suspense>` fallback** while the game's bundle loads — show a
+  consistent spinner so the transition feels intentional.
+- **Vite `base` is automatic.** The current `vite.config.ts` has
+  `base: "/twistedFate-belote/"`; `wouter` composes that with the
+  router basename without any extra wiring. Production URLs end up
+  as `/twistedFate-belote/belote/coinche/lobby`.
+
+### Why this model
+
+| Property                           | What you get                                                              |
+| ---------------------------------- | ------------------------------------------------------------------------- |
+| **Bookmarkable**                   | A Coinche player bookmarks `/belote/coinche` directly.                    |
+| **Code-split**                     | Each game's bundle loads on demand.                                       |
+| **Browser-native**                 | Back button, history, deep links work for free.                           |
+| **PWA-honest**                     | Install banner installs the _platform_; users navigate to specific games. |
+| **No global "current game" state** | The URL is the answer. No React context needed for "what game am I in."   |
+
+### Why `wouter` and not `react-router-dom`
+
+`wouter` is ~2 KB; `react-router-dom` is ~24 KB. We don't need
+data routes, loaders, or route preloading hooks. Keep the platform
+small. If a future requirement forces a switch (unlikely), it's a
+mechanical migration — both libraries have nearly the same hook
+shape.
+
+---
+
+## 7. Wire types
 
 Wire types decode from the opaque `game_action: unknown` envelope on
 the server and from the opaque `public_state: Record<string, unknown>`
@@ -288,7 +439,7 @@ game.
 
 ---
 
-## 7. Tests
+## 8. Tests
 
 Each game owns its own `__tests__/` directory under each package. Test
 discipline per `MANIFESTO.md`:
@@ -305,7 +456,7 @@ game's CI runs its own suite.
 
 ---
 
-## 8. Bootstrapping a new game (the 80% copy)
+## 9. Bootstrapping a new game (the 80% copy)
 
 When the PO greenlights a new game `@<newgame>/*`:
 
@@ -318,10 +469,22 @@ When the PO greenlights a new game `@<newgame>/*`:
 4. **Run `pnpm install`** to wire the new packages into the workspace.
 5. **Run `pnpm test`** — every test should still pass against the
    copied (renamed) code.
-6. **Commit this baseline as iteration N-1** (e.g.
-   `iteration-NNN-coinche-baseline.md`). The diff is just renames.
-   Reviewer's job is to confirm find-replace was clean.
-7. **Now specialise**, one iteration at a time. Each iteration touches
+6. **Scaffold the `RouteTree`** — `packages/<newgame>/ui/src/RouteTree.tsx`
+   per the contract in §6. Initially the screen components can be
+   placeholders that re-export shell screens; specialisation iterations
+   replace them. The barrel `packages/<newgame>/ui/src/index.ts` MUST
+   export the `RouteTree` named export.
+7. **Mount in the shell** — invoke the `shell-router-integration`
+   skill: add a `lazy(() => import("@<newgame>/ui"))` and a `<Route
+path="/<family>/<variant>/:rest*">` to `@cards/ui-shell`'s
+   `PlatformRouter.tsx`. (Skip this step if `@cards/ui-shell` does not
+   yet exist — pre-Phase-0; mounting becomes its own iteration once the
+   shell is in place.)
+8. **Commit this baseline as iteration N-1** (e.g.
+   `iteration-NNN-coinche-baseline.md`). The diff is renames + the
+   `RouteTree` scaffold + (if applicable) the shell mount. Reviewer's
+   job is to confirm find-replace was clean and the mount is correct.
+9. **Now specialise**, one iteration at a time. Each iteration touches
    only the new game's packages, follows TDD, lands a focused change.
 
 The baseline-then-specialise pattern means iteration 1 of a new game
@@ -332,7 +495,7 @@ This honours the "no half-built skeleton" rule from
 
 ---
 
-## 9. When a game stops earning its package
+## 10. When a game stops earning its package
 
 If a game's package set ends up being a near-clone of `@belote/*`
 with no meaningful specialisation after 5+ iterations, **fold it back**:
@@ -354,7 +517,7 @@ games share an engine.
 
 ---
 
-## 10. When 3 games confirm a pattern (extraction)
+## 11. When 3 games confirm a pattern (extraction)
 
 After three games have shipped with **the exact same** code shape for
 some piece of logic, that piece earns extraction to `@cards/*`. Process:
@@ -375,7 +538,7 @@ the third.
 
 ---
 
-## 11. Hot leftover questions
+## 12. Hot leftover questions
 
 These are decisions deferred from `PLATFORM_REFACTOR_PLAN_v2.md`
 (§8) and need PO answers before specific phases run:

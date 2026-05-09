@@ -1,6 +1,6 @@
 ---
 name: new-game-bootstrap
-description: Walks through scaffolding a new game package set (@<game>/core, @<game>/app, @<game>/ui) by copy-and-specialise from @belote/*. Use when the user says "let's start Coinche" or "add a Rami package" or "scaffold a new game". Produces the renamed-clone baseline as iteration N-1, then teaches the specialisation cadence. Refuses to start without PO greenlight + locked rule decisions.
+description: Walks through scaffolding a new game package set (@<game>/core, @<game>/app, @<game>/ui) by copy-and-specialise from @belote/*. Use when the user says "let's start Coinche" or "add a Rami package" or "scaffold a new game". Produces the renamed-clone baseline as iteration N-1, scaffolds the RouteTree contract for shell mounting, then teaches the specialisation cadence. Hands off to shell-router-integration for the actual route mount. Refuses to start without PO greenlight + locked rule decisions.
 ---
 
 # New Game Bootstrap
@@ -99,7 +99,57 @@ Use a tool that respects word boundaries (e.g. ripgrep + sed with
 `\b`, or your editor's "match whole word" mode). Manual review of the
 diff is mandatory.
 
-### Step 4 — Wire into the workspace
+### Step 4 — Scaffold the `RouteTree`
+
+Each game's UI package MUST expose a single `RouteTree` component
+that the shell mounts at the game's URL prefix. See
+`docs/GAME_PACKAGE_GUIDELINE.md` §6 for the full contract.
+
+Create `packages/<newgame>/ui/src/RouteTree.tsx`:
+
+```tsx
+import { Router, Route, Switch } from "wouter";
+import { HomeScreen } from "./screens/HomeScreen.js";
+import { SoloScreen } from "./screens/SoloScreen.js";
+import { LobbyScreen } from "./screens/LobbyScreen.js";
+import { RandomScreen } from "./screens/RandomScreen.js";
+import { PlayScreen } from "./screens/PlayScreen.js";
+
+export function RouteTree({ basename }: { readonly basename: string }) {
+  return (
+    <Router base={basename}>
+      <Switch>
+        <Route path="/" component={HomeScreen} />
+        <Route path="/solo" component={SoloScreen} />
+        <Route path="/lobby/:code?" component={LobbyScreen} />
+        <Route path="/random" component={RandomScreen} />
+        <Route path="/play/:sessionId" component={PlayScreen} />
+      </Switch>
+    </Router>
+  );
+}
+```
+
+The screen components (`HomeScreen`, `SoloScreen`, etc.) start as
+placeholder stubs in the bootstrap iteration. They render simple
+"coming soon" placeholders or re-export from the cloned belote screens.
+Specialisation iterations replace them with real game-specific screens.
+
+Update the package barrel `packages/<newgame>/ui/src/index.ts`:
+
+```ts
+export { RouteTree } from "./RouteTree.js";
+```
+
+The `RouteTree` named export is **how the shell finds this game**.
+Without it, the game cannot be mounted.
+
+**Skip this step gracefully if** the shell router doesn't yet exist
+(pre-Phase-0 of `PLATFORM_REFACTOR_PLAN_v2.md`). In that case, scaffold
+the `RouteTree.tsx` with a minimal stub but do not attempt to mount —
+mounting becomes a separate iteration once `@cards/ui-shell` exists.
+
+### Step 5 — Wire into the workspace
 
 `pnpm-workspace.yaml`:
 
@@ -123,7 +173,7 @@ import "@<newgame>/app/server-adapter";
 This must come **before** the server `listen()` call so the registry
 is populated before the first connection.
 
-### Step 5 — Validate
+### Step 6 — Validate
 
 Run all four checks:
 
@@ -140,7 +190,7 @@ Run all four checks:
 If anything fails: do **not** start specialising. Fix the bootstrap
 first.
 
-### Step 6 — Iteration report
+### Step 7 — Iteration report
 
 Write `docs/iterations/iteration-NNN-<newgame>-baseline-report.md`
 per `PLAYBOOK.md` template. Highlight:
@@ -152,7 +202,7 @@ per `PLAYBOOK.md` template. Highlight:
 - The rule decisions still pending for `<newgame>` (so iteration N+1
   knows what to specialise first).
 
-### Step 7 — Define iteration N+1 and N+2
+### Step 8 — Define iteration N+1 and N+2
 
 Per the forward-planning rule. Typical N+1 is the **first
 specialisation** — e.g. for Coinche, that's "implement coinche /
@@ -195,12 +245,16 @@ Subsequent iterations follow standard `PLAYBOOK.md` discipline:
 - Decide what game to add — that's a PO decision documented in
   `VISION.md`.
 - Write the new game's `GAME_RULES.md` — that's PO + rules-research
-  work, prerequisite to bootstrap.
+  work, prerequisite to bootstrap (`game-rules-research` skill).
+- **Mount the game in the shell router** — `shell-router-integration`
+  skill. This skill scaffolds the game's `RouteTree` (Step 4) but the
+  actual lazy-import + `<Route>` registration in `@cards/ui-shell`'s
+  `PlatformRouter.tsx` is a separate concern.
 
 ## References
 
-- `docs/GAME_PACKAGE_GUIDELINE.md` §8 — the canonical bootstrap
-  recipe.
+- `docs/GAME_PACKAGE_GUIDELINE.md` §6 — URL routing & shell integration.
+- `docs/GAME_PACKAGE_GUIDELINE.md` §9 — the canonical bootstrap recipe.
 - `docs/PLATFORM_MANIFESTO.md` §5 — the no-half-built-skeleton rule
   this workflow honours.
 - `docs/PLAYBOOK.md` — iteration template + 4 checks + report
