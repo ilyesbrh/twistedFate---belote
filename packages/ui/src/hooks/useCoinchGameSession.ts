@@ -417,7 +417,9 @@ export function useCoinchGameSession(): GameSessionState {
 
   const coinchContract = round?.contract ?? null;
   const rawHand: readonly Card[] = round?.players[HUMAN]?.hand ?? [];
-  const trumpForSort: Suit | null = coinchContract?.suit ?? null;
+  // Only use the trump suit for sorting when it's a suit contract (SA/TA have no real trump)
+  const trumpForSort: Suit | null =
+    coinchContract?.contractType === "suit" ? coinchContract.suit : null;
   const DEFAULT_SUIT_ORDER: readonly Suit[] = ["hearts", "spades", "diamonds", "clubs"];
 
   const suitRank = (suit: Suit): number => {
