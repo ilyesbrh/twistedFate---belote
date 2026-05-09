@@ -50,6 +50,13 @@ temp/
 # Legacy iteration screenshots from the deleted/rebuilt UI track
 packages/ui/e2e/screenshots/
 
+# Root-level debug screenshots
+*.png
+!e2e/baseline/*.png
+
+# Claude worktrees
+.claude/worktrees/
+
 # Local SQLite database (created at runtime; mounted as a docker volume in prod)
 data/
 *.db
