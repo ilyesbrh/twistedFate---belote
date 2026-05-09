@@ -359,6 +359,194 @@ describe("calculateRoundScore — belote bonus unaffected by coinche level", () 
   });
 });
 
+// ── SA/TA contract scoring ──────────────────────────────────────────────────
+
+function saContract(value: BidValue, bidder: PlayerPosition, level: 1 | 2 | 4 = 1): Contract {
+  return Object.freeze({
+    id: idGen.generateId("contract"),
+    suit: "hearts" as Suit, // sentinel — no trump for SA
+    value,
+    bidderPosition: bidder,
+    coincheLevel: level,
+    contractType: "sans-atout" as const,
+    isCapot: false,
+  });
+}
+
+function taContract(value: BidValue, bidder: PlayerPosition, level: 1 | 2 | 4 = 1): Contract {
+  return Object.freeze({
+    id: idGen.generateId("contract"),
+    suit: "hearts" as Suit, // sentinel — all suits trump for TA
+    value,
+    bidderPosition: bidder,
+    coincheLevel: level,
+    contractType: "tout-atout" as const,
+    isCapot: false,
+  });
+}
+
+function saTrick(
+  cards: Array<{ suit: Suit; rank: Rank; pos: PlayerPosition }>,
+  winner: PlayerPosition,
+): Trick {
+  const played: PlayedCard[] = cards.map((e) =>
+    Object.freeze({ card: card(e.suit, e.rank), playerPosition: e.pos }),
+  );
+  return Object.freeze({
+    id: idGen.generateId("trick"),
+    leadingPlayerPosition: cards[0]!.pos,
+    trumpSuit: "hearts" as Suit,
+    contractType: "sans-atout" as const,
+    isCapot: false,
+    cards: Object.freeze(played),
+    state: "completed" as const,
+    winnerPosition: winner,
+  });
+}
+
+// SA scoring: Ace=19, 10=10, K=4, Q=3, J=0, 9=0, 8=0, 7=0
+// 4 aces (76) + 4 tens (40) + 4 kings (16) + 4 queens (12) = 144 total for SA
+// Last trick bonus: 10
+// 144 + 10 = 154 total for SA → but wait, TOTAL_CARD_POINTS is 152 for SA? Let me check…
+// Actually SA deck total: sum all cards with SA points = 4×19 + 4×10 + 4×4 + 4×3 = 76+40+16+12 = 144
+// + last trick bonus 10 = 154 total
+
+// SA round template:
+// T0: A♥(19)+A♠(19)+A♦(19)+A♣(19) = 76
+// T1: 10♥(10)+10♠(10)+10♦(10)+10♣(10) = 40
+// T2: K♥(4)+K♠(4)+K♦(4)+K♣(4) = 16
+// T3: Q♥(3)+Q♠(3)+Q♦(3)+Q♣(3) = 12
+// T4: J♥(0)+J♠(0)+J♦(0)+J♣(0) = 0
+// T5: 9♥(0)+9♠(0)+9♦(0)+9♣(0) = 0
+// T6: 8♥(0)+8♠(0)+8♦(0)+8♣(0) = 0
+// T7: 7♥(0)+7♠(0)+7♦(0)+7♣(0) = 0
+// SA total: 144 points
+
+const SA_TRICK_TEMPLATE: Array<Array<{ suit: Suit; rank: Rank; pos: PlayerPosition }>> = [
+  [
+    { suit: "hearts", rank: "ace", pos: 0 },
+    { suit: "spades", rank: "ace", pos: 1 },
+    { suit: "diamonds", rank: "ace", pos: 2 },
+    { suit: "clubs", rank: "ace", pos: 3 },
+  ],
+  [
+    { suit: "hearts", rank: "10", pos: 0 },
+    { suit: "spades", rank: "10", pos: 1 },
+    { suit: "diamonds", rank: "10", pos: 2 },
+    { suit: "clubs", rank: "10", pos: 3 },
+  ],
+  [
+    { suit: "hearts", rank: "king", pos: 0 },
+    { suit: "spades", rank: "king", pos: 1 },
+    { suit: "diamonds", rank: "king", pos: 2 },
+    { suit: "clubs", rank: "king", pos: 3 },
+  ],
+  [
+    { suit: "hearts", rank: "queen", pos: 0 },
+    { suit: "spades", rank: "queen", pos: 1 },
+    { suit: "diamonds", rank: "queen", pos: 2 },
+    { suit: "clubs", rank: "queen", pos: 3 },
+  ],
+  [
+    { suit: "hearts", rank: "jack", pos: 0 },
+    { suit: "spades", rank: "jack", pos: 1 },
+    { suit: "diamonds", rank: "jack", pos: 2 },
+    { suit: "clubs", rank: "jack", pos: 3 },
+  ],
+  [
+    { suit: "hearts", rank: "9", pos: 0 },
+    { suit: "spades", rank: "9", pos: 1 },
+    { suit: "diamonds", rank: "9", pos: 2 },
+    { suit: "clubs", rank: "9", pos: 3 },
+  ],
+  [
+    { suit: "hearts", rank: "8", pos: 0 },
+    { suit: "spades", rank: "8", pos: 1 },
+    { suit: "diamonds", rank: "8", pos: 2 },
+    { suit: "clubs", rank: "8", pos: 3 },
+  ],
+  [
+    { suit: "hearts", rank: "7", pos: 0 },
+    { suit: "spades", rank: "7", pos: 1 },
+    { suit: "diamonds", rank: "7", pos: 2 },
+    { suit: "clubs", rank: "7", pos: 3 },
+  ],
+];
+
+function saRound(winners: readonly PlayerPosition[]): Trick[] {
+  if (winners.length !== 8) throw new Error("need 8 winners");
+  return SA_TRICK_TEMPLATE.map((cards, i) => saTrick(cards, winners[i]!));
+}
+
+// SA points for each trick:
+// T0 (all aces): 4×19 = 76
+// T1 (all tens): 4×10 = 40
+// T2 (all kings): 4×4 = 16
+// T3 (all queens): 4×3 = 12
+// T4–T7: 0
+
+describe("calculateRoundScore — SA (sans-atout) contract", () => {
+  it("SA success (×1): bidder scores their rounded SA card points", () => {
+    // Bidder (pos 0, NS) wins T0–T3: 76+40+16+12 = 144 → rounded 140.
+    // Opponent wins T4–T7 (all 0s) + last-trick bonus 10.
+    const tricks = saRound([0, 0, 0, 0, 1, 1, 1, 1]);
+    const c = saContract(90, 0, 1);
+    const result = calculateRoundScore(tricks, c);
+    expect(result.contractMet).toBe(true);
+    expect(result.contractingTeamFinalScore).toBe(140); // 144 → round to 140
+    expect(result.opponentTeamFinalScore).toBe(10); // last trick bonus only
+  });
+
+  it("SA failure (×1): opponents score (contract + 160) × 1", () => {
+    // All tricks go to opponents.
+    const tricks = saRound([1, 1, 1, 1, 1, 1, 1, 1]);
+    const c = saContract(100, 0, 1);
+    const result = calculateRoundScore(tricks, c);
+    expect(result.contractMet).toBe(false);
+    expect(result.contractingTeamFinalScore).toBe(0);
+    expect(result.opponentTeamFinalScore).toBe(260); // (100 + 160) × 1
+  });
+
+  it("SA coinched failure (×2): opponents score (contract + 160) × 2", () => {
+    const tricks = saRound([1, 1, 1, 1, 1, 1, 1, 1]);
+    const c = saContract(90, 0, 2);
+    const result = calculateRoundScore(tricks, c);
+    expect(result.opponentTeamFinalScore).toBe(500); // (90 + 160) × 2
+  });
+});
+
+describe("calculateRoundScore — TA (tout-atout) contract", () => {
+  it("TA failure (×1): opponents score (contract + 160) × 1", () => {
+    // Use SA round template but with TA contract — TA uses TOUT_ATOUT_POINTS
+    // T0: 4 aces → J(0 in TA...wait. TA: J=14, 9=9, A=6, 10=5, K=3, Q=1, 8=0, 7=0
+    // T0 aces: 4×6 = 24; T1 tens: 4×5 = 20; T2 kings: 4×3 = 12; T3 queens: 4×1 = 4
+    // T4 jacks: 4×14 = 56; T5 nines: 4×9 = 36; T6 eights: 0; T7 sevens: 0
+    // Total TA: 24+20+12+4+56+36 = 152 → but TOUT_ATOUT total is 152
+    // Last trick bonus: 10 → total with bonus = 162
+    // Here all tricks go to opponents, so opponents get 152 + 10 = 162 card pts.
+    const taTrickTemplate = SA_TRICK_TEMPLATE.map((cards, i) =>
+      Object.freeze({
+        id: idGen.generateId("trick"),
+        leadingPlayerPosition: cards[0]!.pos,
+        trumpSuit: "hearts" as Suit,
+        contractType: "tout-atout" as const,
+        isCapot: false,
+        cards: Object.freeze(
+          cards.map((e) => Object.freeze({ card: card(e.suit, e.rank), playerPosition: e.pos })),
+        ),
+        state: "completed" as const,
+        winnerPosition: 1 as PlayerPosition,
+      }),
+    );
+
+    const c = taContract(100, 0, 1);
+    const result = calculateRoundScore(taTrickTemplate, c);
+    expect(result.contractMet).toBe(false);
+    expect(result.contractingTeamFinalScore).toBe(0);
+    expect(result.opponentTeamFinalScore).toBe(260); // (100 + 160) × 1
+  });
+});
+
 // Regression guard: formula clearly differs from 160-only.
 describe("calculateRoundScore — formula regression guard", () => {
   it("contract=80, coinched failure gives 480 not 320", () => {
