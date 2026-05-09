@@ -639,7 +639,7 @@ describe("getValidBids", () => {
     const gen = createIdGenerator({ seed: 101 });
     const round = createBiddingRound(0, gen);
     // Current player is position 1, no bids yet
-    // 8 values × 4 suits = 32 suit bids, 8 SA, 8 TA, 1 pass = 49
+    // 8 values × 4 suits = 32 suit bids, 8 SA, 8 TA, 4 capot, 1 pass = 53
     const validBids = getValidBids(round, 1, gen);
     const suitBids = validBids.filter((b) => b.type === "suit");
     const saBids = validBids.filter((b) => b.type === "sans-atout");
@@ -647,7 +647,9 @@ describe("getValidBids", () => {
     expect(suitBids).toHaveLength(32);
     expect(saBids).toHaveLength(8);
     expect(taBids).toHaveLength(8);
-    expect(validBids).toHaveLength(49); // 32 suit + 8 SA + 8 TA + 1 pass
+    const capotBids = validBids.filter((b) => b.type === "capot");
+    expect(capotBids).toHaveLength(4);
+    expect(validBids).toHaveLength(53); // 32 suit + 8 SA + 8 TA + 4 capot + 1 pass
   });
 
   it("should only include suit bids strictly above current highest value", () => {

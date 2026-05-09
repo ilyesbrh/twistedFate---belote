@@ -44,6 +44,7 @@ function trick(
     leadingPlayerPosition: (cards[0]?.pos ?? ("north" as PlayerPosition)) as PlayerPosition,
     trumpSuit: "hearts" as const,
     contractType: "suit" as const,
+    isCapot: false,
     cards: Object.freeze(played),
     state: "completed" as const,
     winnerPosition: winner,
@@ -64,6 +65,7 @@ function makeContract(
     bidderPosition,
     coincheLevel,
     contractType,
+    isCapot: false,
   });
 }
 
