@@ -29,6 +29,7 @@ export function GameTable({ onPlayAgain }: GameTableProps) {
 interface GameTableViewProps {
   state: GameSessionState;
   onPlayAgain: () => void;
+  onBack?: () => void;
   gameName?: string;
   gameSubtitle?: string;
   coincheBidding?: boolean;
@@ -38,6 +39,7 @@ interface GameTableViewProps {
 export function GameTableView({
   state,
   onPlayAgain,
+  onBack,
   gameName,
   gameSubtitle,
   coincheBidding = false,
@@ -216,6 +218,7 @@ export function GameTableView({
           players={state.players}
           targetScore={state.targetScore}
           onPlay={state.startGame}
+          onBack={onBack}
           gameName={gameName}
           gameSubtitle={gameSubtitle}
         />

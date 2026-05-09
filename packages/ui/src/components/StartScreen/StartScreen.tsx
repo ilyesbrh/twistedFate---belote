@@ -5,6 +5,7 @@ interface StartScreenProps {
   players: unknown[];
   targetScore: number;
   onPlay: () => void;
+  onBack?: () => void;
   gameName?: string;
   gameSubtitle?: string;
 }
@@ -12,6 +13,7 @@ interface StartScreenProps {
 export function StartScreen({
   targetScore,
   onPlay,
+  onBack,
   gameName = "Belote",
   gameSubtitle = "— Coinchée —",
 }: StartScreenProps): ReactElement {
@@ -32,6 +34,15 @@ export function StartScreen({
         >
           Play game
         </button>
+        {onBack !== undefined && (
+          <button
+            className={styles.backBtn}
+            onClick={onBack}
+            aria-label="Back"
+          >
+            ← Back
+          </button>
+        )}
       </div>
     </div>
   );

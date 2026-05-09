@@ -87,4 +87,29 @@ describe("StartScreen", () => {
     await user.click(screen.getByRole("button", { name: /play game/i }));
     expect(onPlay).toHaveBeenCalledTimes(1);
   });
+
+  describe("optional back button", () => {
+    it("does not show a back button when onBack is not provided", () => {
+      renderStartScreen();
+      expect(screen.queryByRole("button", { name: /back/i })).not.toBeInTheDocument();
+    });
+
+    it("shows a back button when onBack is provided", () => {
+      const onBack = vi.fn();
+      render(
+        <StartScreen players={PLAYERS} targetScore={501} onPlay={vi.fn()} onBack={onBack} />,
+      );
+      expect(screen.getByRole("button", { name: /back/i })).toBeInTheDocument();
+    });
+
+    it("calls onBack when the back button is clicked", async () => {
+      const user = userEvent.setup();
+      const onBack = vi.fn();
+      render(
+        <StartScreen players={PLAYERS} targetScore={501} onPlay={vi.fn()} onBack={onBack} />,
+      );
+      await user.click(screen.getByRole("button", { name: /back/i }));
+      expect(onBack).toHaveBeenCalledTimes(1);
+    });
+  });
 });

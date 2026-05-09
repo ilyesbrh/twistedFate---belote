@@ -12,6 +12,7 @@ export function CoinchGameTable({ onPlayAgain }: CoinchGameTableProps): ReactEle
     <GameTableView
       state={state}
       onPlayAgain={onPlayAgain}
+      onBack={onPlayAgain}
       gameName="Coinche"
       gameSubtitle="SA · TA · Coinché"
       coincheBidding
