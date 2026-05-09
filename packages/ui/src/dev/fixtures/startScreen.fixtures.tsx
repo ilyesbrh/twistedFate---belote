@@ -18,4 +18,19 @@ export const startScreenFixtures: readonly Fixture[] = [
     group: "StartScreen",
     render: () => <StartScreen players={[]} targetScore={301} onPlay={noop} />,
   },
+  {
+    id: "start-screen-coinche",
+    title: "Coinche variant (1000 pts, with back button)",
+    group: "StartScreen",
+    render: () => (
+      <StartScreen
+        players={[]}
+        targetScore={1000}
+        onPlay={noop}
+        onBack={noop}
+        gameName="Coinche"
+        gameSubtitle="SA · TA · Coinché"
+      />
+    ),
+  },
 ];
