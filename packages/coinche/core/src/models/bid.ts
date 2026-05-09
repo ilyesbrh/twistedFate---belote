@@ -4,7 +4,14 @@ import { ALL_SUITS } from "./card.js";
 import type { PlayerPosition } from "./player.js";
 import { getNextPlayerPosition, isOnSameTeam } from "./player-helpers.js";
 
-export type BidType = "pass" | "suit" | "sans-atout" | "tout-atout" | "coinche" | "surcoinche";
+export type BidType =
+  | "pass"
+  | "suit"
+  | "sans-atout"
+  | "tout-atout"
+  | "capot"
+  | "coinche"
+  | "surcoinche";
 
 export type BiddingState = "in_progress" | "completed" | "all_passed";
 
@@ -38,6 +45,7 @@ export interface Contract {
   readonly bidderPosition: PlayerPosition;
   readonly coincheLevel: 1 | 2 | 4;
   readonly contractType: ContractType;
+  readonly isCapot: boolean;
 }
 
 // ── Helpers (re-exported from shared module) ──
@@ -96,6 +104,20 @@ export function createToutAtoutBid(
     playerPosition,
     value,
     suit: null,
+  });
+}
+
+export function createCapotBid(
+  playerPosition: PlayerPosition,
+  suit: Suit,
+  idGenerator: IdGenerator,
+): Bid {
+  return Object.freeze({
+    id: idGenerator.generateId("bid"),
+    type: "capot" as const,
+    playerPosition,
+    value: null,
+    suit,
   });
 }
 
@@ -206,6 +228,14 @@ export function isValidBid(round: BiddingRound, bid: Bid): boolean {
       return true;
     }
 
+    case "capot": {
+      // Capot requires a suit — always valid when bidding is open and not post-coinche
+      if (bid.suit === null) {
+        return false;
+      }
+      return true;
+    }
+
     case "coinche": {
       if (round.highestBid === null) {
         return false;
@@ -262,6 +292,14 @@ export function getValidBids(
     }
   }
 
+  // Try capot (one per suit — bidder names the trump suit)
+  for (const suit of ALL_SUITS) {
+    const capotBid = createCapotBid(playerPosition, suit, idGenerator);
+    if (isValidBid(biddingRound, capotBid)) {
+      validBids.push(capotBid);
+    }
+  }
+
   // Try coinche
   const coincheBid = createCoincheBid(playerPosition, idGenerator);
   if (isValidBid(biddingRound, coincheBid)) {
@@ -302,6 +340,11 @@ export function placeBid(round: BiddingRound, bid: Bid): BiddingRound {
     case "tout-atout":
       newHighestBid = bid;
       newConsecutivePasses = 0;
+      break;
+    case "capot":
+      newHighestBid = bid;
+      newConsecutivePasses = 0;
+      newState = "completed";
       break;
     case "coinche":
       newCoinched = true;
@@ -364,7 +407,11 @@ export function getContract(round: BiddingRound, idGenerator: IdGenerator): Cont
   if (highestBid === null) {
     throw new Error("Cannot extract contract: no highest bid found");
   }
-  if (highestBid.value === null) {
+
+  const isCapot = highestBid.type === "capot";
+
+  // Capot bids have no value; non-capot bids must have a value.
+  if (!isCapot && highestBid.value === null) {
     throw new Error("Cannot extract contract: highest bid has no value");
   }
 
@@ -375,10 +422,10 @@ export function getContract(round: BiddingRound, idGenerator: IdGenerator): Cont
         ? "tout-atout"
         : "suit";
 
-  // For SA/TA bids suit is null; use "hearts" as sentinel (scoring ignores it for SA/TA).
+  // Capot and suit bids both declare a trump suit.
   const suit: Suit = highestBid.suit ?? "hearts";
 
-  if (contractType === "suit" && highestBid.suit === null) {
+  if (contractType === "suit" && !isCapot && highestBid.suit === null) {
     throw new Error("Cannot extract contract: suit bid has no suit");
   }
 
@@ -389,12 +436,16 @@ export function getContract(round: BiddingRound, idGenerator: IdGenerator): Cont
     coincheLevel = 2;
   }
 
+  // Capot uses 160 as a sentinel value (not used for scoring).
+  const value: BidValue = isCapot ? 160 : (highestBid.value as BidValue);
+
   return Object.freeze({
     id: idGenerator.generateId("contract"),
     suit,
-    value: highestBid.value,
+    value,
     bidderPosition: highestBid.playerPosition,
     coincheLevel,
     contractType,
+    isCapot,
   });
 }

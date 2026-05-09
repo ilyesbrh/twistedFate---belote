@@ -49,6 +49,7 @@ function makeTrick(
     leadingPlayerPosition: cards[0]!.position,
     trumpSuit,
     contractType: "suit" as const,
+    isCapot: false,
     cards: Object.freeze(playedCards),
     state: "completed" as const,
     winnerPosition,
@@ -62,6 +63,7 @@ function makeInProgressTrick(trumpSuit: Suit): Trick {
     leadingPlayerPosition: 0 as PlayerPosition,
     trumpSuit,
     contractType: "suit" as const,
+    isCapot: false,
     cards: Object.freeze([]),
     state: "in_progress" as const,
     winnerPosition: null,
@@ -82,6 +84,7 @@ function makeContract(
     bidderPosition,
     coincheLevel,
     contractType: "suit" as const,
+    isCapot: false,
   });
 }
 

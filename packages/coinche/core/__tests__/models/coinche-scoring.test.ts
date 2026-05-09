@@ -51,6 +51,7 @@ function trick(
     leadingPlayerPosition: cards[0]!.pos,
     trumpSuit,
     contractType: "suit" as const,
+    isCapot: false,
     cards: Object.freeze(played),
     state: "completed" as const,
     winnerPosition: winner,
@@ -70,6 +71,7 @@ function contract(
     bidderPosition: bidder,
     coincheLevel: level,
     contractType: "suit" as const,
+    isCapot: false,
   });
 }
 

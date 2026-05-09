@@ -163,10 +163,62 @@ export function detectBeloteRebelote(
   return "opponent";
 }
 
+// ── contractingTeamWonAllTricks helper ──
+
+function contractingTeamWonAllTricks(
+  tricks: readonly Trick[],
+  bidderPosition: PlayerPosition,
+): boolean {
+  return (
+    tricks.length === 8 &&
+    tricks.every((t) => t.winnerPosition !== null && isOnSameTeam(t.winnerPosition, bidderPosition))
+  );
+}
+
 // ── calculateRoundScore ──
 
 export function calculateRoundScore(tricks: readonly Trick[], contract: Contract): RoundScore {
   const trumpSuit = contract.contractType === "suit" ? contract.suit : null;
+
+  // ── Announced capot scoring ──
+  if (contract.isCapot) {
+    const { contractingTeamPoints, opponentTeamPoints } = calculateTeamPoints(
+      tricks,
+      trumpSuit,
+      contract.contractType,
+      contract.bidderPosition,
+    );
+
+    const capotMade = contractingTeamWonAllTricks(tricks, contract.bidderPosition);
+    const baseScore = 500;
+    const multipliedScore = baseScore * contract.coincheLevel;
+
+    const contractingTeamScore = capotMade ? multipliedScore : 0;
+    const opponentTeamScore = capotMade ? 0 : multipliedScore;
+
+    const beloteBonusTeam =
+      trumpSuit !== null ? detectBeloteRebelote(tricks, trumpSuit, contract.bidderPosition) : null;
+
+    const contractingTeamFinalScore =
+      contractingTeamScore + (beloteBonusTeam === "contracting" ? BELOTE_BONUS : 0);
+    const opponentTeamFinalScore =
+      opponentTeamScore + (beloteBonusTeam === "opponent" ? BELOTE_BONUS : 0);
+
+    return Object.freeze({
+      contractingTeamPoints,
+      opponentTeamPoints,
+      contractingTeamRoundedPoints: roundToNearestTen(contractingTeamPoints),
+      opponentTeamRoundedPoints: roundToNearestTen(opponentTeamPoints),
+      contractMet: capotMade,
+      contractingTeamScore,
+      opponentTeamScore,
+      beloteBonusTeam,
+      contractingTeamFinalScore,
+      opponentTeamFinalScore,
+    });
+  }
+
+  // ── Regular contract scoring ──
   const { contractingTeamPoints, opponentTeamPoints } = calculateTeamPoints(
     tricks,
     trumpSuit,
@@ -191,16 +243,19 @@ export function calculateRoundScore(tricks: readonly Trick[], contract: Contract
   let opponentTeamScore: number;
 
   // Coinche payout formula: (contract.value + 160) × level.
-  // Applies to: all failures (any level) and coinched/surcoinched successes (×2 / ×4).
-  // Plain success (×1) keeps card-based scoring.
   const coinchePayout = (contract.value + FAILED_CONTRACT_POINTS) * contract.coincheLevel;
 
   if (contractMet) {
     if (contract.coincheLevel === 1) {
-      contractingTeamScore = contractingTeamRoundedPoints;
-      opponentTeamScore = opponentTeamRoundedPoints;
+      // Unannounced capot bonus: bidder wins all 8 tricks → score = 250 + bid value
+      if (contractingTeamWonAllTricks(tricks, contract.bidderPosition)) {
+        contractingTeamScore = 250 + contract.value;
+        opponentTeamScore = 0;
+      } else {
+        contractingTeamScore = contractingTeamRoundedPoints;
+        opponentTeamScore = opponentTeamRoundedPoints;
+      }
     } else {
-      // Coinched/surcoinched success: winner takes (contract + 160) × level, loser 0.
       contractingTeamScore = coinchePayout;
       opponentTeamScore = 0;
     }

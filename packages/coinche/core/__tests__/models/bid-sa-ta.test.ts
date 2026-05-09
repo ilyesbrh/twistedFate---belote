@@ -240,6 +240,7 @@ describe("calculateRoundScore with SA contract from getContract", () => {
           leadingPlayerPosition: 1 as PlayerPosition,
           trumpSuit: "hearts" as Suit,
           contractType: "sans-atout" as const,
+          isCapot: false,
           cards: Object.freeze(played),
           state: "completed" as const,
           winnerPosition: 1 as PlayerPosition,

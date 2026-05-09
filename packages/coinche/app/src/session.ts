@@ -25,6 +25,7 @@ import {
   createSuitBid,
   createSansAtoutBid,
   createToutAtoutBid,
+  createCapotBid,
   createCoincheBid,
   createSurcoincheBid,
   getNextPlayerPosition,
@@ -266,7 +267,7 @@ export class GameSession {
 
   private _createBid(
     playerPosition: PlayerPosition,
-    bidType: "pass" | "suit" | "sans-atout" | "tout-atout" | "coinche" | "surcoinche",
+    bidType: "pass" | "suit" | "sans-atout" | "tout-atout" | "capot" | "coinche" | "surcoinche",
     value: BidValue | undefined,
     suit: Suit | undefined,
   ): ReturnType<typeof createPassBid> {
@@ -290,6 +291,12 @@ export class GameSession {
           throw new Error("Tout-atout bid requires a value");
         }
         return createToutAtoutBid(playerPosition, value, this._idGenerator);
+      }
+      case "capot": {
+        if (suit === undefined) {
+          throw new Error("Capot bid requires a suit");
+        }
+        return createCapotBid(playerPosition, suit, this._idGenerator);
       }
       case "coinche":
         return createCoincheBid(playerPosition, this._idGenerator);

@@ -27,6 +27,7 @@ export {
   createSuitBid,
   createSansAtoutBid,
   createToutAtoutBid,
+  createCapotBid,
   createCoincheBid,
   createSurcoincheBid,
   createBiddingRound,
