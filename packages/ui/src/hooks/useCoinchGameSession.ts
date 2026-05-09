@@ -206,7 +206,7 @@ function coinchEventToMessage(
 
 export function useCoinchGameSession(): GameSessionState {
   const sessionRef = useRef(
-    new GameSession({ playerTypes: ["human", "ai", "ai", "ai"], stepDelayMs: 3000 }),
+    new GameSession({ playerTypes: ["human", "ai", "ai", "ai"], stepDelayMs: 1500 }),
   );
   const [rev, setRev] = useState(0);
   const [isDealing, setIsDealing] = useState(false);
