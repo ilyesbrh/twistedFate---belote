@@ -53,11 +53,7 @@ describe("CoinchBidPanel — SA (sans-atout) tab", () => {
     const user = userEvent.setup();
     const onBid = vi.fn();
     render(
-      <CoinchBidPanel
-        biddingRound={makeBiddingRound()}
-        validBidValues={[90, 100]}
-        onBid={onBid}
-      />,
+      <CoinchBidPanel biddingRound={makeBiddingRound()} validBidValues={[90, 100]} onBid={onBid} />,
     );
     await user.click(screen.getByRole("button", { name: /sans-atout/i }));
     await user.click(screen.getByRole("button", { name: /bid 90 points/i }));
@@ -82,11 +78,7 @@ describe("CoinchBidPanel — TA (tout-atout) tab", () => {
     const user = userEvent.setup();
     const onBid = vi.fn();
     render(
-      <CoinchBidPanel
-        biddingRound={makeBiddingRound()}
-        validBidValues={[90, 100]}
-        onBid={onBid}
-      />,
+      <CoinchBidPanel biddingRound={makeBiddingRound()} validBidValues={[90, 100]} onBid={onBid} />,
     );
     await user.click(screen.getByRole("button", { name: /tout-atout/i }));
     await user.click(screen.getByRole("button", { name: /bid 100 points/i }));

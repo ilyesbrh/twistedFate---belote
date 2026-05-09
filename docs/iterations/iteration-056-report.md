@@ -10,6 +10,7 @@ yet — pure model only.
 ## What was done
 
 ### New file
+
 - `packages/coinche/core/src/models/announcements.ts`
   - `ANNOUNCEMENT_ORDER` constant: A>K>Q>J>10>9>8>7
   - `announcementRank()`, `sequencePoints()`, `carrePoints()` internal helpers
@@ -22,23 +23,25 @@ yet — pure model only.
   - `calculateAnnouncementTotal(announcements)`: sum of points
 
 ### Modified files
+
 - `packages/coinche/core/src/models/index.ts`: exports all announcement
   types and functions
 - `packages/coinche/core/src/index.ts`: re-exports from models index
 
 ### Tests
+
 - `packages/coinche/core/__tests__/models/announcements.test.ts`: 21 tests
   (20 as specified + 1 edge case for empty calculateAnnouncementTotal)
   — all GREEN
 
 ## 4 checks
 
-| Check | Status |
-|-------|--------|
-| `pnpm test` | 2043 / 2043 passed |
-| `pnpm typecheck` | clean |
-| `pnpm lint` | clean (delta-zero on new files) |
-| `pnpm format:check` | clean |
+| Check               | Status                          |
+| ------------------- | ------------------------------- |
+| `pnpm test`         | 2043 / 2043 passed              |
+| `pnpm typecheck`    | clean                           |
+| `pnpm lint`         | clean (delta-zero on new files) |
+| `pnpm format:check` | clean                           |
 
 ## Forward planning
 

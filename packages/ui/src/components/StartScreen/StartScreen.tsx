@@ -35,11 +35,7 @@ export function StartScreen({
           Play game
         </button>
         {onBack !== undefined && (
-          <button
-            className={styles.backBtn}
-            onClick={onBack}
-            aria-label="Back"
-          >
+          <button className={styles.backBtn} onClick={onBack} aria-label="Back">
             ← Back
           </button>
         )}

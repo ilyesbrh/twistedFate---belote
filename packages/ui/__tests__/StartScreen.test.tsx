@@ -96,18 +96,14 @@ describe("StartScreen", () => {
 
     it("shows a back button when onBack is provided", () => {
       const onBack = vi.fn();
-      render(
-        <StartScreen players={PLAYERS} targetScore={501} onPlay={vi.fn()} onBack={onBack} />,
-      );
+      render(<StartScreen players={PLAYERS} targetScore={501} onPlay={vi.fn()} onBack={onBack} />);
       expect(screen.getByRole("button", { name: /back/i })).toBeInTheDocument();
     });
 
     it("calls onBack when the back button is clicked", async () => {
       const user = userEvent.setup();
       const onBack = vi.fn();
-      render(
-        <StartScreen players={PLAYERS} targetScore={501} onPlay={vi.fn()} onBack={onBack} />,
-      );
+      render(<StartScreen players={PLAYERS} targetScore={501} onPlay={vi.fn()} onBack={onBack} />);
       await user.click(screen.getByRole("button", { name: /back/i }));
       expect(onBack).toHaveBeenCalledTimes(1);
     });

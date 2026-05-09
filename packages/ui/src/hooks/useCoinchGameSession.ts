@@ -334,10 +334,12 @@ export function useCoinchGameSession(): GameSessionState {
           announcementWinner?: "ns" | "ew" | null;
           announcementPoints?: number;
         };
-        const rc = event.round.contract as unknown as (Contract & {
-          contractType?: "suit" | "sans-atout" | "tout-atout";
-          isCapot?: boolean;
-        }) | null;
+        const rc = event.round.contract as unknown as
+          | (Contract & {
+              contractType?: "suit" | "sans-atout" | "tout-atout";
+              isCapot?: boolean;
+            })
+          | null;
         setTimeout((): void => {
           setLastRoundResult({
             wasCancelled: false,

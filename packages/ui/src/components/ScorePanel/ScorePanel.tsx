@@ -79,8 +79,18 @@ export function ScorePanel({
       )}
 
       {/* Trump suit icon — replaced with SA/TA/Cap for Coinche special contracts */}
-      <span className={`${styles.trump} ${isRedSuit && !isSA && !isTA ? styles.trumpRed : styles.trumpBlack}`}>
-        {isCapot ? "Cap" : isSA ? "SA" : isTA ? "TA" : trumpSuit !== undefined ? SUIT_SYMBOLS[trumpSuit] : "—"}
+      <span
+        className={`${styles.trump} ${isRedSuit && !isSA && !isTA ? styles.trumpRed : styles.trumpBlack}`}
+      >
+        {isCapot
+          ? "Cap"
+          : isSA
+            ? "SA"
+            : isTA
+              ? "TA"
+              : trumpSuit !== undefined
+                ? SUIT_SYMBOLS[trumpSuit]
+                : "—"}
       </span>
 
       {/* Coinche level badge */}

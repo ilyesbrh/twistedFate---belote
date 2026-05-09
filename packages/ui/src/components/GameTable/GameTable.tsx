@@ -53,10 +53,12 @@ export function GameTableView({
 
   const active = state.activePosition;
   const showBid = state.phase === "bidding" && state.isMyTurn && state.biddingRound !== null;
-  const extContract = state.contract as (typeof state.contract & {
-    contractType?: "suit" | "sans-atout" | "tout-atout";
-    isCapot?: boolean;
-  }) | null;
+  const extContract = state.contract as
+    | (typeof state.contract & {
+        contractType?: "suit" | "sans-atout" | "tout-atout";
+        isCapot?: boolean;
+      })
+    | null;
   const contractInfo = extContract
     ? {
         suit: extContract.suit,

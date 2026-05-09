@@ -34,11 +34,11 @@
 
 ## 4 Checks
 
-| Check | Result |
-|-------|--------|
-| `pnpm test` | 2059 / 2059 passed |
-| `pnpm typecheck` | Clean |
-| `pnpm lint` | Clean (delta = 0 new errors) |
+| Check               | Result                                                                         |
+| ------------------- | ------------------------------------------------------------------------------ |
+| `pnpm test`         | 2059 / 2059 passed                                                             |
+| `pnpm typecheck`    | Clean                                                                          |
+| `pnpm lint`         | Clean (delta = 0 new errors)                                                   |
 | `pnpm format:check` | Clean for modified files (4 pre-existing markdown warnings from iters 054/056) |
 
 ## Key design notes

@@ -17,12 +17,15 @@ per `docs/games/coinche/GAME_RULES.md` §8.
 - `calculateAnnouncementTotal(announcements)` — sums announcement points
 
 ### Modified: `packages/coinche/core/src/models/index.ts`
+
 Export all announcement types and functions.
 
 ### Modified: `packages/coinche/core/src/index.ts`
+
 Re-export from models index.
 
 ### New: `packages/coinche/core/__tests__/models/announcements.test.ts`
+
 20 tests covering all detection, comparison, and winner-resolution cases.
 
 ## Out of scope
