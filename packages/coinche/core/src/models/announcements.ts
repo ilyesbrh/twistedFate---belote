@@ -68,23 +68,25 @@ export function findAnnouncements(hand: readonly Card[]): Announcement[] {
     let runStart = 0;
     while (runStart < sorted.length) {
       let runEnd = runStart;
-      while (
-        runEnd + 1 < sorted.length &&
-        announcementRank(sorted[runStart + (runEnd - runStart)]!.rank) -
-          announcementRank(sorted[runEnd + 1]!.rank) ===
-          1
-      ) {
+      while (runEnd + 1 < sorted.length) {
+        const current = sorted[runEnd];
+        const next = sorted[runEnd + 1];
+        if (current === undefined || next === undefined) break;
+        if (announcementRank(current.rank) - announcementRank(next.rank) !== 1) break;
         runEnd++;
       }
       const runLength = runEnd - runStart + 1;
       if (runLength >= 3) {
-        announcements.push({
-          kind: "sequence",
-          length: runLength,
-          suit,
-          highCard: sorted[runStart]!.rank,
-          points: sequencePoints(runLength),
-        });
+        const highCardEntry = sorted[runStart];
+        if (highCardEntry !== undefined) {
+          announcements.push({
+            kind: "sequence",
+            length: runLength,
+            suit,
+            highCard: highCardEntry.rank,
+            points: sequencePoints(runLength),
+          });
+        }
       }
       runStart = runEnd + 1;
     }
