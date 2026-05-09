@@ -6,18 +6,56 @@ import styles from "./PlayerAvatar.module.css";
 
 type AvatarSize = "lg" | "md" | "sm";
 
+type ContractInfo = {
+  suit: Suit;
+  value: number;
+  contractType?: "suit" | "sans-atout" | "tout-atout";
+  isCapot?: boolean;
+};
+
+function ContractStamp({ info }: { info: ContractInfo }): ReactElement {
+  const isSA = info.contractType === "sans-atout";
+  const isTA = info.contractType === "tout-atout";
+  const isCap = info.isCapot === true;
+  const isRed = isRedSuit(info.suit);
+  const label = isCap ? "Capot" : isSA ? "SA" : isTA ? "TA" : String(info.value);
+  const titleText = isCap
+    ? "Capot"
+    : isSA
+      ? `SA ${String(info.value)}`
+      : isTA
+        ? `TA ${String(info.value)}`
+        : `${String(info.value)} ${SUIT_GLYPH[info.suit]}`;
+
+  return (
+    <span
+      className={`${styles.contractStamp} ${styles.contractStampRich} ${
+        isRed && !isSA && !isTA ? styles.contractStampRed : ""
+      }`}
+      aria-label={`Contract holder — ${label} ${info.suit}`}
+      title={`Contract: ${titleText}`}
+    >
+      {isCap ? (
+        <span className={styles.contractSuit}>Capot</span>
+      ) : isSA ? (
+        <span className={styles.contractSuit}>SA</span>
+      ) : isTA ? (
+        <span className={styles.contractSuit}>TA</span>
+      ) : (
+        <span className={styles.contractSuit}>{SUIT_GLYPH[info.suit]}</span>
+      )}
+      {!isCap && <span className={styles.contractValue}>{info.value}</span>}
+    </span>
+  );
+}
+
 interface PlayerAvatarProps {
   player: PlayerData;
   size?: AvatarSize;
   isActive?: boolean;
   isContractHolder?: boolean;
   /** When set + isContractHolder, the stamp shows the suit + value instead of a generic ★. */
-  contractInfo?: {
-    suit: Suit;
-    value: number;
-    contractType?: "suit" | "sans-atout" | "tout-atout";
-    isCapot?: boolean;
-  } | null;
+  contractInfo?: ContractInfo | null;
   bubbleMessage?: GameMessage | null;
 }
 
@@ -79,32 +117,9 @@ export function PlayerAvatar({
           </span>
         )}
         {isContractHolder &&
-          (contractInfo !== null ? (() => {
-            const isSA = contractInfo?.contractType === "sans-atout";
-            const isTA = contractInfo?.contractType === "tout-atout";
-            const isCap = contractInfo?.isCapot === true;
-            const isRed = isRedSuit(contractInfo.suit);
-            return (
-              <span
-                className={`${styles.contractStamp} ${styles.contractStampRich} ${
-                  isRed && !isSA && !isTA ? styles.contractStampRed : ""
-                }`}
-                aria-label={`Contract holder — ${isCap ? "Capot" : isSA ? "SA" : isTA ? "TA" : String(contractInfo.value)} ${contractInfo.suit}`}
-                title={`Contract: ${isCap ? "Capot" : isSA ? `SA ${String(contractInfo.value)}` : isTA ? `TA ${String(contractInfo.value)}` : `${String(contractInfo.value)} ${SUIT_GLYPH[contractInfo.suit]}`}`}
-              >
-                {isCap ? (
-                  <span className={styles.contractSuit}>Capot</span>
-                ) : isSA ? (
-                  <span className={styles.contractSuit}>SA</span>
-                ) : isTA ? (
-                  <span className={styles.contractSuit}>TA</span>
-                ) : (
-                  <span className={styles.contractSuit}>{SUIT_GLYPH[contractInfo.suit]}</span>
-                )}
-                {!isCap && <span className={styles.contractValue}>{contractInfo.value}</span>}
-              </span>
-            );
-          })() : (
+          (contractInfo !== null ? (
+            <ContractStamp info={contractInfo} />
+          ) : (
             <span
               className={styles.contractStamp}
               aria-label="Contract holder"
