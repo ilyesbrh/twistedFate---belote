@@ -4,13 +4,21 @@ import {
   getCardRankOrder,
   getCoincheCardPoints,
   TRUMP_POINTS,
+  SANS_ATOUT_POINTS,
+  TOUT_ATOUT_POINTS,
 } from "../models/card.js";
 import { ALL_SUITS } from "../models/card.js";
 import type { PlayerPosition } from "../models/player.js";
 import type { Trick } from "../models/trick.js";
 import { getValidPlays } from "../models/trick.js";
 import type { Bid, BiddingRound } from "../models/bid.js";
-import { BID_VALUES, createPassBid, createSuitBid } from "../models/bid.js";
+import {
+  BID_VALUES,
+  createPassBid,
+  createSuitBid,
+  createSansAtoutBid,
+  createToutAtoutBid,
+} from "../models/bid.js";
 import type { BidValue } from "../models/bid.js";
 import type { Round } from "../models/round.js";
 import type { IdGenerator } from "../utils/id.js";
@@ -43,6 +51,28 @@ export function evaluateHandForSuit(hand: readonly Card[], suit: Suit): number {
   }
 
   score += trumpCount * TRUMP_LENGTH_BONUS;
+  return score;
+}
+
+/** Evaluate a hand's strength for a Sans-Atout contract.
+ *  SA rewards: Ace=19, 10=10, K=4, Q=3 — no jacks.
+ */
+export function evaluateHandForSansAtout(hand: readonly Card[]): number {
+  let score = 0;
+  for (const card of hand) {
+    score += SANS_ATOUT_POINTS[card.rank];
+  }
+  return score;
+}
+
+/** Evaluate a hand's strength for a Tout-Atout contract.
+ *  TA rewards: J=14, 9=9, A=6, 10=5, K=3, Q=1 across all suits.
+ */
+export function evaluateHandForToutAtout(hand: readonly Card[]): number {
+  let score = 0;
+  for (const card of hand) {
+    score += TOUT_ATOUT_POINTS[card.rank];
+  }
   return score;
 }
 
@@ -463,14 +493,32 @@ export function chooseBid(
 
   // Evaluate hand: find best suit
   let bestSuit: Suit | null = null;
-  let bestStrength = 0;
+  let bestSuitScore = 0;
 
   for (const suit of ALL_SUITS) {
     const strength = evaluateHandForSuit(hand, suit);
-    if (strength > bestStrength) {
-      bestStrength = strength;
+    if (strength > bestSuitScore) {
+      bestSuitScore = strength;
       bestSuit = suit;
     }
+  }
+
+  // Evaluate SA and TA
+  const saScore = evaluateHandForSansAtout(hand);
+  const taScore = evaluateHandForToutAtout(hand);
+
+  // Pick the best contract type (SA/TA must beat suit by 1.15× to be preferred)
+  type ContractChoice = "suit" | "sans-atout" | "tout-atout";
+  let contractType: ContractChoice = "suit";
+  let baseScore = bestSuitScore;
+
+  if (saScore > baseScore * 1.15) {
+    contractType = "sans-atout";
+    baseScore = saScore;
+  }
+  if (taScore > baseScore * 1.15) {
+    contractType = "tout-atout";
+    baseScore = taScore;
   }
 
   // Determine minimum bid value
@@ -491,9 +539,9 @@ export function chooseBid(
 
   // Can't bid if no valid value or hand too weak for the required bid level
   if (
-    bestSuit === null ||
+    (contractType === "suit" && bestSuit === null) ||
     minBidValue === null ||
-    bestStrength < minBidValue * BID_STRENGTH_RATIO
+    baseScore < minBidValue * BID_STRENGTH_RATIO
   ) {
     return createPassBid(playerPosition, idGenerator);
   }
@@ -501,10 +549,16 @@ export function chooseBid(
   // Find highest bid value we can support (but at least minBidValue)
   let bidValue: BidValue = minBidValue;
   for (const v of BID_VALUES) {
-    if (v >= minBidValue && v <= bestStrength) {
+    if (v >= minBidValue && v <= baseScore) {
       bidValue = v;
     }
   }
 
-  return createSuitBid(playerPosition, bidValue, bestSuit, idGenerator);
+  if (contractType === "sans-atout") {
+    return createSansAtoutBid(playerPosition, bidValue, idGenerator);
+  }
+  if (contractType === "tout-atout") {
+    return createToutAtoutBid(playerPosition, bidValue, idGenerator);
+  }
+  return createSuitBid(playerPosition, bidValue, bestSuit as Suit, idGenerator);
 }

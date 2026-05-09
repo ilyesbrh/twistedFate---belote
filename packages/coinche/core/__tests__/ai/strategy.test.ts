@@ -20,6 +20,8 @@ import {
   chooseCardForRound,
   chooseBid,
   evaluateHandForSuit,
+  evaluateHandForSansAtout,
+  evaluateHandForToutAtout,
 } from "../../src/ai/strategy.js";
 
 // ==============================================================
@@ -1047,5 +1049,210 @@ describe("chooseCard — TA contract", () => {
 
     const chosen = chooseCard(hand, t1, null, "tout-atout", 1 as PlayerPosition);
     expect(isValidPlay(t1, chosen, 1 as PlayerPosition, hand)).toBe(true);
+  });
+});
+
+// ==============================================================
+// evaluateHandForSansAtout
+// ==============================================================
+
+describe("evaluateHandForSansAtout", () => {
+  it("should score 4 aces as 76 pts (4×19)", () => {
+    const hand = [
+      card("hearts", "ace"),
+      card("spades", "ace"),
+      card("diamonds", "ace"),
+      card("clubs", "ace"),
+    ];
+    const score = evaluateHandForSansAtout(hand);
+    expect(score).toBe(76); // 4 × 19
+  });
+
+  it("should score 4 tens as 40 pts (4×10)", () => {
+    const hand = [
+      card("hearts", "10"),
+      card("spades", "10"),
+      card("diamonds", "10"),
+      card("clubs", "10"),
+    ];
+    const score = evaluateHandForSansAtout(hand);
+    expect(score).toBe(40); // 4 × 10
+  });
+
+  it("should score jacks as 0 in SA", () => {
+    const hand = [card("hearts", "jack"), card("spades", "jack")];
+    const score = evaluateHandForSansAtout(hand);
+    expect(score).toBe(0);
+  });
+
+  it("should sum SA points across all cards", () => {
+    // ace=19 + 10=10 + king=4 + queen=3 + jack=0 + 9=0 + 8=0 + 7=0
+    const hand = [
+      card("hearts", "ace"), // 19
+      card("spades", "10"), // 10
+      card("diamonds", "king"), // 4
+      card("clubs", "queen"), // 3
+      card("hearts", "jack"), // 0
+    ];
+    const score = evaluateHandForSansAtout(hand);
+    expect(score).toBe(36); // 19+10+4+3+0
+  });
+});
+
+// ==============================================================
+// evaluateHandForToutAtout
+// ==============================================================
+
+describe("evaluateHandForToutAtout", () => {
+  it("should score 4 jacks as 56 pts (4×14)", () => {
+    const hand = [
+      card("hearts", "jack"),
+      card("spades", "jack"),
+      card("diamonds", "jack"),
+      card("clubs", "jack"),
+    ];
+    const score = evaluateHandForToutAtout(hand);
+    expect(score).toBe(56); // 4 × 14
+  });
+
+  it("should score 4 nines as 36 pts (4×9)", () => {
+    const hand = [
+      card("hearts", "9"),
+      card("spades", "9"),
+      card("diamonds", "9"),
+      card("clubs", "9"),
+    ];
+    const score = evaluateHandForToutAtout(hand);
+    expect(score).toBe(36); // 4 × 9
+  });
+
+  it("should sum TA points across all cards", () => {
+    // jack=14 + 9=9 + ace=6 + 10=5 + king=3 + queen=1 + 8=0 + 7=0
+    const hand = [
+      card("hearts", "jack"), // 14
+      card("spades", "9"), // 9
+      card("diamonds", "ace"), // 6
+      card("clubs", "10"), // 5
+      card("hearts", "king"), // 3
+      card("spades", "queen"), // 1
+    ];
+    const score = evaluateHandForToutAtout(hand);
+    expect(score).toBe(38); // 14+9+6+5+3+1
+  });
+});
+
+// ==============================================================
+// chooseBid — SA/TA contract selection
+// ==============================================================
+
+describe("chooseBid — SA/TA contract selection", () => {
+  it("should bid SA when hand is full of aces and tens (SA-heavy)", () => {
+    const gen = createIdGenerator({ seed: 400 });
+    const round = createBiddingRound(0, gen);
+
+    // 4 aces (19 each) + 4 tens (10 each) = 76 + 40 = 116 SA score
+    // Best suit score: hearts has ace(11)+10(10)+length=2*5=10 → 31; clubs same → best suit ~31
+    // SA 116 >> suit 31 × 1.15 = 35.65 → SA wins
+    const hand = [
+      card("hearts", "ace"),
+      card("hearts", "10"),
+      card("spades", "ace"),
+      card("spades", "10"),
+      card("diamonds", "ace"),
+      card("diamonds", "10"),
+      card("clubs", "ace"),
+      card("clubs", "10"),
+    ];
+
+    const bid = chooseBid(hand, round, 1 as PlayerPosition, gen);
+    expect(bid.type).toBe("sans-atout");
+  });
+
+  it("should bid TA when hand is full of jacks and nines (TA-heavy)", () => {
+    const gen = createIdGenerator({ seed: 401 });
+    const round = createBiddingRound(0, gen);
+
+    // 4 jacks (14 each) + 4 nines (9 each) = 56 + 36 = 92 TA score
+    // Best suit score for hearts: J(trump=20)+9(trump=14)+length=2*5=10 → 44
+    //   SA score: jack=0+9=0 per SA → ~0 SA
+    // TA 92 >> suit 44 × 1.15 = 50.6 → TA wins
+    const hand = [
+      card("hearts", "jack"),
+      card("hearts", "9"),
+      card("spades", "jack"),
+      card("spades", "9"),
+      card("diamonds", "jack"),
+      card("diamonds", "9"),
+      card("clubs", "jack"),
+      card("clubs", "9"),
+    ];
+
+    const bid = chooseBid(hand, round, 1 as PlayerPosition, gen);
+    expect(bid.type).toBe("tout-atout");
+  });
+
+  it("should bid suit when suit score is highest (not SA or TA)", () => {
+    const gen = createIdGenerator({ seed: 402 });
+    const round = createBiddingRound(0, gen);
+
+    // Very strong hearts suit: J(20)+9(14)+A(11)+10(10)+K(4) = 59 + 5*5 = 84 trump
+    // SA: A(19)+10(10)+K(4)+Q=0+J=0 → 33 SA score (no queens here, just A+10+K+J+9)
+    //     Actually: jack=0,9=0 in SA → SA is only ace(19)+10(10)+king(4) = 33 + 2 non-trump aces×19
+    //     With spades ace and diamonds ace: SA = 19+10+0+0+4 + 19 + 19 = 71
+    // Suit: hearts = 84 + 2 aces (off-suit support) × 11 = 84 + 22 = 106
+    // TA: J(14)+9(9)+A(6)+10(5)+K(3) = 37 for hearts + spades A(6) + diamonds A(6) = 49
+    // Suit score 106 >> SA 71 × 1.15 = 81.65, TA 49 × 1.15 = 56.35 → suit wins
+    const hand = [
+      card("hearts", "jack"),
+      card("hearts", "9"),
+      card("hearts", "ace"),
+      card("hearts", "10"),
+      card("hearts", "king"),
+      card("spades", "ace"),
+      card("diamonds", "ace"),
+      card("clubs", "7"),
+    ];
+
+    const bid = chooseBid(hand, round, 1 as PlayerPosition, gen);
+    expect(bid.type).toBe("suit");
+    expect(bid.suit).toBe("hearts");
+  });
+
+  it("SA bid should be compatible with placeBid (no throw)", () => {
+    const gen = createIdGenerator({ seed: 403 });
+    const round = createBiddingRound(0, gen);
+
+    const hand = [
+      card("hearts", "ace"),
+      card("hearts", "10"),
+      card("spades", "ace"),
+      card("spades", "10"),
+      card("diamonds", "ace"),
+      card("diamonds", "10"),
+      card("clubs", "ace"),
+      card("clubs", "10"),
+    ];
+
+    const bid = chooseBid(hand, round, 1 as PlayerPosition, gen);
+    expect(() => placeBid(round, bid)).not.toThrow();
+  });
+
+  it("TA bid should be compatible with placeBid (no throw)", () => {
+    const gen = createIdGenerator({ seed: 404 });
+    const round = createBiddingRound(0, gen);
+
+    const hand = [
+      card("hearts", "jack"),
+      card("hearts", "9"),
+      card("spades", "jack"),
+      card("spades", "9"),
+      card("diamonds", "jack"),
+      card("diamonds", "9"),
+      card("clubs", "jack"),
+      card("clubs", "9"),
+    ];
+
+    const bid = chooseBid(hand, round, 1 as PlayerPosition, gen);
+    expect(() => placeBid(round, bid)).not.toThrow();
   });
 });
