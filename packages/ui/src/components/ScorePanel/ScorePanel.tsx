@@ -13,6 +13,10 @@ interface ScorePanelProps {
   contractValue?: number | null;
   /** 1 = normal, 2 = contré, 4 = surcontré. */
   contractCoincheLevel?: 1 | 2 | 4;
+  /** Coinche contract type — overrides trump suit display. */
+  contractType?: "suit" | "sans-atout" | "tout-atout";
+  /** True when the contract is an announced capot — hides the sentinel value 160. */
+  isCapot?: boolean;
 }
 
 const SUIT_SYMBOLS: Record<Suit, string> = {
@@ -33,8 +37,12 @@ export function ScorePanel({
   trumpSuit,
   contractValue = null,
   contractCoincheLevel = 1,
+  contractType,
+  isCapot = false,
 }: ScorePanelProps) {
   const isRedSuit = RED_SUITS.includes(trumpSuit);
+  const isSA = contractType === "sans-atout";
+  const isTA = contractType === "tout-atout";
   const levelLabel =
     contractCoincheLevel === 4 ? "SURCONTRE" : contractCoincheLevel === 2 ? "CONTRE" : null;
 
@@ -65,12 +73,14 @@ export function ScorePanel({
 
       <span className={styles.sep} aria-hidden="true" />
 
-      {/* Contract value */}
-      {contractValue !== null && <span className={styles.contractValue}>{contractValue}</span>}
+      {/* Contract value — hidden for capot (sentinel 160) */}
+      {contractValue !== null && !isCapot && (
+        <span className={styles.contractValue}>{contractValue}</span>
+      )}
 
-      {/* Trump suit icon */}
-      <span className={`${styles.trump} ${isRedSuit ? styles.trumpRed : styles.trumpBlack}`}>
-        {SUIT_SYMBOLS[trumpSuit]}
+      {/* Trump suit icon — replaced with SA/TA/Cap for Coinche special contracts */}
+      <span className={`${styles.trump} ${isRedSuit && !isSA && !isTA ? styles.trumpRed : styles.trumpBlack}`}>
+        {isCapot ? "Cap" : isSA ? "SA" : isTA ? "TA" : SUIT_SYMBOLS[trumpSuit]}
       </span>
 
       {/* Coinche level badge */}

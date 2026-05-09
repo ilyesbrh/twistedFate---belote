@@ -57,4 +57,30 @@ describe("ScorePanel", () => {
     render(<ScorePanel {...BASE} />);
     expect(screen.getByTestId("score-panel")).toBeInTheDocument();
   });
+
+  describe("Coinche contract type display", () => {
+    it("shows 'SA' instead of suit symbol for sans-atout contract", () => {
+      render(
+        <ScorePanel {...BASE} contractValue={90} contractType="sans-atout" />,
+      );
+      expect(screen.getByText("SA")).toBeInTheDocument();
+      expect(screen.queryByText("♥")).not.toBeInTheDocument();
+    });
+
+    it("shows 'TA' instead of suit symbol for tout-atout contract", () => {
+      render(
+        <ScorePanel {...BASE} contractValue={100} contractType="tout-atout" />,
+      );
+      expect(screen.getByText("TA")).toBeInTheDocument();
+      expect(screen.queryByText("♥")).not.toBeInTheDocument();
+    });
+
+    it("shows 'Cap' for a capot contract and does not show 160", () => {
+      render(
+        <ScorePanel {...BASE} contractValue={160} isCapot />,
+      );
+      expect(screen.getByText("Cap")).toBeInTheDocument();
+      expect(screen.queryByText("160")).not.toBeInTheDocument();
+    });
+  });
 });

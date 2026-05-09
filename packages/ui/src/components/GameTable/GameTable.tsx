@@ -87,6 +87,8 @@ export function GameTableView({
           dealerName={state.dealerName}
           contractValue={state.contract?.value ?? null}
           contractCoincheLevel={state.contract?.coincheLevel ?? 1}
+          contractType={extContract?.contractType}
+          isCapot={extContract?.isCapot}
         />
       </div>
 
