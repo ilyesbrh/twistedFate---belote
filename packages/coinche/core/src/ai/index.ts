@@ -1,1 +1,8 @@
-export { chooseCard, chooseCardForRound, chooseBid, evaluateHandForSuit } from "./strategy.js";
+export {
+  chooseCard,
+  chooseCardForRound,
+  chooseBid,
+  evaluateHandForSuit,
+  evaluateHandForSansAtout,
+  evaluateHandForToutAtout,
+} from "./strategy.js";

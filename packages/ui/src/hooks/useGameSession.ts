@@ -144,7 +144,7 @@ export interface GameSessionState {
   dispatch: (cmd: GameCommand) => void;
   playCard: (cardIndex: number) => void;
   placeBid: (
-    type: "pass" | "suit" | "sans-atout" | "tout-atout" | "coinche" | "surcoinche",
+    type: "pass" | "suit" | "sans-atout" | "tout-atout" | "capot" | "coinche" | "surcoinche",
     value?: BidValue,
     suit?: Suit,
   ) => void;

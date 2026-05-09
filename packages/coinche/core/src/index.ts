@@ -84,4 +84,11 @@ export {
 } from "./models/index.js";
 export type { AnnouncementKind, Announcement } from "./models/index.js";
 
-export { chooseCard, chooseCardForRound, chooseBid, evaluateHandForSuit } from "./ai/index.js";
+export {
+  chooseCard,
+  chooseCardForRound,
+  chooseBid,
+  evaluateHandForSuit,
+  evaluateHandForSansAtout,
+  evaluateHandForToutAtout,
+} from "./ai/index.js";
