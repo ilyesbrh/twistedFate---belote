@@ -39,6 +39,73 @@ function renderAvatar(player: PlayerData, bubbleMessage: GameMessage | null = nu
   );
 }
 
+describe("PlayerAvatar — contract stamp", () => {
+  it("shows suit glyph for normal suit contract", () => {
+    render(
+      <Theme>
+        <PlayerAvatar
+          player={makePlayer()}
+          isContractHolder
+          contractInfo={{ suit: "spades", value: 80 }}
+        />
+      </Theme>,
+    );
+    expect(screen.getByText("♠")).toBeInTheDocument();
+    expect(screen.getByText("80")).toBeInTheDocument();
+  });
+
+  it("shows 'SA' for sans-atout contract", () => {
+    render(
+      <Theme>
+        <PlayerAvatar
+          player={makePlayer()}
+          isContractHolder
+          contractInfo={{ suit: "hearts", value: 90, contractType: "sans-atout" }}
+        />
+      </Theme>,
+    );
+    expect(screen.getByText("SA")).toBeInTheDocument();
+    expect(screen.queryByText("♥")).not.toBeInTheDocument();
+  });
+
+  it("shows 'TA' for tout-atout contract", () => {
+    render(
+      <Theme>
+        <PlayerAvatar
+          player={makePlayer()}
+          isContractHolder
+          contractInfo={{ suit: "hearts", value: 100, contractType: "tout-atout" }}
+        />
+      </Theme>,
+    );
+    expect(screen.getByText("TA")).toBeInTheDocument();
+    expect(screen.queryByText("♥")).not.toBeInTheDocument();
+  });
+
+  it("shows 'Capot' for capot contract without sentinel value 160", () => {
+    render(
+      <Theme>
+        <PlayerAvatar
+          player={makePlayer()}
+          isContractHolder
+          contractInfo={{ suit: "clubs", value: 160, isCapot: true }}
+        />
+      </Theme>,
+    );
+    expect(screen.getByText("Capot")).toBeInTheDocument();
+    expect(screen.queryByText("160")).not.toBeInTheDocument();
+  });
+
+  it("shows generic star when isContractHolder but no contractInfo", () => {
+    render(
+      <Theme>
+        <PlayerAvatar player={makePlayer()} isContractHolder contractInfo={null} />
+      </Theme>,
+    );
+    expect(screen.getByText("★")).toBeInTheDocument();
+  });
+});
+
 describe("PlayerAvatar — thought bubble tooltip", () => {
   it("does not render thought bubble when bubbleMessage is null", () => {
     renderAvatar(makePlayer());

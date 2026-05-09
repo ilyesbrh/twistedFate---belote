@@ -51,8 +51,17 @@ export function GameTableView({
 
   const active = state.activePosition;
   const showBid = state.phase === "bidding" && state.isMyTurn && state.biddingRound !== null;
-  const contractInfo = state.contract
-    ? { suit: state.contract.suit, value: state.contract.value }
+  const extContract = state.contract as (typeof state.contract & {
+    contractType?: "suit" | "sans-atout" | "tout-atout";
+    isCapot?: boolean;
+  }) | null;
+  const contractInfo = extContract
+    ? {
+        suit: extContract.suit,
+        value: extContract.value,
+        contractType: extContract.contractType,
+        isCapot: extContract.isCapot,
+      }
     : null;
 
   const tableBg = `url('${import.meta.env.BASE_URL}table-paper.svg') center / cover no-repeat`;
