@@ -7,8 +7,14 @@ import {
   createPlayCardCommand,
 } from "@coinche/app";
 
-import { BID_VALUES, getValidPlays, calculateRunningPoints, getCardRankOrder } from "@coinche/core";
-import type { Card, BiddingRound as CoinchBiddingRound, Suit } from "@coinche/core";
+import {
+  BID_VALUES,
+  getValidPlays,
+  calculateRunningPoints,
+  calculateTrickPoints,
+  getCardRankOrder,
+} from "@coinche/core";
+import type { Card, BiddingRound as CoinchBiddingRound, ContractType, Suit } from "@coinche/core";
 import type {
   BiddingRound as BeloteBiddingRound,
   BidValue,
@@ -17,7 +23,8 @@ import type {
 } from "@belote/core";
 import type { CardData, PlayerData, Position, TrickCardData } from "../data/mockGame.js";
 import type { GameSessionState, LastRoundResult, BidReveal } from "./useGameSession.js";
-import type { GameMessage } from "../messages/gameMessages.js";
+import { SUIT_SYMBOLS } from "../messages/gameMessages.js";
+import type { GameMessage, ProfileLookup } from "../messages/gameMessages.js";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
@@ -82,6 +89,102 @@ const EMPTY_BUBBLES: Record<Position, GameMessage | null> = {
   east: null,
 };
 
+// ── Coinche-aware event→message ──────────────────────────────────────────────
+
+let msgCounter = 0;
+function nextMsgId(): string {
+  msgCounter += 1;
+  return `coinch-msg-${String(Date.now())}-${String(msgCounter)}`;
+}
+
+function coinchEventToMessage(
+  event: { type: string; [key: string]: unknown },
+  profiles: ProfileLookup,
+  getContractType: () => ContractType,
+): GameMessage | null {
+  if (event.type === "bid_placed") {
+    const bid = (
+      event as { bid: { type: string; playerPosition: number; value?: number; suit?: Suit } }
+    ).bid;
+    const position: Position = POS_TO_SEAT[bid.playerPosition] ?? "south";
+    const playerName = profiles[bid.playerPosition]?.name ?? "Unknown";
+    let text: string;
+    switch (bid.type) {
+      case "pass":
+        text = "Pass";
+        break;
+      case "coinche":
+        text = "Contre !";
+        break;
+      case "surcoinche":
+        text = "Surcontre !";
+        break;
+      case "sans-atout":
+        text = `SA ${String(bid.value)}`;
+        break;
+      case "tout-atout":
+        text = `TA ${String(bid.value)}`;
+        break;
+      case "suit":
+        text = `${bid.suit ? SUIT_SYMBOLS[bid.suit] : "?"} ${String(bid.value)}`;
+        break;
+      default:
+        text = "Bid";
+    }
+    return { id: nextMsgId(), position, playerName, text, type: "bid", timestamp: Date.now() };
+  }
+
+  if (event.type === "bidding_completed") {
+    const contract = (
+      event as {
+        contract: { bidderPosition: number; value: number; suit: Suit; contractType: ContractType };
+      }
+    ).contract;
+    const position: Position = POS_TO_SEAT[contract.bidderPosition] ?? "south";
+    const playerName = profiles[contract.bidderPosition]?.name ?? "Unknown";
+    let text: string;
+    if (contract.contractType === "sans-atout") text = `SA ${String(contract.value)}`;
+    else if (contract.contractType === "tout-atout") text = `TA ${String(contract.value)}`;
+    else text = `${SUIT_SYMBOLS[contract.suit]} ${String(contract.value)}`;
+    return { id: nextMsgId(), position, playerName, text, type: "contract", timestamp: Date.now() };
+  }
+
+  if (event.type === "trick_completed") {
+    const ev = event as { winnerPosition: number; trick: { trumpSuit: Suit; cards: unknown[] } };
+    const position: Position = POS_TO_SEAT[ev.winnerPosition] ?? "south";
+    const playerName = profiles[ev.winnerPosition]?.name ?? "Unknown";
+    const contractType = getContractType();
+    const pts = calculateTrickPoints(
+      ev.trick as Parameters<typeof calculateTrickPoints>[0],
+      contractType === "suit" ? ev.trick.trumpSuit : null,
+      contractType,
+    );
+    return {
+      id: nextMsgId(),
+      position,
+      playerName,
+      text: `+${String(pts)} pts`,
+      type: "trick_win",
+      timestamp: Date.now(),
+    };
+  }
+
+  if (event.type === "round_cancelled") {
+    const ev = event as { round: { dealerPosition: number } };
+    const position: Position = POS_TO_SEAT[ev.round.dealerPosition] ?? "south";
+    return {
+      id: nextMsgId(),
+      position,
+      playerName: "",
+      text: "All passed",
+      type: "round_cancelled",
+      timestamp: Date.now(),
+    };
+  }
+
+  return null;
+}
+
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useCoinchGameSession(): GameSessionState {
@@ -98,6 +201,25 @@ export function useCoinchGameSession(): GameSessionState {
   const [bidReveal, setBidReveal] = useState<BidReveal | null>(null);
   const bidRevealKey = useRef(0);
   const [delayedWinnerTeamIndex, setDelayedWinnerTeamIndex] = useState<0 | 1 | null>(null);
+  const [messages, setMessages] = useState<GameMessage[]>([]);
+  const [bubbles, setBubbles] = useState<Record<Position, GameMessage | null>>(EMPTY_BUBBLES);
+  const bubbleTimers = useRef<Record<Position, ReturnType<typeof setTimeout> | null>>({
+    south: null,
+    north: null,
+    west: null,
+    east: null,
+  });
+
+  const showBubble = useCallback((msg: GameMessage): void => {
+    const pos = msg.position;
+    const existing = bubbleTimers.current[pos];
+    if (existing !== null) clearTimeout(existing);
+    setBubbles((prev) => ({ ...prev, [pos]: msg }));
+    bubbleTimers.current[pos] = setTimeout((): void => {
+      setBubbles((prev) => ({ ...prev, [pos]: null }));
+      bubbleTimers.current[pos] = null;
+    }, 4000);
+  }, []);
 
   const dismissBidReveal = useCallback((): void => {
     setBidReveal(null);
@@ -175,11 +297,25 @@ export function useCoinchGameSession(): GameSessionState {
         }, 2500);
       }
 
+      // Generate chat message + thought bubble for every game event.
+      const getContractType = (): ContractType =>
+        (sessionRef.current.currentRound?.contract?.contractType as ContractType | undefined) ??
+        "suit";
+      const msg = coinchEventToMessage(
+        event as { type: string; [key: string]: unknown },
+        PROFILES,
+        getContractType,
+      );
+      if (msg) {
+        setMessages((prev) => [...prev, msg]);
+        showBubble(msg);
+      }
+
       setRev((r) => r + 1);
     });
 
     return unsub;
-  }, []);
+  }, [showBubble]);
 
   void rev;
 
@@ -365,8 +501,8 @@ export function useCoinchGameSession(): GameSessionState {
     validBidValues,
     contract: coinchContract as unknown as Contract | null,
     contractHolderPosition,
-    messages: [],
-    bubbles: EMPTY_BUBBLES,
+    messages,
+    bubbles,
     bidReveal,
     dismissBidReveal,
     isOnline: false,
