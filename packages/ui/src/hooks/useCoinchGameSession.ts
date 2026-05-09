@@ -329,14 +329,20 @@ export function useCoinchGameSession(): GameSessionState {
           announcementWinner?: "ns" | "ew" | null;
           announcementPoints?: number;
         };
+        const rc = event.round.contract as unknown as (Contract & {
+          contractType?: "suit" | "sans-atout" | "tout-atout";
+          isCapot?: boolean;
+        }) | null;
         setTimeout((): void => {
           setLastRoundResult({
             wasCancelled: false,
-            contract: event.round.contract as unknown as Contract | null,
+            contract: rc as unknown as Contract | null,
             bidderName: getProfile(bidderPos).name,
             roundScore: rs as unknown as RoundScore,
             announcementWinner: rs.announcementWinner,
             announcementPoints: rs.announcementPoints,
+            contractType: rc?.contractType,
+            isCapot: rc?.isCapot,
           });
         }, 2000);
       }
@@ -442,7 +448,7 @@ export function useCoinchGameSession(): GameSessionState {
     activePosition = getSeat(nextIdx);
   }
 
-  const targetScore = game?.targetScore ?? 3000;
+  const targetScore = game?.targetScore ?? 1000;
   const usTotalScore = game?.teamScores[0] ?? 0;
   const themTotalScore = game?.teamScores[1] ?? 0;
   let usScore = 0;
@@ -528,7 +534,7 @@ export function useCoinchGameSession(): GameSessionState {
     sessionRef.current.dispatch(
       createStartGameCommand(
         [getProfile(0).name, getProfile(1).name, getProfile(2).name, getProfile(3).name],
-        3000,
+        1000,
       ),
     );
     sessionRef.current.dispatch(createStartRoundCommand());

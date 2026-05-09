@@ -78,6 +78,10 @@ export interface LastRoundResult {
   announcementWinner?: "ns" | "ew" | null;
   /** Total announcement bonus points (Coinche only). */
   announcementPoints?: number;
+  /** Coinche contract type — "sans-atout" | "tout-atout" override suit display. */
+  contractType?: "suit" | "sans-atout" | "tout-atout";
+  /** True when the contract was an announced capot (Coinche only). */
+  isCapot?: boolean;
 }
 
 // ── Bid Reveal (one-shot animation when bidding closes) ──────────────────

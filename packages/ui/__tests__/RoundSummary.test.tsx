@@ -25,6 +25,8 @@ function makeNormalResult(
     beloteBonusTeam: "contracting" | "opponent" | null;
     announcementWinner: "ns" | "ew" | null;
     announcementPoints: number;
+    contractType: "suit" | "sans-atout" | "tout-atout";
+    isCapot: boolean;
   }> = {},
 ): LastRoundResult {
   const {
@@ -40,6 +42,8 @@ function makeNormalResult(
     beloteBonusTeam = null,
     announcementWinner,
     announcementPoints,
+    contractType,
+    isCapot,
   } = overrides;
 
   return {
@@ -64,6 +68,8 @@ function makeNormalResult(
     },
     announcementWinner,
     announcementPoints,
+    contractType,
+    isCapot,
   };
 }
 
@@ -166,6 +172,30 @@ describe("RoundSummary", () => {
       renderRoundSummary({ result: makeNormalResult({ coincheLevel: 1 }) });
       expect(screen.queryByText(/CONTRE/)).not.toBeInTheDocument();
       expect(screen.queryByText(/SURCONTRE/)).not.toBeInTheDocument();
+    });
+
+    it("shows 'SA' label for sans-atout contract instead of suit symbol", () => {
+      renderRoundSummary({
+        result: makeNormalResult({ suit: "hearts", contractType: "sans-atout", value: 90 }),
+      });
+      expect(screen.getByText("SA")).toBeInTheDocument();
+      // Should NOT show a suit symbol when contractType is sans-atout
+      expect(screen.queryByText("♥")).not.toBeInTheDocument();
+    });
+
+    it("shows 'TA' label for tout-atout contract instead of suit symbol", () => {
+      renderRoundSummary({
+        result: makeNormalResult({ suit: "hearts", contractType: "tout-atout", value: 100 }),
+      });
+      expect(screen.getByText("TA")).toBeInTheDocument();
+      expect(screen.queryByText("♥")).not.toBeInTheDocument();
+    });
+
+    it("shows 'Capot' label for capot contract", () => {
+      renderRoundSummary({
+        result: makeNormalResult({ suit: "spades", isCapot: true, value: 160 }),
+      });
+      expect(screen.getByText("Capot")).toBeInTheDocument();
     });
   });
 

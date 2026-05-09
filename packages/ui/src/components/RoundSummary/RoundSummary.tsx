@@ -71,6 +71,8 @@ export function RoundSummary({
             roundScore={roundScore}
             announcementWinner={result.announcementWinner}
             announcementPoints={result.announcementPoints}
+            contractType={result.contractType}
+            isCapot={result.isCapot}
           />
         ) : null}
 
@@ -127,6 +129,8 @@ interface NormalRoundBodyProps {
   roundScore: NonNullable<LastRoundResult["roundScore"]>;
   announcementWinner?: "ns" | "ew" | null;
   announcementPoints?: number;
+  contractType?: "suit" | "sans-atout" | "tout-atout";
+  isCapot?: boolean;
 }
 
 function NormalRoundBody({
@@ -135,6 +139,8 @@ function NormalRoundBody({
   roundScore,
   announcementWinner,
   announcementPoints = 0,
+  contractType,
+  isCapot = false,
 }: NormalRoundBodyProps): ReactElement {
   const { suit, value, coincheLevel, bidderPosition } = contract;
   const {
@@ -174,15 +180,25 @@ function NormalRoundBody({
     coincheLevel === 4 ? " ×4 SURCONTRE" : coincheLevel === 2 ? " ×2 CONTRE" : "";
 
   const isRed = RED_SUITS.has(suit);
+  const isSA = contractType === "sans-atout";
+  const isTA = contractType === "tout-atout";
 
   return (
     <>
       {/* ── Contract line ── */}
       <div className={styles.contractLine}>
-        <span className={`${styles.suitSymbol} ${isRed ? styles.suitRed : styles.suitBlack}`}>
-          {SUIT_SYMBOLS[suit] ?? "?"}
-        </span>
-        <span className={styles.bidValue}>{String(value)}</span>
+        {isCapot ? (
+          <span className={`${styles.suitSymbol} ${styles.suitBlack}`}>Capot</span>
+        ) : isSA ? (
+          <span className={`${styles.suitSymbol} ${styles.suitBlack}`}>SA</span>
+        ) : isTA ? (
+          <span className={`${styles.suitSymbol} ${styles.suitBlack}`}>TA</span>
+        ) : (
+          <span className={`${styles.suitSymbol} ${isRed ? styles.suitRed : styles.suitBlack}`}>
+            {SUIT_SYMBOLS[suit] ?? "?"}
+          </span>
+        )}
+        {!isCapot && <span className={styles.bidValue}>{String(value)}</span>}
         {coincheLabel.length > 0 && <span className={styles.coincheTag}>{coincheLabel}</span>}
         <span className={styles.contractBy}>
           by <strong>{bidderName}</strong>
