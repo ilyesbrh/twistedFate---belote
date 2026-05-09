@@ -128,6 +128,9 @@ function coinchEventToMessage(
       case "suit":
         text = `${bid.suit ? SUIT_SYMBOLS[bid.suit] : "?"} ${String(bid.value)}`;
         break;
+      case "capot":
+        text = `Capot ${bid.suit ? SUIT_SYMBOLS[bid.suit] : "?"}`;
+        break;
       default:
         text = "Bid";
     }
@@ -143,7 +146,9 @@ function coinchEventToMessage(
     const position: Position = POS_TO_SEAT[contract.bidderPosition] ?? "south";
     const playerName = profiles[contract.bidderPosition]?.name ?? "Unknown";
     let text: string;
-    if (contract.contractType === "sans-atout") text = `SA ${String(contract.value)}`;
+    const isCapot = (contract as { isCapot?: boolean }).isCapot === true;
+    if (isCapot) text = `Capot ${SUIT_SYMBOLS[contract.suit]}`;
+    else if (contract.contractType === "sans-atout") text = `SA ${String(contract.value)}`;
     else if (contract.contractType === "tout-atout") text = `TA ${String(contract.value)}`;
     else text = `${SUIT_SYMBOLS[contract.suit]} ${String(contract.value)}`;
     return { id: nextMsgId(), position, playerName, text, type: "contract", timestamp: Date.now() };
@@ -448,7 +453,7 @@ export function useCoinchGameSession(): GameSessionState {
   const validBidValues: readonly BidValue[] = BID_VALUES.filter((v) => v > highestValue);
 
   const placeBid = (
-    type: "pass" | "suit" | "sans-atout" | "tout-atout" | "coinche" | "surcoinche",
+    type: "pass" | "suit" | "sans-atout" | "tout-atout" | "capot" | "coinche" | "surcoinche",
     value?: BidValue,
     suit?: Suit,
   ): void => {

@@ -3,7 +3,7 @@ import { isOnSameTeam } from "@belote/core";
 import type { BiddingRound, BidValue, PlayerPosition, Suit } from "@belote/core";
 import styles from "./CoinchBidPanel.module.css";
 
-type ContractTab = "suit" | "sans-atout" | "tout-atout";
+type ContractTab = "suit" | "sans-atout" | "tout-atout" | "capot";
 
 const SUIT_SYMBOLS: Record<Suit, string> = {
   spades: "♠",
@@ -18,7 +18,7 @@ interface CoinchBidPanelProps {
   biddingRound: BiddingRound;
   validBidValues: readonly BidValue[];
   onBid: (
-    type: "pass" | "suit" | "sans-atout" | "tout-atout" | "coinche" | "surcoinche",
+    type: "pass" | "suit" | "sans-atout" | "tout-atout" | "capot" | "coinche" | "surcoinche",
     value?: BidValue,
     suit?: Suit,
   ) => void;
@@ -44,6 +44,8 @@ export function CoinchBidPanel({ biddingRound, validBidValues, onBid }: CoinchBi
   const canBid =
     !postCoinche && selectedValue !== null && (tab !== "suit" || selectedSuit !== null);
 
+  const canCapot = !postCoinche && tab === "capot" && selectedSuit !== null;
+
   function handleBid() {
     if (!canBid || selectedValue === null) return;
     if (tab === "suit") {
@@ -56,6 +58,12 @@ export function CoinchBidPanel({ biddingRound, validBidValues, onBid }: CoinchBi
     setSelectedValue(null);
   }
 
+  function handleCapot() {
+    if (!canCapot || selectedSuit === null) return;
+    onBid("capot", undefined, selectedSuit);
+    setSelectedSuit(null);
+  }
+
   function bidLabel(): string {
     if (!canBid || selectedValue === null) return "Bid";
     if (tab === "suit" && selectedSuit !== null) {
@@ -66,6 +74,12 @@ export function CoinchBidPanel({ biddingRound, validBidValues, onBid }: CoinchBi
     return "Bid";
   }
 
+  function switchTab(newTab: ContractTab) {
+    setTab(newTab);
+    setSelectedSuit(null);
+    setSelectedValue(null);
+  }
+
   return (
     <div className={styles.panel} data-testid="bid-panel">
       {/* ── Contract-type tabs ── */}
@@ -73,10 +87,7 @@ export function CoinchBidPanel({ biddingRound, validBidValues, onBid }: CoinchBi
         <div className={styles.tabs}>
           <button
             className={`${styles.tab} ${tab === "suit" ? styles.tabActive : ""}`}
-            onClick={() => {
-              setTab("suit");
-              setSelectedValue(null);
-            }}
+            onClick={() => switchTab("suit")}
             aria-pressed={tab === "suit"}
             aria-label="Suit contract"
           >
@@ -85,11 +96,7 @@ export function CoinchBidPanel({ biddingRound, validBidValues, onBid }: CoinchBi
           </button>
           <button
             className={`${styles.tab} ${tab === "sans-atout" ? styles.tabActive : ""}`}
-            onClick={() => {
-              setTab("sans-atout");
-              setSelectedSuit(null);
-              setSelectedValue(null);
-            }}
+            onClick={() => switchTab("sans-atout")}
             aria-pressed={tab === "sans-atout"}
             aria-label="Sans-Atout contract"
           >
@@ -98,22 +105,27 @@ export function CoinchBidPanel({ biddingRound, validBidValues, onBid }: CoinchBi
           </button>
           <button
             className={`${styles.tab} ${tab === "tout-atout" ? styles.tabActive : ""}`}
-            onClick={() => {
-              setTab("tout-atout");
-              setSelectedSuit(null);
-              setSelectedValue(null);
-            }}
+            onClick={() => switchTab("tout-atout")}
             aria-pressed={tab === "tout-atout"}
             aria-label="Tout-Atout contract"
           >
             <span className={styles.tabIcon}>★</span>
             TA
           </button>
+          <button
+            className={`${styles.tab} ${tab === "capot" ? styles.tabActive : ""}`}
+            onClick={() => switchTab("capot")}
+            aria-pressed={tab === "capot"}
+            aria-label="Capot contract"
+          >
+            <span className={styles.tabIcon}>∞</span>
+            Capot
+          </button>
         </div>
       )}
 
-      {/* ── Suit picker (suit tab only) ── */}
-      {!postCoinche && tab === "suit" && (
+      {/* ── Suit picker (suit and capot tabs) ── */}
+      {!postCoinche && (tab === "suit" || tab === "capot") && (
         <>
           <div className={styles.suitRow}>
             {SUITS.map((s) => (
@@ -133,8 +145,8 @@ export function CoinchBidPanel({ biddingRound, validBidValues, onBid }: CoinchBi
         </>
       )}
 
-      {/* ── Value picker ── */}
-      {!postCoinche && (
+      {/* ── Value picker (not shown for capot) ── */}
+      {!postCoinche && tab !== "capot" && (
         <>
           <div className={styles.valueGrid}>
             {validBidValues.map((v) => (
@@ -165,7 +177,7 @@ export function CoinchBidPanel({ biddingRound, validBidValues, onBid }: CoinchBi
           Pass
         </button>
 
-        {!postCoinche && (
+        {!postCoinche && tab !== "capot" && (
           <button
             className={`${styles.btn} ${styles.bidBtn}`}
             disabled={!canBid}
@@ -174,6 +186,18 @@ export function CoinchBidPanel({ biddingRound, validBidValues, onBid }: CoinchBi
             data-touch="primary"
           >
             {bidLabel()}
+          </button>
+        )}
+
+        {!postCoinche && tab === "capot" && (
+          <button
+            className={`${styles.btn} ${styles.bidBtn}`}
+            disabled={!canCapot}
+            onClick={handleCapot}
+            aria-label="Announce Capot"
+            data-touch="primary"
+          >
+            Capot !
           </button>
         )}
 
