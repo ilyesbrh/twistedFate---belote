@@ -215,7 +215,13 @@ function NormalRoundBody({
       <div
         className={`${styles.resultBadge} ${contractMet ? styles.resultMet : styles.resultFailed}`}
       >
-        {contractMet ? "CONTRACT MET ✓" : "CONTRACT FAILED ✗"}
+        {isCapot
+          ? contractMet
+            ? "CAPOT MET ✓"
+            : "CAPOT FAILED ✗"
+          : contractMet
+            ? "CONTRACT MET ✓"
+            : "CONTRACT FAILED ✗"}
       </div>
 
       {/* ── Score table ── */}

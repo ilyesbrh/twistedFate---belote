@@ -209,6 +209,21 @@ describe("RoundSummary", () => {
       renderRoundSummary({ result: makeNormalResult({ contractMet: false }) });
       expect(screen.getByText(/CONTRACT FAILED/)).toBeInTheDocument();
     });
+
+    it("shows CAPOT MET when capot contract is met", () => {
+      renderRoundSummary({
+        result: makeNormalResult({ contractMet: true, isCapot: true, value: 160 }),
+      });
+      expect(screen.getByText(/CAPOT MET/)).toBeInTheDocument();
+      expect(screen.queryByText(/CONTRACT MET/)).not.toBeInTheDocument();
+    });
+
+    it("shows CAPOT FAILED when capot contract is not met", () => {
+      renderRoundSummary({
+        result: makeNormalResult({ contractMet: false, isCapot: true, value: 160 }),
+      });
+      expect(screen.getByText(/CAPOT FAILED/)).toBeInTheDocument();
+    });
   });
 
   describe("normal round — score table", () => {
