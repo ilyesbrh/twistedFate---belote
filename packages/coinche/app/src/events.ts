@@ -1,4 +1,5 @@
 import type {
+  Announcement,
   Bid,
   Card,
   Contract,
@@ -18,6 +19,7 @@ export type GameEventType =
   | "round_started"
   | "bid_placed"
   | "bidding_completed"
+  | "announcements_revealed"
   | "card_played"
   | "trick_completed"
   | "round_completed"
@@ -47,6 +49,14 @@ export interface BidPlacedEvent {
 export interface BiddingCompletedEvent {
   readonly type: "bidding_completed";
   readonly contract: Contract;
+}
+
+export interface AnnouncementsRevealedEvent {
+  readonly type: "announcements_revealed";
+  /** Per-position announcements (sparse — only positions with ≥1 announcement). */
+  readonly byPosition: Partial<Record<PlayerPosition, readonly Announcement[]>>;
+  readonly winner: "ns" | "ew" | null;
+  readonly totalPoints: number;
 }
 
 export interface CardPlayedEvent {
@@ -85,6 +95,7 @@ export type GameEvent =
   | RoundStartedEvent
   | BidPlacedEvent
   | BiddingCompletedEvent
+  | AnnouncementsRevealedEvent
   | CardPlayedEvent
   | TrickCompletedEvent
   | RoundCompletedEvent

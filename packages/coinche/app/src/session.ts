@@ -1,4 +1,5 @@
 import type {
+  Announcement,
   BidValue,
   Card,
   Game,
@@ -18,6 +19,7 @@ import {
   createPlayer,
   createRound,
   createTeam,
+  findAnnouncements,
   shuffleDeck,
   placeBidInRound,
   playCardInRound,
@@ -305,6 +307,26 @@ export class GameSession {
     }
   }
 
+  // ── Private: Emit announcements_revealed if round has any ──
+
+  private _emitAnnouncementsIfAny(round: Round): void {
+    if (round.nsAnnouncements.length === 0 && round.ewAnnouncements.length === 0) return;
+
+    const byPosition: Partial<Record<PlayerPosition, readonly Announcement[]>> = {};
+    for (const player of round.players) {
+      const ann = findAnnouncements(player.hand);
+      if (ann.length > 0) {
+        byPosition[player.position] = ann;
+      }
+    }
+    this._emit({
+      type: "announcements_revealed",
+      byPosition,
+      winner: round.announcementWinner,
+      totalPoints: round.announcementPoints,
+    });
+  }
+
   // ── Private: After Bidding Step ──
 
   private _afterBidding(): void {
@@ -317,6 +339,7 @@ export class GameSession {
         type: "bidding_completed",
         contract: this._currentRound.contract,
       });
+      this._emitAnnouncementsIfAny(this._currentRound);
       this._state = "round_playing";
       // Schedule first card play (delayed so UI shows bidding→playing transition)
       this._scheduleNext(() => {
@@ -351,6 +374,7 @@ export class GameSession {
 
     if (round.phase === "playing" && round.contract !== null) {
       this._emit({ type: "bidding_completed", contract: round.contract });
+      this._emitAnnouncementsIfAny(round);
       this._state = "round_playing";
       this._scheduleNext(() => {
         this._processNextCard();

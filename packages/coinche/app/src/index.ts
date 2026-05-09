@@ -22,6 +22,7 @@ export type {
   RoundStartedEvent,
   BidPlacedEvent,
   BiddingCompletedEvent,
+  AnnouncementsRevealedEvent,
   CardPlayedEvent,
   TrickCompletedEvent,
   RoundCompletedEvent,

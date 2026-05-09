@@ -14,7 +14,14 @@ import {
   calculateTrickPoints,
   getCardRankOrder,
 } from "@coinche/core";
-import type { Card, BiddingRound as CoinchBiddingRound, ContractType, Suit } from "@coinche/core";
+import type {
+  Announcement,
+  Card,
+  BiddingRound as CoinchBiddingRound,
+  ContractType,
+  PlayerPosition,
+  Suit,
+} from "@coinche/core";
 import type {
   BiddingRound as BeloteBiddingRound,
   BidValue,
@@ -187,6 +194,11 @@ function coinchEventToMessage(
     };
   }
 
+  // announcements_revealed is handled separately in the event effect
+  if (event.type === "announcements_revealed") {
+    return null;
+  }
+
   return null;
 }
 
@@ -251,6 +263,44 @@ export function useCoinchGameSession(): GameSessionState {
           winnerPosition: getSeat(bidderPos),
           winnerName: getProfile(bidderPos).name,
         });
+      }
+
+      if (event.type === "announcements_revealed") {
+        const ev = event;
+        for (const [posStr, anns] of Object.entries(ev.byPosition)) {
+          const pos = Number(posStr) as PlayerPosition;
+          const seat = getSeat(pos);
+          const playerName = getProfile(pos).name;
+          const annText = (anns as Announcement[])
+            .map((a) => {
+              if (a.kind === "carre") return `Carré de ${a.highCard}s`;
+              const label = a.points === 20 ? "Tierce" : a.points === 50 ? "Cinquante" : "Cent";
+              return `${label} ${SUIT_SYMBOLS[a.suit]}`;
+            })
+            .join(" + ");
+          const annMsg: GameMessage = {
+            id: nextMsgId(),
+            position: seat,
+            playerName,
+            text: annText,
+            type: "bid",
+            timestamp: Date.now(),
+          };
+          setMessages((prev) => [...prev, annMsg]);
+          showBubble(annMsg);
+        }
+        if (ev.winner !== null) {
+          const winnerText = `${ev.winner.toUpperCase()} wins announcements (+${String(ev.totalPoints)} pts)`;
+          const sysMsg: GameMessage = {
+            id: nextMsgId(),
+            position: "south",
+            playerName: "",
+            text: winnerText,
+            type: "contract",
+            timestamp: Date.now(),
+          };
+          setMessages((prev) => [...prev, sysMsg]);
+        }
       }
 
       if (event.type === "trick_completed") {
