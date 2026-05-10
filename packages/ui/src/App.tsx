@@ -1,4 +1,5 @@
 import { type ReactElement, Suspense, lazy, useEffect, useState } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import { CoinchGameTable } from "./components/CoinchGameTable/CoinchGameTable.js";
 import { FriendsScreen } from "./components/FriendsScreen/FriendsScreen.js";
 import { GamePickerScreen } from "./components/GamePickerScreen/GamePickerScreen.js";
@@ -40,35 +41,30 @@ const CARD_SRCS = SUITS.flatMap((s) =>
   RANKS.map((r) => `${import.meta.env.BASE_URL}cards/${r}_of_${s}.png`),
 );
 
-type Screen =
-  | "game-picker"
-  | "menu"
-  | "ai"
-  | "coinche-ai"
-  | "online"
-  | "random"
-  | "login"
-  | "signup"
-  | "history"
-  | "friends"
-  | "profile";
+// ── Card preload (rendered invisibly on every route) ──────────────────────────
 
-/** Auto-jump into the online flow if a saved session is present in the URL. */
-function initialScreen(): Screen {
-  if (typeof window === "undefined") return "game-picker";
-  const url = new URL(window.location.href);
-  const code = url.searchParams.get("room");
-  const pid = url.searchParams.get("pid");
-  if (code && pid && /^[A-Z]{4}$/.test(code)) return "online";
-  return "game-picker";
+function CardPreload(): ReactElement {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        width: 0,
+        height: 0,
+        overflow: "hidden",
+        pointerEvents: "none",
+      }}
+      aria-hidden="true"
+    >
+      {CARD_SRCS.map((src) => (
+        <img key={src} src={src} alt="" loading="eager" />
+      ))}
+    </div>
+  );
 }
 
-export default function App(): ReactElement {
-  const [screen, setScreen] = useState<Screen>(initialScreen);
-  const [gameKey, setGameKey] = useState(0);
-  const [authPending, setAuthPending] = useState(false);
-  const auth = useAuth();
+// ── Root: wraps everything in BrowserRouter ───────────────────────────────────
 
+export default function App(): ReactElement {
   if (shouldRenderDevScreens()) {
     return (
       <Suspense fallback={null}>
@@ -77,217 +73,272 @@ export default function App(): ReactElement {
     );
   }
 
-  // Block rendering while the auth preflight is in flight. Prevents the
-  // online lobby from opening a WS before the cookie is minted.
-  if (auth.status === "loading") {
-    return null;
-  }
+  // Strip the Vite base path to get a clean basename for the router.
+  // import.meta.env.BASE_URL is "/twistedFate-belote/" in dev/prod.
+  const base = import.meta.env.BASE_URL.replace(/\/$/, "") || "/";
 
-  const handleSignIn = (): void => {
-    setScreen("login");
-  };
-  const handleSignUp = (): void => {
-    setScreen("signup");
-  };
-  const handleSignOut = async (): Promise<void> => {
+  return (
+    <BrowserRouter basename={base}>
+      <CardPreload />
+      <RoomDeepLinkRedirect />
+      <AppRoutes />
+    </BrowserRouter>
+  );
+}
+
+/** Redirect ?room=XXXX&pid=YYY deep links to /belote/online (preserving query params). */
+function RoomDeepLinkRedirect(): null {
+  const navigate = useNavigate();
+  const location = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const code = params.get("room");
+    const pid = params.get("pid");
+    if (code && pid && /^[A-Z]{4}$/.test(code) && location.pathname === "/") {
+      navigate(`/belote/online${location.search}`, { replace: true });
+    }
+  }, []); // runs once on mount
+  return null;
+}
+
+// ── Route tree ────────────────────────────────────────────────────────────────
+
+function AppRoutes(): ReactElement {
+  const auth = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [authPending, setAuthPending] = useState(false);
+
+  // Block until auth resolves (prevents WS opening before cookie is minted).
+  if (auth.status === "loading") return <></>;
+
+  const handleSignIn = () => navigate("/signin");
+  const handleSignUp = () => navigate("/signup");
+  const handleSignOut = async () => {
     await auth.logout();
-    setScreen("game-picker");
+    navigate("/");
+  };
+
+  const authProps = {
+    identity: auth.identity,
+    onSignIn: handleSignIn,
+    onSignUp: handleSignUp,
+    onSignOut: () => void handleSignOut(),
   };
 
   return (
-    <>
-      {/* Install banner only on the menu — it overlaps the in-game score panel. */}
-      {screen === "menu" && <InstallPrompt />}
+    <Routes>
+      {/* ── Game Picker ── */}
+      <Route
+        path="/"
+        element={
+          <GamePickerScreen
+            {...authProps}
+            onPickBelote={() => navigate("/belote")}
+            onPickCoinche={() => navigate("/coinche")}
+          />
+        }
+      />
 
-      {screen === "game-picker" && (
-        <GamePickerScreen
-          onPickBelote={() => {
-            setScreen("menu");
-          }}
-          onPickCoinche={() => {
-            setScreen("coinche-ai");
-          }}
-          identity={auth.identity}
-          onSignIn={handleSignIn}
-          onSignUp={handleSignUp}
-          onSignOut={() => {
-            void handleSignOut();
-          }}
-        />
-      )}
+      {/* ── Belote menu ── */}
+      <Route
+        path="/belote"
+        element={
+          <>
+            <InstallPrompt />
+            <ModeSelectScreen
+              {...authProps}
+              onSelect={(mode: Mode) => {
+                if (mode === "ai") navigate("/belote/ai");
+                else if (mode === "friends") navigate("/belote/online");
+                else if (mode === "random") navigate("/belote/random");
+              }}
+              onViewHistory={
+                auth.identity?.kind === "user" ? () => navigate("/history") : undefined
+              }
+              onViewFriends={
+                auth.identity?.kind === "user" ? () => navigate("/friends") : undefined
+              }
+              onViewProfile={
+                auth.identity?.kind === "user" ? () => navigate("/profile") : undefined
+              }
+            />
+          </>
+        }
+      />
 
-      {screen === "coinche-ai" && (
-        <CoinchGameTable
-          key={gameKey}
-          onPlayAgain={() => {
-            setGameKey((k) => k + 1);
-            setScreen("game-picker");
-          }}
-        />
-      )}
-      <div
-        style={{
-          position: "absolute",
-          width: 0,
-          height: 0,
-          overflow: "hidden",
-          pointerEvents: "none",
-        }}
-        aria-hidden="true"
-      >
-        {CARD_SRCS.map((src) => (
-          <img key={src} src={src} alt="" loading="eager" />
-        ))}
-      </div>
+      {/* ── Belote AI ── */}
+      <Route
+        path="/belote/ai"
+        element={<GameTable key={location.key} onPlayAgain={() => navigate("/belote")} />}
+      />
 
-      {screen === "menu" && (
-        <ModeSelectScreen
-          onSelect={(mode: Mode) => {
-            if (mode === "ai") setScreen("ai");
-            else if (mode === "friends") setScreen("online");
-            else if (mode === "random") setScreen("random");
-          }}
-          identity={auth.identity}
-          onSignIn={handleSignIn}
-          onSignUp={handleSignUp}
-          onSignOut={() => {
-            void handleSignOut();
-          }}
-          onViewHistory={
-            auth.identity?.kind === "user"
-              ? () => {
-                  setScreen("history");
-                }
-              : undefined
-          }
-          onViewFriends={
-            auth.identity?.kind === "user"
-              ? () => {
-                  setScreen("friends");
-                }
-              : undefined
-          }
-          onViewProfile={
-            auth.identity?.kind === "user"
-              ? () => {
-                  setScreen("profile");
-                }
-              : undefined
-          }
-        />
-      )}
+      {/* ── Belote Online lobby ── */}
+      <Route path="/belote/online" element={<OnlineFlow onLeave={() => navigate("/belote")} />} />
 
-      {screen === "profile" && auth.identity?.kind === "user" && (
-        <ProfileScreenContainer
-          userId={auth.identity.id}
-          onIdentityChanged={() => {
-            void auth.refresh();
-          }}
-          onBack={() => {
-            setScreen("menu");
-          }}
-        />
-      )}
+      {/* ── Belote Random matchmaking ── */}
+      <Route
+        path="/belote/random"
+        element={<OnlineRandomFlow onLeave={() => navigate("/belote")} />}
+      />
 
-      {screen === "friends" && auth.identity?.kind === "user" && (
-        <FriendsScreenContainer
-          onBack={() => {
-            setScreen("menu");
-          }}
-        />
-      )}
+      {/* ── Coinche AI ── */}
+      <Route
+        path="/coinche"
+        element={<CoinchGameTable key={location.key} onPlayAgain={() => navigate("/")} />}
+      />
 
-      {screen === "history" && auth.identity?.kind === "user" && (
-        <HistoryScreenContainer
-          currentUserId={auth.identity.id}
-          onBack={() => {
-            setScreen("menu");
-          }}
-        />
-      )}
+      {/* ── Auth ── */}
+      <Route
+        path="/signin"
+        element={
+          <LoginScreen
+            error={auth.error}
+            loading={authPending}
+            onSubmit={(input) => {
+              setAuthPending(true);
+              auth
+                .login(input)
+                .then(() => navigate("/belote"))
+                .catch(() => {
+                  /* error on auth.error */
+                })
+                .finally(() => setAuthPending(false));
+            }}
+            onGotoSignup={() => navigate("/signup")}
+            onCancel={() => navigate(-1)}
+          />
+        }
+      />
+      <Route
+        path="/signup"
+        element={
+          <SignupScreen
+            error={auth.error}
+            loading={authPending}
+            onSubmit={(input) => {
+              setAuthPending(true);
+              auth
+                .signup(input)
+                .then(() => navigate("/belote"))
+                .catch(() => {
+                  /* error on auth.error */
+                })
+                .finally(() => setAuthPending(false));
+            }}
+            onGotoLogin={() => navigate("/signin")}
+            onCancel={() => navigate(-1)}
+          />
+        }
+      />
 
-      {screen === "login" && (
-        <LoginScreen
-          error={auth.error}
-          loading={authPending}
-          onSubmit={(input) => {
-            setAuthPending(true);
-            auth
-              .login(input)
-              .then(() => {
-                setScreen("menu");
-              })
-              .catch(() => {
-                // error is already on auth.error
-              })
-              .finally(() => {
-                setAuthPending(false);
-              });
-          }}
-          onGotoSignup={() => {
-            setScreen("signup");
-          }}
-          onCancel={() => {
-            setScreen("menu");
-          }}
-        />
-      )}
+      {/* ── Account screens (require user auth) ── */}
+      <Route
+        path="/history"
+        element={
+          auth.identity?.kind === "user" ? (
+            <HistoryScreenContainer currentUserId={auth.identity.id} onBack={() => navigate(-1)} />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+      <Route
+        path="/friends"
+        element={
+          auth.identity?.kind === "user" ? (
+            <FriendsScreenContainer onBack={() => navigate(-1)} />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          auth.identity?.kind === "user" ? (
+            <ProfileScreenContainer
+              userId={auth.identity.id}
+              onBack={() => navigate(-1)}
+              onIdentityChanged={() => void auth.refresh()}
+            />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
 
-      {screen === "signup" && (
-        <SignupScreen
-          error={auth.error}
-          loading={authPending}
-          onSubmit={(input) => {
-            setAuthPending(true);
-            auth
-              .signup(input)
-              .then(() => {
-                setScreen("menu");
-              })
-              .catch(() => {
-                // error is already on auth.error
-              })
-              .finally(() => {
-                setAuthPending(false);
-              });
-          }}
-          onGotoLogin={() => {
-            setScreen("login");
-          }}
-          onCancel={() => {
-            setScreen("menu");
-          }}
-        />
-      )}
-
-      {screen === "ai" && (
-        <GameTable
-          key={gameKey}
-          onPlayAgain={() => {
-            setGameKey((k) => k + 1);
-            setScreen("menu");
-          }}
-        />
-      )}
-
-      {screen === "online" && (
-        <OnlineFlow
-          onLeave={() => {
-            setScreen("menu");
-          }}
-        />
-      )}
-
-      {screen === "random" && (
-        <OnlineRandomFlow
-          onLeave={() => {
-            setScreen("menu");
-          }}
-        />
-      )}
-    </>
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
+
+// ── Online flow containers ────────────────────────────────────────────────────
+
+function OnlineFlow({ onLeave }: { onLeave: () => void }): ReactElement {
+  const lobby = useOnlineLobby();
+  const sessionState = useOnlineGameSession(lobby);
+  const [view, setView] = useState<"lobby" | "game">("lobby");
+
+  useEffect(() => {
+    if (sessionState.phase !== "idle") setView("game");
+  }, [sessionState.phase]);
+
+  const leaveAndForget = (): void => {
+    lobby.clearSavedSession();
+    lobby.disconnect();
+    onLeave();
+  };
+
+  if (view === "lobby") {
+    return (
+      <OnlineLobby lobby={lobby} onBack={leaveAndForget} onGameStarted={() => setView("game")} />
+    );
+  }
+  return <GameTableView state={sessionState} onPlayAgain={leaveAndForget} />;
+}
+
+function OnlineRandomFlow({ onLeave }: { onLeave: () => void }): ReactElement {
+  const lobby = useOnlineLobby();
+  const sessionState = useOnlineGameSession(lobby);
+  const [view, setView] = useState<"queue" | "game">("queue");
+
+  useEffect(() => {
+    if (sessionState.phase !== "idle") setView("game");
+  }, [sessionState.phase]);
+
+  const leaveAndForget = (): void => {
+    if (lobby.phase === "queued") lobby.cancelRandom();
+    lobby.clearSavedSession();
+    lobby.disconnect();
+    onLeave();
+  };
+
+  if (view === "queue") {
+    const queuePhase = lobby.phase === "queued" ? "queued" : "idle";
+    return (
+      <OnlineRandomScreen
+        phase={queuePhase}
+        position={lobby.queuePosition}
+        size={lobby.queueSize}
+        status={lobby.status}
+        error={lobby.error}
+        nickname={lobby.identity?.nickname ?? ""}
+        onFind={(nickname) => {
+          lobby.findRandom(nickname);
+        }}
+        onCancel={() => {
+          lobby.cancelRandom();
+        }}
+        onBack={leaveAndForget}
+      />
+    );
+  }
+  return <GameTableView state={sessionState} onPlayAgain={leaveAndForget} />;
+}
+
+// ── Account screen containers ─────────────────────────────────────────────────
 
 function ProfileScreenContainer({
   userId,
@@ -395,68 +446,4 @@ function HistoryScreenContainer({
       onBack={onBack}
     />
   );
-}
-
-function OnlineFlow({ onLeave }: { onLeave: () => void }): ReactElement {
-  const lobby = useOnlineLobby();
-  const sessionState = useOnlineGameSession(lobby);
-  const [view, setView] = useState<"lobby" | "game">("lobby");
-
-  // Auto-switch to the game view as soon as the server moves past the lobby phase.
-  useEffect(() => {
-    if (sessionState.phase !== "idle") setView("game");
-  }, [sessionState.phase]);
-
-  const leaveAndForget = (): void => {
-    lobby.clearSavedSession();
-    lobby.disconnect();
-    onLeave();
-  };
-
-  if (view === "lobby") {
-    return (
-      <OnlineLobby lobby={lobby} onBack={leaveAndForget} onGameStarted={() => setView("game")} />
-    );
-  }
-  return <GameTableView state={sessionState} onPlayAgain={leaveAndForget} />;
-}
-
-function OnlineRandomFlow({ onLeave }: { onLeave: () => void }): ReactElement {
-  const lobby = useOnlineLobby();
-  const sessionState = useOnlineGameSession(lobby);
-  const [view, setView] = useState<"queue" | "game">("queue");
-
-  // Once the server kicks the game past idle, show the table.
-  useEffect(() => {
-    if (sessionState.phase !== "idle") setView("game");
-  }, [sessionState.phase]);
-
-  const leaveAndForget = (): void => {
-    if (lobby.phase === "queued") lobby.cancelRandom();
-    lobby.clearSavedSession();
-    lobby.disconnect();
-    onLeave();
-  };
-
-  if (view === "queue") {
-    const queuePhase = lobby.phase === "queued" ? "queued" : "idle";
-    return (
-      <OnlineRandomScreen
-        phase={queuePhase}
-        position={lobby.queuePosition}
-        size={lobby.queueSize}
-        status={lobby.status}
-        error={lobby.error}
-        nickname={lobby.identity?.nickname ?? ""}
-        onFind={(nickname) => {
-          lobby.findRandom(nickname);
-        }}
-        onCancel={() => {
-          lobby.cancelRandom();
-        }}
-        onBack={leaveAndForget}
-      />
-    );
-  }
-  return <GameTableView state={sessionState} onPlayAgain={leaveAndForget} />;
 }
