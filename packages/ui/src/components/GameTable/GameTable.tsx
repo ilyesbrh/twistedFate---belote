@@ -3,6 +3,7 @@ import { useGameSession } from "../../hooks/useGameSession.js";
 import type { GameSessionState } from "../../hooks/useGameSession.js";
 import { AvatarActionMenu } from "../AvatarActionMenu/AvatarActionMenu.js";
 import { BidPanel } from "@tunisian/ui";
+import { BidLog, type BidLogProfile, type LogBid } from "../BidLog/BidLog.js";
 import { CoinchBidPanel } from "../CoinchBidPanel/CoinchBidPanel.js";
 import { BidWinReveal } from "../BidWinReveal/BidWinReveal.js";
 import { ChatPanel } from "../ChatPanel/ChatPanel.js";
@@ -53,6 +54,12 @@ export function GameTableView({
 
   const active = state.activePosition;
   const showBid = state.phase === "bidding" && state.isMyTurn && state.biddingRound !== null;
+  const bidLogProfiles: Partial<Record<number, BidLogProfile>> = {
+    0: { name: south.name },
+    1: { name: west.name },
+    2: { name: north.name },
+    3: { name: east.name },
+  };
   const extContract = state.contract as
     | (typeof state.contract & {
         contractType?: "suit" | "sans-atout" | "tout-atout";
@@ -151,6 +158,13 @@ export function GameTableView({
       <div className={styles.trickArea}>
         <TrickArea cards={state.trickCards} winnerPosition={state.trickWinnerPosition} />
       </div>
+
+      {/* ── Bid log — visible during entire auction phase ── */}
+      {state.biddingRound !== null && state.biddingRound.bids.length > 0 && (
+        <div className={styles.bidLog}>
+          <BidLog bids={state.biddingRound.bids as readonly LogBid[]} profiles={bidLogProfiles} />
+        </div>
+      )}
 
       {/* ── Bid panel — above south hand, only when it's human's turn to bid ── */}
       {showBid && (

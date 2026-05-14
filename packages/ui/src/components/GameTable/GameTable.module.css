@@ -152,6 +152,35 @@
   z-index: 20;
 }
 
+/* ── Bid log: small floating panel above the bid panel, visible during the
+   entire auction phase so AI bids appear in real time. ── */
+.bidLog {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: calc(50% - 220px);
+  z-index: 19;
+  width: min(320px, 92vw);
+  max-height: 9rem;
+  pointer-events: none;
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+  .bidLog {
+    top: calc(50% - 160px);
+    max-height: 5.5rem;
+    width: min(280px, 88vw);
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .bidLog {
+    top: 8px;
+    max-height: 4rem;
+    width: min(260px, 50vw);
+  }
+}
+
 /* ═══════════════════════════════════════
    Tablet (≤ 900px)
    ═══════════════════════════════════════ */

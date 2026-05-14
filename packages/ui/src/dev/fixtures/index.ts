@@ -14,6 +14,7 @@ import { onlineRandomScreenFixtures } from "./onlineRandomScreen.fixtures.js";
 import { onlineLobbyFixtures } from "./onlineLobby.fixtures.js";
 import { roundSummaryFixtures } from "./roundSummary.fixtures.js";
 import { gameTableViewFixtures } from "./gameTableView.fixtures.js";
+import { bidLogFixtures } from "./bidLog.fixtures.js";
 
 export const fixtures: readonly Fixture[] = [
   ...startScreenFixtures,
@@ -22,6 +23,7 @@ export const fixtures: readonly Fixture[] = [
   ...onlineRandomScreenFixtures,
   ...gameTableViewFixtures,
   ...bidPanelFixtures,
+  ...bidLogFixtures,
   ...bidWinRevealFixtures,
   ...coinchBidPanelFixtures,
   ...scorePanelFixtures,
