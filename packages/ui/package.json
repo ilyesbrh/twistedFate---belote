@@ -15,6 +15,7 @@
     "@belote/protocol": "workspace:*",
     "@coinche/app": "workspace:*",
     "@coinche/core": "workspace:*",
+    "@tunisian/ui": "workspace:*",
     "@radix-ui/themes": "^3.3.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

@@ -1,4 +1,4 @@
-import { BidPanel } from "../../components/BidPanel/BidPanel.js";
+import { BidPanel } from "@tunisian/ui";
 import type { Bid, BidValue, BiddingRound } from "@belote/core";
 import type { Fixture } from "../ScreenViewer/types.js";
 

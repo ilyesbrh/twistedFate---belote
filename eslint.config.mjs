@@ -86,7 +86,24 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ["@belote/*"],
+              group: ["@belote/*", "@tunisian/*"],
+              message:
+                "Game packages cannot import each other. Duplicate the code or extract to @cards/* (≥3-game evidence required). See docs/PLATFORM_MANIFESTO.md Rule 1.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["packages/tunisian/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@coinche/*"],
               message:
                 "Game packages cannot import each other. Duplicate the code or extract to @cards/* (≥3-game evidence required). See docs/PLATFORM_MANIFESTO.md Rule 1.",
             },

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useGameSession } from "../../hooks/useGameSession.js";
 import type { GameSessionState } from "../../hooks/useGameSession.js";
 import { AvatarActionMenu } from "../AvatarActionMenu/AvatarActionMenu.js";
-import { BidPanel } from "../BidPanel/BidPanel.js";
+import { BidPanel } from "@tunisian/ui";
 import { CoinchBidPanel } from "../CoinchBidPanel/CoinchBidPanel.js";
 import { BidWinReveal } from "../BidWinReveal/BidWinReveal.js";
 import { ChatPanel } from "../ChatPanel/ChatPanel.js";

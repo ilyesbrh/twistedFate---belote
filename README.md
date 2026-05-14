@@ -55,7 +55,7 @@ client with full visual parity between solo and online modes.
 
 ## Features
 
-- **Solo vs AI** — three bots with a real AI strategy (`packages/core/src/ai/strategy.ts`).
+- **Solo vs AI** — three bots with a real AI strategy (`packages/tunisian/core/src/ai/strategy.ts`).
 - **Friends mode** — create a 4-letter room code, share it, four players in.
 - **Random matchmaking** — global FIFO queue, server auto-pairs four
   strangers and starts the game.
@@ -132,17 +132,24 @@ pnpm format:check  # Prettier
 
 ## Project structure
 
-pnpm workspace, six packages, strict layer separation:
+pnpm workspace, two game families + shared shell + shared infra:
 
 ```text
 twistedFate---belote/
 ├── packages/
-│   ├── core/         # @belote/core      — pure domain (no deps)
-│   ├── app/          # @belote/app       — session / commands / events
-│   ├── animation/    # @belote/animation — animation sequence engine
-│   ├── protocol/     # @belote/protocol  — wire types + validators (zero deps)
+│   ├── tunisian/
+│   │   ├── core/     # @belote/core      — pure Tunisian-Belote domain (no deps)
+│   │   ├── app/      # @belote/app       — Tunisian session / commands / events
+│   │   └── ui/       # @tunisian/ui      — Tunisian game-specific UI (BidPanel …)
+│   ├── coinche/
+│   │   ├── core/     # @coinche/core     — pure Coinche domain
+│   │   ├── app/      # @coinche/app      — Coinche session
+│   │   └── ui/       # @coinche/ui       — Coinche game-specific UI
+│   ├── animation/    # @belote/animation — shared animation sequence engine
+│   ├── protocol/     # @belote/protocol  — shared WS types + validators
 │   ├── server/       # @belote/server    — Fastify + ws authoritative gateway
-│   └── ui/           # ui                — React 19 + Vite PWA client
+│   ├── db/           # @belote/db        — SQLite data layer
+│   └── ui/           # ui                — shared React 19 shell (router, picker, board primitives)
 ├── docs/
 │   ├── VISION.md
 │   ├── MANIFESTO.md

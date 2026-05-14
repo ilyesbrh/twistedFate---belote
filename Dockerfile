@@ -18,8 +18,8 @@ RUN corepack enable
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY tsconfig.base.json tsconfig.json ./
 COPY packages/animation/package.json ./packages/animation/
-COPY packages/app/package.json ./packages/app/
-COPY packages/core/package.json ./packages/core/
+COPY packages/tunisian/app/package.json ./packages/tunisian/app/
+COPY packages/tunisian/core/package.json ./packages/tunisian/core/
 COPY packages/db/package.json ./packages/db/
 COPY packages/protocol/package.json ./packages/protocol/
 COPY packages/server/package.json ./packages/server/
@@ -64,8 +64,8 @@ ENV DB_PATH=/data/belote.db
 COPY --from=build /app/package.json /app/pnpm-workspace.yaml /app/pnpm-lock.yaml ./
 COPY --from=build /app/tsconfig.base.json /app/tsconfig.json ./
 COPY --from=build /app/packages/server ./packages/server
-COPY --from=build /app/packages/core ./packages/core
-COPY --from=build /app/packages/app ./packages/app
+COPY --from=build /app/packages/tunisian/core ./packages/tunisian/core
+COPY --from=build /app/packages/tunisian/app ./packages/tunisian/app
 COPY --from=build /app/packages/db ./packages/db
 COPY --from=build /app/packages/protocol ./packages/protocol
 COPY --from=build /app/packages/animation ./packages/animation
