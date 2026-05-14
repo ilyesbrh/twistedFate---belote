@@ -143,37 +143,41 @@
   }
 }
 
-/* ── Active player: soft terracotta aura, no hard rectangle ── */
+/* ── Active player: high-contrast terracotta frame + breathing glow ── */
 .wrapperActive .token {
   border-color: var(--accent-terracotta);
 }
+
+.activeRing {
+  position: absolute;
+  inset: -5px;
+  border: 3px solid var(--accent-terracotta);
+  border-radius: 18px;
+  z-index: 5;
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: no-preference) {
-  .wrapperActive .token {
-    animation: tokenAura 1.6s ease-in-out infinite;
+  .activeRing {
+    animation: turnGlow 1.4s ease-in-out infinite;
   }
 }
 
-/* The previous activeRing was a sharp rectangular border that pulsed. The
-   token's animated box-shadow above gives a softer aura instead, so the
-   ring element is hidden but kept in the DOM for backwards-compat. */
-.activeRing {
-  display: none;
-}
-
-@keyframes tokenAura {
+@keyframes turnGlow {
   0%,
   100% {
-    box-shadow:
-      0 3px 0 rgba(42, 31, 18, 0.22),
-      0 6px 14px rgba(42, 31, 18, 0.22);
+    box-shadow: 0 0 0 0 rgba(168, 50, 50, 0);
   }
   50% {
-    box-shadow:
-      0 3px 0 rgba(42, 31, 18, 0.22),
-      0 6px 14px rgba(42, 31, 18, 0.22),
-      0 0 0 4px rgba(168, 50, 50, 0.22),
-      0 0 18px 2px rgba(168, 50, 50, 0.45);
+    box-shadow: 0 0 0 8px rgba(168, 50, 50, 0.55);
   }
+}
+
+.wrapperActive .nameLabel {
+  border-color: var(--accent-terracotta);
+}
+.wrapperActive .name {
+  font-weight: 900;
 }
 
 /* ── Name label (handwritten under the token) ──
@@ -353,6 +357,11 @@
   .nameLabel {
     max-width: 80px;
   }
+  .activeRing {
+    inset: -4px;
+    border-radius: 14px;
+    border-width: 2.5px;
+  }
 }
 
 /* ── Landscape phone — short height, every px counts. Compact tokens
@@ -411,5 +420,10 @@
   }
   .contractValue {
     font-size: 9px;
+  }
+  .activeRing {
+    inset: -3px;
+    border-radius: 12px;
+    border-width: 2px;
   }
 }

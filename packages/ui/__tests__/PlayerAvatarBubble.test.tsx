@@ -164,3 +164,48 @@ describe("PlayerAvatar — thought bubble tooltip", () => {
     expect(bubble.className).toContain("contract");
   });
 });
+
+describe("PlayerAvatar \u2014 active state", () => {
+  it("renders the activeRing span when isActive=true", () => {
+    render(
+      <Theme>
+        <PlayerAvatar player={makePlayer()} isActive />
+      </Theme>,
+    );
+    const wrapper = screen.getByTestId("player-avatar-south");
+    const ring = wrapper.querySelector('[aria-hidden="true"]');
+    expect(ring).not.toBeNull();
+    expect(ring!.className).toContain("activeRing");
+  });
+
+  it("does not render the activeRing span when isActive=false", () => {
+    render(
+      <Theme>
+        <PlayerAvatar player={makePlayer()} isActive={false} />
+      </Theme>,
+    );
+    const wrapper = screen.getByTestId("player-avatar-south");
+    const ring = wrapper.querySelector('[class*="activeRing"]');
+    expect(ring).toBeNull();
+  });
+
+  it("applies wrapperActive class to the wrapper when isActive=true", () => {
+    render(
+      <Theme>
+        <PlayerAvatar player={makePlayer()} isActive />
+      </Theme>,
+    );
+    const wrapper = screen.getByTestId("player-avatar-south");
+    expect(wrapper.className).toContain("wrapperActive");
+  });
+
+  it("does not apply wrapperActive class when isActive=false", () => {
+    render(
+      <Theme>
+        <PlayerAvatar player={makePlayer()} isActive={false} />
+      </Theme>,
+    );
+    const wrapper = screen.getByTestId("player-avatar-south");
+    expect(wrapper.className).not.toContain("wrapperActive");
+  });
+});
