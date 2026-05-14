@@ -5,12 +5,12 @@
   --avatar-sm: 56px; /* west / east */
 
   /* ── Card sizes ── */
-  --card-w-hand: 80px;
-  --card-h-hand: 112px;
-  --card-w-trick: 90px;
-  --card-h-trick: 126px;
-  --card-w-opp: 54px;
-  --card-h-opp: 75px;
+  --card-w-hand: 88px;
+  --card-h-hand: 122px;
+  --card-w-trick: 100px;
+  --card-h-trick: 138px;
+  --card-w-opp: 56px;
+  --card-h-opp: 78px;
   --card-radius: 7px;
 
   /* ── Score Panel ── */
@@ -177,12 +177,12 @@
     --avatar-md: 52px;
     --avatar-sm: 46px;
 
-    --card-w-hand: 62px;
-    --card-h-hand: 87px;
-    --card-w-trick: 70px;
-    --card-h-trick: 98px;
-    --card-w-opp: 42px;
-    --card-h-opp: 59px;
+    --card-w-hand: 72px;
+    --card-h-hand: 100px;
+    --card-w-trick: 82px;
+    --card-h-trick: 114px;
+    --card-w-opp: 44px;
+    --card-h-opp: 62px;
 
     --font-size-score-target: 22px;
     --font-size-score-value: 18px;
@@ -229,12 +229,12 @@
     --avatar-md: 44px;
     --avatar-sm: 38px;
 
-    --card-w-hand: 46px;
-    --card-h-hand: 64px;
-    --card-w-trick: 54px;
-    --card-h-trick: 76px;
-    --card-w-opp: 32px;
-    --card-h-opp: 45px;
+    --card-w-hand: 56px;
+    --card-h-hand: 78px;
+    --card-w-trick: 64px;
+    --card-h-trick: 90px;
+    --card-w-opp: 34px;
+    --card-h-opp: 48px;
 
     --font-size-score-target: 18px;
     --font-size-score-value: 15px;

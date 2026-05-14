@@ -1,7 +1,7 @@
 .area {
   position: relative;
-  width: clamp(200px, 26vw, 320px);
-  height: clamp(160px, 20vw, 260px);
+  width: clamp(220px, 26vw, 320px);
+  height: clamp(180px, 20vw, 260px);
   pointer-events: none;
 }
 

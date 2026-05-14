@@ -65,9 +65,18 @@ try {
         }
 
         if (sc.fullFlow) {
+          // Picker → Belote tile → ModeSelectScreen → AI → StartScreen → PLAY.
+          const pickBelote = page.locator('[data-testid="pick-belote"]');
+          if (await pickBelote.count()) {
+            await pickBelote.click();
+            await page.waitForTimeout(250);
+          }
           await page.locator('[data-testid="mode-btn-ai"]').click();
           await page.waitForTimeout(250);
-          await page.locator('button:has-text("Play game")').click();
+          const play = page.locator('button:has-text("Play game")');
+          if (await play.count()) {
+            await play.click();
+          }
           await page.waitForTimeout(4000); // let AI bid until it's south's turn
         }
 

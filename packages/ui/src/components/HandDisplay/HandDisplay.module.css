@@ -84,7 +84,7 @@
 /* ── Tablet ── */
 @media (max-width: 900px) {
   .fanSlot {
-    transform-origin: 50% 380px;
+    transform-origin: 50% 430px;
   }
 }
 
@@ -110,7 +110,7 @@
 /* ── Mobile ── */
 @media (max-width: 600px) {
   .fanSlot {
-    transform-origin: 50% 260px;
+    transform-origin: 50% 310px;
   }
   .fanSlot:hover .cardHover {
     transform: translateY(-14px);
