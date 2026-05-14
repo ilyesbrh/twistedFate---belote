@@ -16,6 +16,12 @@ interface ModeSelectScreenProps {
   onViewHistory?: () => void;
   onViewFriends?: () => void;
   onViewProfile?: () => void;
+  /** Game title shown at the top. Defaults to "Belote". */
+  gameName?: string;
+  /** Subtitle shown below the title. Defaults to "— Coinchée —". */
+  gameSubtitle?: string;
+  /** Modes to disable (shown as "soon"). Overrides the base disabled state. */
+  disabledModes?: ReadonlySet<Mode>;
 }
 
 interface ModeButton {
@@ -71,6 +77,9 @@ export function ModeSelectScreen({
   onViewHistory,
   onViewFriends,
   onViewProfile,
+  gameName = "Belote",
+  gameSubtitle = "— Coinchée —",
+  disabledModes,
 }: ModeSelectScreenProps): ReactElement {
   const showChip = identity !== undefined && onSignIn && onSignUp && onSignOut;
   return (
@@ -91,41 +100,44 @@ export function ModeSelectScreen({
       <MenuFelt className={styles.root}>
         <div data-testid="mode-select-screen" className={styles.contentColumn}>
           <HeroIllustration />
-          <h1 className={styles.title}>Belote</h1>
-          <p className={styles.subtitle}>— Coinchée —</p>
+          <h1 className={styles.title}>{gameName}</h1>
+          <p className={styles.subtitle}>{gameSubtitle}</p>
           <div className={styles.grid}>
-            {MODES.map((m) => (
-              <button
-                key={m.id}
-                className={`${styles.btn} ${m.disabled ? styles.btnDisabled : ""}`}
-                onClick={() => {
-                  if (!m.disabled) onSelect(m.id);
-                }}
-                disabled={m.disabled}
-                aria-label={m.ariaLabel}
-                data-touch="primary"
-                data-testid={`mode-btn-${m.id}`}
-              >
-                <span
-                  className={styles.iconSlot}
-                  data-testid={`mode-icon-${m.id}`}
-                  aria-hidden="true"
+            {MODES.map((m) => {
+              const disabled = m.disabled || (disabledModes?.has(m.id) ?? false);
+              return (
+                <button
+                  key={m.id}
+                  className={`${styles.btn} ${disabled ? styles.btnDisabled : ""}`}
+                  onClick={() => {
+                    if (!disabled) onSelect(m.id);
+                  }}
+                  disabled={disabled}
+                  aria-label={m.ariaLabel}
+                  data-touch="primary"
+                  data-testid={`mode-btn-${m.id}`}
                 >
-                  {m.icon}
-                </span>
-                <span className={styles.btnLabel}>{m.label}</span>
-                <span className={styles.btnSubtitle}>{m.subtitle}</span>
-                {m.disabled && (
-                  <span className={styles.comingPill} data-testid={`mode-pill-${m.id}`}>
-                    soon
+                  <span
+                    className={styles.iconSlot}
+                    data-testid={`mode-icon-${m.id}`}
+                    aria-hidden="true"
+                  >
+                    {m.icon}
                   </span>
-                )}
-                {/* Decorative corner pip — hand-drawn ornament. */}
-                <span className={styles.cornerPip} aria-hidden="true">
-                  <CornerOrnament />
-                </span>
-              </button>
-            ))}
+                  <span className={styles.btnLabel}>{m.label}</span>
+                  <span className={styles.btnSubtitle}>{m.subtitle}</span>
+                  {disabled && (
+                    <span className={styles.comingPill} data-testid={`mode-pill-${m.id}`}>
+                      soon
+                    </span>
+                  )}
+                  {/* Decorative corner pip — hand-drawn ornament. */}
+                  <span className={styles.cornerPip} aria-hidden="true">
+                    <CornerOrnament />
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </MenuFelt>

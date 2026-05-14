@@ -95,7 +95,7 @@ function RoomDeepLinkRedirect(): null {
     const code = params.get("room");
     const pid = params.get("pid");
     if (code && pid && /^[A-Z]{4}$/.test(code) && location.pathname === "/") {
-      navigate(`/belote/online${location.search}`, { replace: true });
+      void navigate(`/belote/online${location.search}`, { replace: true });
     }
   }, []); // runs once on mount
   return null;
@@ -112,11 +112,15 @@ function AppRoutes(): ReactElement {
   // Block until auth resolves (prevents WS opening before cookie is minted).
   if (auth.status === "loading") return <></>;
 
-  const handleSignIn = () => navigate("/signin");
-  const handleSignUp = () => navigate("/signup");
-  const handleSignOut = async () => {
+  const handleSignIn = (): void => {
+    void navigate("/signin");
+  };
+  const handleSignUp = (): void => {
+    void navigate("/signup");
+  };
+  const handleSignOut = async (): Promise<void> => {
     await auth.logout();
-    navigate("/");
+    void navigate("/");
   };
 
   const authProps = {
@@ -126,6 +130,25 @@ function AppRoutes(): ReactElement {
     onSignOut: () => void handleSignOut(),
   };
 
+  const viewHistory =
+    auth.identity?.kind === "user"
+      ? (): void => {
+          void navigate("/history");
+        }
+      : undefined;
+  const viewFriends =
+    auth.identity?.kind === "user"
+      ? (): void => {
+          void navigate("/friends");
+        }
+      : undefined;
+  const viewProfile =
+    auth.identity?.kind === "user"
+      ? (): void => {
+          void navigate("/profile");
+        }
+      : undefined;
+
   return (
     <Routes>
       {/* ── Game Picker ── */}
@@ -134,8 +157,12 @@ function AppRoutes(): ReactElement {
         element={
           <GamePickerScreen
             {...authProps}
-            onPickBelote={() => navigate("/belote")}
-            onPickCoinche={() => navigate("/coinche")}
+            onPickBelote={() => {
+              void navigate("/belote");
+            }}
+            onPickCoinche={() => {
+              void navigate("/coinche");
+            }}
           />
         }
       />
@@ -149,19 +176,13 @@ function AppRoutes(): ReactElement {
             <ModeSelectScreen
               {...authProps}
               onSelect={(mode: Mode) => {
-                if (mode === "ai") navigate("/belote/ai");
-                else if (mode === "friends") navigate("/belote/online");
-                else if (mode === "random") navigate("/belote/random");
+                if (mode === "ai") void navigate("/belote/ai");
+                else if (mode === "friends") void navigate("/belote/online");
+                else if (mode === "random") void navigate("/belote/random");
               }}
-              onViewHistory={
-                auth.identity?.kind === "user" ? () => navigate("/history") : undefined
-              }
-              onViewFriends={
-                auth.identity?.kind === "user" ? () => navigate("/friends") : undefined
-              }
-              onViewProfile={
-                auth.identity?.kind === "user" ? () => navigate("/profile") : undefined
-              }
+              onViewHistory={viewHistory}
+              onViewFriends={viewFriends}
+              onViewProfile={viewProfile}
             />
           </>
         }
@@ -170,22 +191,70 @@ function AppRoutes(): ReactElement {
       {/* ── Belote AI ── */}
       <Route
         path="/belote/ai"
-        element={<GameTable key={location.key} onPlayAgain={() => navigate("/belote")} />}
+        element={
+          <GameTable
+            key={location.key}
+            onPlayAgain={() => {
+              void navigate("/belote");
+            }}
+          />
+        }
       />
 
       {/* ── Belote Online lobby ── */}
-      <Route path="/belote/online" element={<OnlineFlow onLeave={() => navigate("/belote")} />} />
+      <Route
+        path="/belote/online"
+        element={
+          <OnlineFlow
+            onLeave={() => {
+              void navigate("/belote");
+            }}
+          />
+        }
+      />
 
       {/* ── Belote Random matchmaking ── */}
       <Route
         path="/belote/random"
-        element={<OnlineRandomFlow onLeave={() => navigate("/belote")} />}
+        element={
+          <OnlineRandomFlow
+            onLeave={() => {
+              void navigate("/belote");
+            }}
+          />
+        }
+      />
+
+      {/* ── Coinche menu ── */}
+      <Route
+        path="/coinche"
+        element={
+          <ModeSelectScreen
+            {...authProps}
+            gameName="Coinche"
+            gameSubtitle="— Coinchée —"
+            disabledModes={new Set<Mode>(["friends", "random", "ranked"])}
+            onSelect={(mode: Mode) => {
+              if (mode === "ai") void navigate("/coinche/ai");
+            }}
+            onViewHistory={viewHistory}
+            onViewFriends={viewFriends}
+            onViewProfile={viewProfile}
+          />
+        }
       />
 
       {/* ── Coinche AI ── */}
       <Route
-        path="/coinche"
-        element={<CoinchGameTable key={location.key} onPlayAgain={() => navigate("/")} />}
+        path="/coinche/ai"
+        element={
+          <CoinchGameTable
+            key={location.key}
+            onPlayAgain={() => {
+              void navigate("/coinche");
+            }}
+          />
+        }
       />
 
       {/* ── Auth ── */}
@@ -199,14 +268,22 @@ function AppRoutes(): ReactElement {
               setAuthPending(true);
               auth
                 .login(input)
-                .then(() => navigate("/belote"))
+                .then(() => {
+                  void navigate("/belote");
+                })
                 .catch(() => {
                   /* error on auth.error */
                 })
-                .finally(() => setAuthPending(false));
+                .finally(() => {
+                  setAuthPending(false);
+                });
             }}
-            onGotoSignup={() => navigate("/signup")}
-            onCancel={() => navigate(-1)}
+            onGotoSignup={() => {
+              void navigate("/signup");
+            }}
+            onCancel={() => {
+              void navigate(-1);
+            }}
           />
         }
       />
@@ -220,14 +297,22 @@ function AppRoutes(): ReactElement {
               setAuthPending(true);
               auth
                 .signup(input)
-                .then(() => navigate("/belote"))
+                .then(() => {
+                  void navigate("/belote");
+                })
                 .catch(() => {
                   /* error on auth.error */
                 })
-                .finally(() => setAuthPending(false));
+                .finally(() => {
+                  setAuthPending(false);
+                });
             }}
-            onGotoLogin={() => navigate("/signin")}
-            onCancel={() => navigate(-1)}
+            onGotoLogin={() => {
+              void navigate("/signin");
+            }}
+            onCancel={() => {
+              void navigate(-1);
+            }}
           />
         }
       />
@@ -237,7 +322,12 @@ function AppRoutes(): ReactElement {
         path="/history"
         element={
           auth.identity?.kind === "user" ? (
-            <HistoryScreenContainer currentUserId={auth.identity.id} onBack={() => navigate(-1)} />
+            <HistoryScreenContainer
+              currentUserId={auth.identity.id}
+              onBack={() => {
+                void navigate(-1);
+              }}
+            />
           ) : (
             <Navigate to="/" replace />
           )
@@ -247,7 +337,11 @@ function AppRoutes(): ReactElement {
         path="/friends"
         element={
           auth.identity?.kind === "user" ? (
-            <FriendsScreenContainer onBack={() => navigate(-1)} />
+            <FriendsScreenContainer
+              onBack={() => {
+                void navigate(-1);
+              }}
+            />
           ) : (
             <Navigate to="/" replace />
           )
@@ -259,8 +353,12 @@ function AppRoutes(): ReactElement {
           auth.identity?.kind === "user" ? (
             <ProfileScreenContainer
               userId={auth.identity.id}
-              onBack={() => navigate(-1)}
-              onIdentityChanged={() => void auth.refresh()}
+              onBack={() => {
+                void navigate(-1);
+              }}
+              onIdentityChanged={() => {
+                void auth.refresh();
+              }}
             />
           ) : (
             <Navigate to="/" replace />
@@ -293,7 +391,13 @@ function OnlineFlow({ onLeave }: { onLeave: () => void }): ReactElement {
 
   if (view === "lobby") {
     return (
-      <OnlineLobby lobby={lobby} onBack={leaveAndForget} onGameStarted={() => setView("game")} />
+      <OnlineLobby
+        lobby={lobby}
+        onBack={leaveAndForget}
+        onGameStarted={() => {
+          setView("game");
+        }}
+      />
     );
   }
   return <GameTableView state={sessionState} onPlayAgain={leaveAndForget} />;
