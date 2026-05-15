@@ -29,7 +29,12 @@ import type {
   RoundScore,
 } from "@belote/core";
 import type { CardData, PlayerData, Position, TrickCardData } from "../data/mockGame.js";
-import type { GameSessionState, LastRoundResult, BidReveal } from "./useGameSession.js";
+import type {
+  GameSessionState,
+  LastRoundResult,
+  BidReveal,
+  RoundHistoryEntry,
+} from "./useGameSession.js";
 import { SUIT_SYMBOLS } from "../messages/gameMessages.js";
 import type { GameMessage, ProfileLookup } from "../messages/gameMessages.js";
 
@@ -215,6 +220,7 @@ export function useCoinchGameSession(): GameSessionState {
     winnerPosition: Position | null;
   } | null>(null);
   const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
+  const [roundHistory, setRoundHistory] = useState<readonly RoundHistoryEntry[]>([]);
   const [peekingLastTrick, setPeekingLastTrick] = useState(false);
   const [bidReveal, setBidReveal] = useState<BidReveal | null>(null);
   const bidRevealKey = useRef(0);
@@ -341,6 +347,25 @@ export function useCoinchGameSession(): GameSessionState {
               isCapot?: boolean;
             })
           | null;
+        // Accumulate roundHistory immediately so cumulative totals are correct.
+        const cg = sessionRef.current.game;
+        const ns = cg?.teamScores[0] ?? 0;
+        const ew = cg?.teamScores[1] ?? 0;
+        setRoundHistory((prev) => [
+          ...prev,
+          {
+            roundNumber: prev.length + 1,
+            contract: rc as unknown as Contract | null,
+            bidderName: getProfile(bidderPos).name,
+            roundScore: rs as unknown as RoundScore,
+            nsCumulative: ns,
+            ewCumulative: ew,
+            announcementWinner: rs.announcementWinner,
+            announcementPoints: rs.announcementPoints,
+            contractType: rc?.contractType,
+            isCapot: rc?.isCapot,
+          },
+        ]);
         setTimeout((): void => {
           setLastRoundResult({
             wasCancelled: false,
@@ -595,6 +620,7 @@ export function useCoinchGameSession(): GameSessionState {
     bidReveal,
     dismissBidReveal,
     isOnline: false,
+    roundHistory,
     lastCompletedTrick,
     lastTrickWinnerPosition,
     peekingLastTrick,

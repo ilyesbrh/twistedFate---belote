@@ -311,6 +311,7 @@ export function GameTableView({
           onPlayAgain={onPlayAgain}
           onBackToMenu={onBackToMenu ?? onPlayAgain}
           onFindNewOpponents={onFindNewOpponents}
+          roundHistory={state.roundHistory}
         />
       )}
     </div>

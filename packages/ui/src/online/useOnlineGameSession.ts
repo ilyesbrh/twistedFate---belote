@@ -26,6 +26,7 @@ import type {
   GamePhase,
   LastRoundResult,
   BidReveal,
+  RoundHistoryEntry,
 } from "../hooks/useGameSession.js";
 import type { CardData, PlayerData, Position, TrickCardData } from "../data/mockGame.js";
 import { eventToMessage, createBeloteMessage } from "../messages/gameMessages.js";
@@ -74,6 +75,7 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
   const [hand, setHand] = useState<readonly Card[]>([]);
   const [legalIds, setLegalIds] = useState<ReadonlySet<string>>(new Set());
   const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
+  const [roundHistory, setRoundHistory] = useState<readonly RoundHistoryEntry[]>([]);
   const [peekingLastTrick, setPeekingLastTrick] = useState(false);
   const [delayedWinner, setDelayedWinner] = useState<0 | 1 | null>(null);
   const [bidReveal, setBidReveal] = useState<BidReveal | null>(null);
@@ -296,6 +298,20 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
         const bidderName =
           (pubRef.current?.players ?? []).find((p) => p.seat === bidderPos)?.nickname ?? "";
         const roundScore = (ev["roundScore"] as RoundScore | undefined) ?? null;
+        const scoresArr = pubRef.current?.scores;
+        const nsCumulative = scoresArr ? scoresArr[0] : 0;
+        const ewCumulative = scoresArr ? scoresArr[1] : 0;
+        setRoundHistory((prev) => [
+          ...prev,
+          {
+            roundNumber: prev.length + 1,
+            contract,
+            bidderName,
+            roundScore,
+            nsCumulative,
+            ewCumulative,
+          },
+        ]);
         setTimeout(() => {
           setLastRoundResult({
             wasCancelled: false,
@@ -363,6 +379,7 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
       dismissBidReveal,
       peekingLastTrick,
       setPeekingLastTrick,
+      roundHistory,
     });
   }, [
     pub,
@@ -378,6 +395,7 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
     dismissBidReveal,
     peekingLastTrick,
     setPeekingLastTrick,
+    roundHistory,
   ]);
 }
 
@@ -419,6 +437,7 @@ interface AdaptInput {
   dismissBidReveal: () => void;
   peekingLastTrick: boolean;
   setPeekingLastTrick: (open: boolean) => void;
+  roundHistory: readonly RoundHistoryEntry[];
 }
 
 function adapt(input: AdaptInput): GameSessionState {
@@ -436,6 +455,7 @@ function adapt(input: AdaptInput): GameSessionState {
     dismissBidReveal,
     peekingLastTrick,
     setPeekingLastTrick,
+    roundHistory,
   } = input;
   const mySeat: Seat = lobby.seat ?? 0;
 
@@ -657,6 +677,7 @@ function adapt(input: AdaptInput): GameSessionState {
     bidReveal,
     dismissBidReveal,
     isOnline: true,
+    roundHistory,
     lastCompletedTrick,
     lastTrickWinnerPosition,
     peekingLastTrick,

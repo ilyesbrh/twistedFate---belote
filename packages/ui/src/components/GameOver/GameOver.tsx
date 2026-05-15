@@ -1,5 +1,14 @@
 import type { ReactElement } from "react";
+import { useState } from "react";
+import type { RoundHistoryEntry } from "../../hooks/useGameSession.js";
 import styles from "./GameOver.module.css";
+
+const SUIT_GLYPH: Record<string, string> = {
+  spades: "♠",
+  hearts: "♥",
+  diamonds: "♦",
+  clubs: "♣",
+};
 
 // NS = positions 0 (ElenaP) & 2 (DilyanaBl)
 // EW = positions 1 (Villy) & 3 (Vane_Bane)
@@ -21,6 +30,8 @@ interface GameOverProps {
   onPlayAgain: () => void;
   onBackToMenu: () => void;
   onFindNewOpponents?: () => void;
+  /** Round-by-round history for the optional score breakdown panel. */
+  roundHistory?: readonly RoundHistoryEntry[];
 }
 
 export function GameOver({
@@ -32,7 +43,10 @@ export function GameOver({
   onPlayAgain,
   onBackToMenu,
   onFindNewOpponents,
+  roundHistory,
 }: GameOverProps): ReactElement {
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const hasHistory = (roundHistory?.length ?? 0) > 0;
   const nsWins = winnerTeamIndex === 0;
   const winner = nsWins ? "NS" : "EW";
   const winnerPlayers = nsWins ? NS_PLAYERS : EW_PLAYERS;
@@ -87,6 +101,23 @@ export function GameOver({
           </div>
         </div>
 
+        {/* ── Score breakdown toggle + panel ── */}
+        {hasHistory && roundHistory && (
+          <>
+            <button
+              type="button"
+              className={styles.breakdownToggle}
+              onClick={() => {
+                setShowBreakdown((s) => !s);
+              }}
+              aria-expanded={showBreakdown}
+            >
+              {showBreakdown ? "Hide breakdown" : "See breakdown"}
+            </button>
+            {showBreakdown && <ScoreBreakdown entries={roundHistory} />}
+          </>
+        )}
+
         {/* ── CTAs — mode-aware ── */}
         <div className={styles.ctaGroup}>
           <CtaSet
@@ -97,6 +128,71 @@ export function GameOver({
           />
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── ScoreBreakdown ────────────────────────────────────────────────────────────
+
+interface ScoreBreakdownProps {
+  entries: readonly RoundHistoryEntry[];
+}
+
+function formatContract(entry: RoundHistoryEntry): string {
+  if (entry.contract === null) return "—";
+  const c = entry.contract;
+  const lvlSuffix = c.coincheLevel === 4 ? " ×4" : c.coincheLevel === 2 ? " ×2" : "";
+  if (entry.isCapot === true) return `Capot ${SUIT_GLYPH[c.suit] ?? ""}${lvlSuffix}`;
+  if (entry.contractType === "sans-atout") return `SA ${String(c.value)}${lvlSuffix}`;
+  if (entry.contractType === "tout-atout") return `TA ${String(c.value)}${lvlSuffix}`;
+  return `${SUIT_GLYPH[c.suit] ?? c.suit} ${String(c.value)}${lvlSuffix}`;
+}
+
+function formatBonus(entry: RoundHistoryEntry): string {
+  const parts: string[] = [];
+  if (entry.roundScore?.beloteBonusTeam) parts.push("Belote +20");
+  if (entry.announcementPoints && entry.announcementPoints > 0) {
+    parts.push(`Annonces +${String(entry.announcementPoints)}`);
+  }
+  return parts.join(", ") || "—";
+}
+
+function ScoreBreakdown({ entries }: ScoreBreakdownProps): ReactElement {
+  return (
+    <div className={styles.breakdownWrap}>
+      <table className={styles.breakdownTable} aria-label="Score breakdown">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Contract</th>
+            <th scope="col">Result</th>
+            <th scope="col">NS</th>
+            <th scope="col">EW</th>
+            <th scope="col">Bonus</th>
+            <th scope="col">NS tot</th>
+            <th scope="col">EW tot</th>
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((e) => {
+            const made = e.roundScore?.contractMet ?? false;
+            return (
+              <tr key={e.roundNumber}>
+                <td>{e.roundNumber}</td>
+                <td>{formatContract(e)}</td>
+                <td className={made ? styles.resultMade : styles.resultFailed}>
+                  {e.contract === null ? "—" : made ? "Made" : "Failed"}
+                </td>
+                <td>{e.roundScore?.contractingTeamFinalScore ?? 0}</td>
+                <td>{e.roundScore?.opponentTeamFinalScore ?? 0}</td>
+                <td>{formatBonus(e)}</td>
+                <td>{e.nsCumulative}</td>
+                <td>{e.ewCumulative}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

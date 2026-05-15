@@ -1,4 +1,5 @@
 import { GameOver, type GameOverMode } from "../../components/GameOver/GameOver.js";
+import type { RoundHistoryEntry } from "../../hooks/useGameSession.js";
 import type { Fixture } from "../ScreenViewer/types.js";
 
 const noop = (): void => {
@@ -9,6 +10,66 @@ const AI_BELOTE: GameOverMode = { kind: "ai", gameVariant: "belote" };
 const AI_COINCHE: GameOverMode = { kind: "ai", gameVariant: "coinche" };
 const ONLINE_FRIENDS: GameOverMode = { kind: "online-friends" };
 const ONLINE_RANDOM: GameOverMode = { kind: "online-random" };
+
+const SAMPLE_HISTORY: readonly RoundHistoryEntry[] = [
+  {
+    roundNumber: 1,
+    bidderName: "Imed",
+    contract: { id: "c1", suit: "hearts", value: 90, bidderPosition: 0, coincheLevel: 1 },
+    roundScore: {
+      contractingTeamPoints: 100,
+      opponentTeamPoints: 62,
+      contractingTeamRoundedPoints: 100,
+      opponentTeamRoundedPoints: 60,
+      contractMet: true,
+      contractingTeamScore: 100,
+      opponentTeamScore: 62,
+      beloteBonusTeam: "contracting",
+      contractingTeamFinalScore: 120,
+      opponentTeamFinalScore: 62,
+    },
+    nsCumulative: 120,
+    ewCumulative: 62,
+  },
+  {
+    roundNumber: 2,
+    bidderName: "Bilal",
+    contract: { id: "c2", suit: "spades", value: 110, bidderPosition: 1, coincheLevel: 2 },
+    roundScore: {
+      contractingTeamPoints: 95,
+      opponentTeamPoints: 67,
+      contractingTeamRoundedPoints: 100,
+      opponentTeamRoundedPoints: 70,
+      contractMet: false,
+      contractingTeamScore: 0,
+      opponentTeamScore: 320,
+      beloteBonusTeam: null,
+      contractingTeamFinalScore: 0,
+      opponentTeamFinalScore: 320,
+    },
+    nsCumulative: 440,
+    ewCumulative: 62,
+  },
+  {
+    roundNumber: 3,
+    bidderName: "Sami",
+    contract: { id: "c3", suit: "clubs", value: 80, bidderPosition: 0, coincheLevel: 1 },
+    roundScore: {
+      contractingTeamPoints: 82,
+      opponentTeamPoints: 80,
+      contractingTeamRoundedPoints: 80,
+      opponentTeamRoundedPoints: 80,
+      contractMet: true,
+      contractingTeamScore: 80,
+      opponentTeamScore: 80,
+      beloteBonusTeam: null,
+      contractingTeamFinalScore: 80,
+      opponentTeamFinalScore: 80,
+    },
+    nsCumulative: 520,
+    ewCumulative: 142,
+  },
+];
 
 export const gameOverFixtures: readonly Fixture[] = [
   {
@@ -89,6 +150,23 @@ export const gameOverFixtures: readonly Fixture[] = [
         onPlayAgain={noop}
         onBackToMenu={noop}
         onFindNewOpponents={noop}
+      />
+    ),
+  },
+  {
+    id: "game-over-with-breakdown",
+    title: "With score breakdown (3 rounds)",
+    group: "GameOver",
+    render: () => (
+      <GameOver
+        winnerTeamIndex={0}
+        nsTotal={520}
+        ewTotal={142}
+        targetScore={501}
+        mode={AI_BELOTE}
+        roundHistory={SAMPLE_HISTORY}
+        onPlayAgain={noop}
+        onBackToMenu={noop}
       />
     ),
   },

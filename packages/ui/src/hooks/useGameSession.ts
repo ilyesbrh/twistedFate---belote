@@ -67,6 +67,21 @@ const TRICK_OFFSETS: Record<Position, { rotation: number; offsetX: number; offse
   east: { rotation: 9, offsetX: 14, offsetY: -4 },
 };
 
+// ── Round History (accumulated for end-of-game breakdown) ────────────────
+
+export interface RoundHistoryEntry {
+  readonly roundNumber: number;
+  readonly contract: Contract | null;
+  readonly bidderName: string;
+  readonly roundScore: RoundScore | null;
+  readonly nsCumulative: number;
+  readonly ewCumulative: number;
+  readonly announcementWinner?: "ns" | "ew" | null;
+  readonly announcementPoints?: number;
+  readonly contractType?: "suit" | "sans-atout" | "tout-atout";
+  readonly isCapot?: boolean;
+}
+
 // ── Last Round Result ─────────────────────────────────────────────────────
 
 export interface LastRoundResult {
@@ -141,6 +156,8 @@ export interface GameSessionState {
   dismissBidReveal: () => void;
   /** True when playing an online game (server auto-starts next round). */
   isOnline: boolean;
+  /** Round-by-round history accumulated for the end-of-game score breakdown. */
+  roundHistory: readonly RoundHistoryEntry[];
   /** The four cards of the previously-completed trick, null until one trick has been swept. */
   lastCompletedTrick: TrickCardData[] | null;
   /** Seat of the player who won the previous trick. */
@@ -173,6 +190,7 @@ export function useGameSession(): GameSessionState {
     winnerPosition: Position | null;
   } | null>(null);
   const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
+  const [roundHistory, setRoundHistory] = useState<readonly RoundHistoryEntry[]>([]);
   const [peekingLastTrick, setPeekingLastTrick] = useState(false);
   const [bidReveal, setBidReveal] = useState<BidReveal | null>(null);
   const bidRevealKey = useRef(0);
@@ -296,6 +314,23 @@ export function useGameSession(): GameSessionState {
       if (event.type === "round_completed") {
         const ev = event as RoundCompletedEvent;
         const bidderPos = ev.round.contract?.bidderPosition ?? 0;
+        // Accumulate roundHistory immediately so cumulative totals match the
+        // session state at the moment of round completion.
+        const g = sessionRef.current.game;
+        const ns = g?.teamScores[0] ?? 0;
+        const ew = g?.teamScores[1] ?? 0;
+        const bidderName = PROFILES[bidderPos].name;
+        setRoundHistory((prev) => [
+          ...prev,
+          {
+            roundNumber: prev.length + 1,
+            contract: ev.round.contract ?? null,
+            bidderName,
+            roundScore: ev.roundScore,
+            nsCumulative: ns,
+            ewCumulative: ew,
+          },
+        ]);
         // Delay so the player sees the last trick sweep before the popup
         setTimeout(() => {
           setLastRoundResult({
@@ -552,6 +587,7 @@ export function useGameSession(): GameSessionState {
     bidReveal,
     dismissBidReveal,
     isOnline: false,
+    roundHistory,
     lastCompletedTrick,
     lastTrickWinnerPosition,
     peekingLastTrick,

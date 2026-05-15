@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { GameOver, type GameOverMode } from "../src/components/GameOver/GameOver.js";
+import type { RoundHistoryEntry } from "../src/hooks/useGameSession.js";
 
 interface RenderOptions {
   winnerTeamIndex?: 0 | 1;
@@ -10,6 +11,7 @@ interface RenderOptions {
   ewTotal?: number;
   targetScore?: number;
   mode?: GameOverMode;
+  roundHistory?: readonly RoundHistoryEntry[];
 }
 
 function renderGameOver(opts: RenderOptions = {}) {
@@ -19,6 +21,7 @@ function renderGameOver(opts: RenderOptions = {}) {
     ewTotal: opts.ewTotal ?? 380,
     targetScore: opts.targetScore ?? 501,
     mode: opts.mode ?? ({ kind: "ai", gameVariant: "belote" } as const),
+    roundHistory: opts.roundHistory,
     onPlayAgain: vi.fn(),
     onBackToMenu: vi.fn(),
     onFindNewOpponents: vi.fn(),
@@ -29,6 +32,35 @@ function renderGameOver(opts: RenderOptions = {}) {
     onPlayAgain: props.onPlayAgain,
     onBackToMenu: props.onBackToMenu,
     onFindNewOpponents: props.onFindNewOpponents,
+  };
+}
+
+function makeHistoryEntry(over: Partial<RoundHistoryEntry> = {}): RoundHistoryEntry {
+  return {
+    roundNumber: 1,
+    bidderName: "South",
+    contract: {
+      id: "c1",
+      suit: "hearts",
+      value: 90,
+      bidderPosition: 0,
+      coincheLevel: 1,
+    },
+    roundScore: {
+      contractingTeamPoints: 100,
+      opponentTeamPoints: 62,
+      contractingTeamRoundedPoints: 100,
+      opponentTeamRoundedPoints: 60,
+      contractMet: true,
+      contractingTeamScore: 100,
+      opponentTeamScore: 62,
+      beloteBonusTeam: null,
+      contractingTeamFinalScore: 100,
+      opponentTeamFinalScore: 62,
+    },
+    nsCumulative: 100,
+    ewCumulative: 62,
+    ...over,
   };
 }
 
@@ -192,6 +224,41 @@ describe("GameOver", () => {
       const { onFindNewOpponents } = renderGameOver({ mode: { kind: "online-random" } });
       await user.click(screen.getByRole("button", { name: /find new opponents/i }));
       expect(onFindNewOpponents).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("score breakdown", () => {
+    it("does NOT render the breakdown toggle when roundHistory is empty/undefined", () => {
+      renderGameOver();
+      expect(screen.queryByRole("button", { name: /see breakdown/i })).toBeNull();
+    });
+
+    it("renders the toggle when roundHistory has entries", () => {
+      renderGameOver({ roundHistory: [makeHistoryEntry()] });
+      expect(screen.getByRole("button", { name: /see breakdown/i })).toBeInTheDocument();
+    });
+
+    it("clicking the toggle opens the breakdown table", async () => {
+      const user = userEvent.setup();
+      renderGameOver({ roundHistory: [makeHistoryEntry()] });
+      expect(screen.queryByLabelText("Score breakdown")).toBeNull();
+      await user.click(screen.getByRole("button", { name: /see breakdown/i }));
+      expect(screen.getByLabelText("Score breakdown")).toBeInTheDocument();
+    });
+
+    it("renders one row per history entry", async () => {
+      const user = userEvent.setup();
+      renderGameOver({
+        roundHistory: [
+          makeHistoryEntry({ roundNumber: 1, nsCumulative: 100, ewCumulative: 62 }),
+          makeHistoryEntry({ roundNumber: 2, nsCumulative: 230, ewCumulative: 130 }),
+          makeHistoryEntry({ roundNumber: 3, nsCumulative: 350, ewCumulative: 220 }),
+        ],
+      });
+      await user.click(screen.getByRole("button", { name: /see breakdown/i }));
+      const rows = screen.getAllByRole("row");
+      // header + 3 body rows
+      expect(rows.length).toBeGreaterThanOrEqual(4);
     });
   });
 });
