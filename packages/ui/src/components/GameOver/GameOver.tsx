@@ -6,13 +6,21 @@ import styles from "./GameOver.module.css";
 const NS_PLAYERS = "ElenaP & DilyanaBl";
 const EW_PLAYERS = "Villy & Vane_Bane";
 
+export type GameOverMode =
+  | { readonly kind: "ai"; readonly gameVariant: "belote" | "coinche" }
+  | { readonly kind: "online-friends" }
+  | { readonly kind: "online-random" };
+
 interface GameOverProps {
   /** 0 = NS wins, 1 = EW wins */
   winnerTeamIndex: 0 | 1;
   nsTotal: number;
   ewTotal: number;
   targetScore: number;
+  mode: GameOverMode;
   onPlayAgain: () => void;
+  onBackToMenu: () => void;
+  onFindNewOpponents?: () => void;
 }
 
 export function GameOver({
@@ -20,7 +28,10 @@ export function GameOver({
   nsTotal,
   ewTotal,
   targetScore,
+  mode,
   onPlayAgain,
+  onBackToMenu,
+  onFindNewOpponents,
 }: GameOverProps): ReactElement {
   const nsWins = winnerTeamIndex === 0;
   const winner = nsWins ? "NS" : "EW";
@@ -76,8 +87,40 @@ export function GameOver({
           </div>
         </div>
 
-        {/* ── Play again ── */}
+        {/* ── CTAs — mode-aware ── */}
+        <div className={styles.ctaGroup}>
+          <CtaSet
+            mode={mode}
+            onPlayAgain={onPlayAgain}
+            onBackToMenu={onBackToMenu}
+            onFindNewOpponents={onFindNewOpponents}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── CTA set ──────────────────────────────────────────────────────────────────
+
+interface CtaSetProps {
+  mode: GameOverMode;
+  onPlayAgain: () => void;
+  onBackToMenu: () => void;
+  onFindNewOpponents?: () => void;
+}
+
+function CtaSet({
+  mode,
+  onPlayAgain,
+  onBackToMenu,
+  onFindNewOpponents,
+}: CtaSetProps): ReactElement {
+  if (mode.kind === "ai") {
+    return (
+      <>
         <button
+          type="button"
           className={styles.playAgainBtn}
           onClick={onPlayAgain}
           aria-label="Play again"
@@ -85,8 +128,74 @@ export function GameOver({
         >
           PLAY AGAIN
         </button>
-      </div>
-    </div>
+        <button
+          type="button"
+          className={styles.secondaryBtn}
+          onClick={onBackToMenu}
+          aria-label="Back to Menu"
+          data-touch="primary"
+        >
+          Back to Menu
+        </button>
+      </>
+    );
+  }
+  if (mode.kind === "online-friends") {
+    return (
+      <>
+        <button
+          type="button"
+          className={styles.playAgainBtn}
+          onClick={onPlayAgain}
+          aria-label="Leave room"
+          data-touch="primary"
+        >
+          LEAVE ROOM
+        </button>
+        <button
+          type="button"
+          className={styles.secondaryBtn}
+          onClick={onBackToMenu}
+          aria-label="Back to Menu"
+          data-touch="primary"
+        >
+          Back to Menu
+        </button>
+      </>
+    );
+  }
+  // online-random
+  return (
+    <>
+      <button
+        type="button"
+        className={styles.playAgainBtn}
+        onClick={() => {
+          onFindNewOpponents?.();
+        }}
+        aria-label="Find new opponents"
+        data-touch="primary"
+      >
+        FIND NEW OPPONENTS
+      </button>
+      <button
+        type="button"
+        className={styles.secondaryBtn}
+        onClick={onPlayAgain}
+        aria-label="Leave"
+        data-touch="primary"
+      >
+        LEAVE
+      </button>
+      <button
+        type="button"
+        className={styles.tertiaryBtn}
+        onClick={onBackToMenu}
+        aria-label="Back to Menu"
+      >
+        Back to Menu
+      </button>
+    </>
   );
 }
 

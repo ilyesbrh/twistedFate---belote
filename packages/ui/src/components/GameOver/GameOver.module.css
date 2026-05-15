@@ -269,6 +269,72 @@
   box-shadow: 0 0 0 rgba(42, 31, 18, 0.2);
 }
 
+/* ── CTA group (stacks the mode-aware buttons vertically) ── */
+.ctaGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.ctaGroup .playAgainBtn {
+  width: 100%;
+  margin-top: 0;
+}
+
+/* ── Secondary button — ghost/outlined style ── */
+.secondaryBtn {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  background: transparent;
+  border: 2px solid var(--ink-dark);
+  color: var(--ink-dark);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 3px 0 rgba(42, 31, 18, 0.2);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.secondaryBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 rgba(42, 31, 18, 0.25);
+}
+
+.secondaryBtn:active {
+  transform: translateY(1px);
+  box-shadow: 0 0 0 rgba(42, 31, 18, 0.18);
+}
+
+/* ── Tertiary button — text link, no border, lower visual weight ── */
+.tertiaryBtn {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  color: var(--ink-medium);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-style: italic;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.12s ease;
+}
+
+.tertiaryBtn:hover {
+  color: var(--ink-dark);
+}
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .panel {

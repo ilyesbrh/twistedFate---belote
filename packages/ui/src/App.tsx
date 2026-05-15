@@ -197,6 +197,9 @@ function AppRoutes(): ReactElement {
             onPlayAgain={() => {
               void navigate("/belote");
             }}
+            onBackToMenu={() => {
+              void navigate("/belote");
+            }}
           />
         }
       />
@@ -251,6 +254,9 @@ function AppRoutes(): ReactElement {
           <CoinchGameTable
             key={location.key}
             onPlayAgain={() => {
+              void navigate("/coinche");
+            }}
+            onBackToMenu={() => {
               void navigate("/coinche");
             }}
           />
@@ -400,7 +406,14 @@ function OnlineFlow({ onLeave }: { onLeave: () => void }): ReactElement {
       />
     );
   }
-  return <GameTableView state={sessionState} onPlayAgain={leaveAndForget} />;
+  return (
+    <GameTableView
+      state={sessionState}
+      onPlayAgain={leaveAndForget}
+      onBackToMenu={leaveAndForget}
+      gameOverMode={{ kind: "online-friends" }}
+    />
+  );
 }
 
 function OnlineRandomFlow({ onLeave }: { onLeave: () => void }): ReactElement {
@@ -439,7 +452,23 @@ function OnlineRandomFlow({ onLeave }: { onLeave: () => void }): ReactElement {
       />
     );
   }
-  return <GameTableView state={sessionState} onPlayAgain={leaveAndForget} />;
+  const findNewOpponents = (): void => {
+    if (lobby.phase === "queued") lobby.cancelRandom();
+    lobby.clearSavedSession();
+    lobby.disconnect();
+    const nick = lobby.identity?.nickname ?? "";
+    lobby.findRandom(nick);
+    setView("queue");
+  };
+  return (
+    <GameTableView
+      state={sessionState}
+      onPlayAgain={leaveAndForget}
+      onBackToMenu={leaveAndForget}
+      onFindNewOpponents={findNewOpponents}
+      gameOverMode={{ kind: "online-random" }}
+    />
+  );
 }
 
 // ── Account screen containers ─────────────────────────────────────────────────

@@ -2,13 +2,14 @@ import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { GameOver } from "../src/components/GameOver/GameOver.js";
+import { GameOver, type GameOverMode } from "../src/components/GameOver/GameOver.js";
 
 interface RenderOptions {
   winnerTeamIndex?: 0 | 1;
   nsTotal?: number;
   ewTotal?: number;
   targetScore?: number;
+  mode?: GameOverMode;
 }
 
 function renderGameOver(opts: RenderOptions = {}) {
@@ -17,10 +18,18 @@ function renderGameOver(opts: RenderOptions = {}) {
     nsTotal: opts.nsTotal ?? 520,
     ewTotal: opts.ewTotal ?? 380,
     targetScore: opts.targetScore ?? 501,
+    mode: opts.mode ?? ({ kind: "ai", gameVariant: "belote" } as const),
     onPlayAgain: vi.fn(),
+    onBackToMenu: vi.fn(),
+    onFindNewOpponents: vi.fn(),
   };
   const rendered = render(<GameOver {...props} />);
-  return { ...rendered, onPlayAgain: props.onPlayAgain };
+  return {
+    ...rendered,
+    onPlayAgain: props.onPlayAgain,
+    onBackToMenu: props.onBackToMenu,
+    onFindNewOpponents: props.onFindNewOpponents,
+  };
 }
 
 describe("GameOver", () => {
@@ -142,6 +151,47 @@ describe("GameOver", () => {
       renderGameOver();
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-modal", "true");
+    });
+  });
+
+  describe("mode-aware CTAs", () => {
+    it("AI mode renders PLAY AGAIN + Back to Menu, no Find Opponents", () => {
+      renderGameOver({ mode: { kind: "ai", gameVariant: "belote" } });
+      expect(screen.getByRole("button", { name: /play again/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /back to menu/i })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /find new opponents/i })).toBeNull();
+    });
+
+    it("AI mode: Back to Menu fires onBackToMenu", async () => {
+      const user = userEvent.setup();
+      const { onBackToMenu } = renderGameOver({ mode: { kind: "ai", gameVariant: "belote" } });
+      await user.click(screen.getByRole("button", { name: /back to menu/i }));
+      expect(onBackToMenu).toHaveBeenCalledTimes(1);
+    });
+
+    it("online-friends renders LEAVE ROOM + Back to Menu", () => {
+      renderGameOver({ mode: { kind: "online-friends" } });
+      expect(screen.getByRole("button", { name: /leave room/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /back to menu/i })).toBeInTheDocument();
+    });
+
+    it("online-friends does NOT render Find Opponents", () => {
+      renderGameOver({ mode: { kind: "online-friends" } });
+      expect(screen.queryByRole("button", { name: /find new opponents/i })).toBeNull();
+    });
+
+    it("online-random renders FIND NEW OPPONENTS + LEAVE + Back to Menu", () => {
+      renderGameOver({ mode: { kind: "online-random" } });
+      expect(screen.getByRole("button", { name: /find new opponents/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^leave$/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /back to menu/i })).toBeInTheDocument();
+    });
+
+    it("online-random: FIND NEW OPPONENTS fires onFindNewOpponents", async () => {
+      const user = userEvent.setup();
+      const { onFindNewOpponents } = renderGameOver({ mode: { kind: "online-random" } });
+      await user.click(screen.getByRole("button", { name: /find new opponents/i }));
+      expect(onFindNewOpponents).toHaveBeenCalledTimes(1);
     });
   });
 });

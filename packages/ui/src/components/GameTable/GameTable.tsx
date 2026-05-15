@@ -8,7 +8,7 @@ import { CoinchBidPanel } from "../CoinchBidPanel/CoinchBidPanel.js";
 import { LastTrickPeek } from "../LastTrickPeek/LastTrickPeek.js";
 import { BidWinReveal } from "../BidWinReveal/BidWinReveal.js";
 import { ChatPanel } from "../ChatPanel/ChatPanel.js";
-import { GameOver } from "../GameOver/GameOver.js";
+import { GameOver, type GameOverMode } from "../GameOver/GameOver.js";
 import { HandDisplay } from "../HandDisplay/HandDisplay.js";
 import { OpponentHand } from "../OpponentHand/OpponentHand.js";
 import { PlayerAvatar } from "../PlayerAvatar/PlayerAvatar.js";
@@ -20,12 +20,20 @@ import styles from "./GameTable.module.css";
 
 interface GameTableProps {
   onPlayAgain: () => void;
+  onBackToMenu?: () => void;
 }
 
 /** Container: wires the local AI session and renders the table. */
-export function GameTable({ onPlayAgain }: GameTableProps) {
+export function GameTable({ onPlayAgain, onBackToMenu }: GameTableProps) {
   const state = useGameSession();
-  return <GameTableView state={state} onPlayAgain={onPlayAgain} />;
+  return (
+    <GameTableView
+      state={state}
+      onPlayAgain={onPlayAgain}
+      onBackToMenu={onBackToMenu}
+      gameOverMode={{ kind: "ai", gameVariant: "belote" }}
+    />
+  );
 }
 
 interface GameTableViewProps {
@@ -35,6 +43,9 @@ interface GameTableViewProps {
   gameName?: string;
   gameSubtitle?: string;
   coincheBidding?: boolean;
+  gameOverMode?: GameOverMode;
+  onBackToMenu?: () => void;
+  onFindNewOpponents?: () => void;
 }
 
 /** Pure-presentation game table — accepts any GameSessionState (AI or online). */
@@ -45,6 +56,9 @@ export function GameTableView({
   gameName,
   gameSubtitle,
   coincheBidding = false,
+  gameOverMode,
+  onBackToMenu,
+  onFindNewOpponents,
 }: GameTableViewProps) {
   const [chatOpen, setChatOpen] = useState(false);
 
@@ -293,7 +307,10 @@ export function GameTableView({
           nsTotal={state.usTotalScore}
           ewTotal={state.themTotalScore}
           targetScore={state.targetScore}
+          mode={gameOverMode ?? { kind: "ai", gameVariant: coincheBidding ? "coinche" : "belote" }}
           onPlayAgain={onPlayAgain}
+          onBackToMenu={onBackToMenu ?? onPlayAgain}
+          onFindNewOpponents={onFindNewOpponents}
         />
       )}
     </div>
