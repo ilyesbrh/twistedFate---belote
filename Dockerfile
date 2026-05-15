@@ -21,6 +21,9 @@ COPY packages/animation/package.json ./packages/animation/
 COPY packages/tunisian/app/package.json ./packages/tunisian/app/
 COPY packages/tunisian/core/package.json ./packages/tunisian/core/
 COPY packages/tunisian/ui/package.json ./packages/tunisian/ui/
+COPY packages/coinche/app/package.json ./packages/coinche/app/
+COPY packages/coinche/core/package.json ./packages/coinche/core/
+COPY packages/coinche/ui/package.json ./packages/coinche/ui/
 COPY packages/db/package.json ./packages/db/
 COPY packages/protocol/package.json ./packages/protocol/
 COPY packages/server/package.json ./packages/server/
