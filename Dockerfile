@@ -54,7 +54,11 @@ WORKDIR /app
 # fails crash-loop style for the unprivileged `belote` system user that
 # CMD eventually runs as (its $HOME has no write access path inside this
 # image). A globally npm-installed pnpm avoids the runtime download.
-RUN npm install -g pnpm@10 && pnpm --version
+# Pin to the exact version listed in package.json's `packageManager` field.
+# A loose `pnpm@10` triggers pnpm's self-management (it tries to download the
+# pinned version into $HOME/.local/share/pnpm), which fails EACCES for the
+# unprivileged `belote` user that CMD runs as.
+RUN npm install -g pnpm@10.18.0 && pnpm --version
 
 ENV NODE_ENV=production
 ENV PORT=4100
