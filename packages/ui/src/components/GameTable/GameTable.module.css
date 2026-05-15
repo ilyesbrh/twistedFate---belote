@@ -152,6 +152,53 @@
   z-index: 20;
 }
 
+/* ── Last trick peek button: small pill anchored bottom-right of the trick zone.
+   Ghost style (cream paper background, ink-dark border) so it doesn't compete
+   with primary action UI. Visible only between tricks. ── */
+.peekBtn {
+  position: absolute;
+  bottom: calc(50% - 80px);
+  right: calc(50% - 220px);
+  z-index: 18;
+  min-height: 32px;
+  padding: 6px 12px;
+  font-family: var(--font-hand);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-dark);
+  background: rgba(255, 251, 233, 0.92);
+  border: 1.5px solid var(--ink-dark);
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow:
+    0 2px 0 rgba(42, 31, 18, 0.2),
+    0 4px 10px rgba(42, 31, 18, 0.18);
+  transition: transform 0.08s ease;
+}
+
+.peekBtn:hover {
+  transform: translateY(-1px);
+}
+.peekBtn:active {
+  transform: translateY(1px);
+}
+
+@media (max-width: 600px) {
+  .peekBtn {
+    bottom: calc(50% - 60px);
+    right: 12px;
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .peekBtn {
+    bottom: 8px;
+    right: 8px;
+  }
+}
+
 /* ── Bid log: small floating panel above the bid panel, visible during the
    entire auction phase so AI bids appear in real time. ── */
 .bidLog {

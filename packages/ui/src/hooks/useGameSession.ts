@@ -141,6 +141,14 @@ export interface GameSessionState {
   dismissBidReveal: () => void;
   /** True when playing an online game (server auto-starts next round). */
   isOnline: boolean;
+  /** The four cards of the previously-completed trick, null until one trick has been swept. */
+  lastCompletedTrick: TrickCardData[] | null;
+  /** Seat of the player who won the previous trick. */
+  lastTrickWinnerPosition: Position | null;
+  /** UI flag: is the LastTrickPeek modal currently open? */
+  peekingLastTrick: boolean;
+  /** Toggle the LastTrickPeek modal. */
+  setPeekingLastTrick: (open: boolean) => void;
   dispatch: (cmd: GameCommand) => void;
   playCard: (cardIndex: number) => void;
   placeBid: (
@@ -165,6 +173,7 @@ export function useGameSession(): GameSessionState {
     winnerPosition: Position | null;
   } | null>(null);
   const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
+  const [peekingLastTrick, setPeekingLastTrick] = useState(false);
   const [bidReveal, setBidReveal] = useState<BidReveal | null>(null);
   const bidRevealKey = useRef(0);
   /** Delayed winner — gives the player time to see the last actions before the popup. */
@@ -388,6 +397,20 @@ export function useGameSession(): GameSessionState {
   const trickCards = completedTrick?.cards ?? liveTrickCards;
   const trickWinnerPosition = completedTrick?.winnerPosition ?? null;
 
+  // Last completed trick (n-1) — derived from round.tricks history.
+  // Used by the LastTrickPeek modal so the player can review the previous trick.
+  const lastTrickFromCore = round?.tricks.at(-1) ?? null;
+  const lastCompletedTrick: TrickCardData[] | null = lastTrickFromCore
+    ? lastTrickFromCore.cards.map((pc): TrickCardData => {
+        const seat = POS_TO_SEAT[pc.playerPosition];
+        return { suit: pc.card.suit, rank: pc.card.rank, position: seat, ...TRICK_OFFSETS[seat] };
+      })
+    : null;
+  let lastTrickWinnerPosition: Position | null = null;
+  if (lastTrickFromCore?.winnerPosition != null) {
+    lastTrickWinnerPosition = POS_TO_SEAT[lastTrickFromCore.winnerPosition];
+  }
+
   // Trump
   const trumpSuit = (round?.contract?.suit ?? null) as Suit | null;
 
@@ -529,6 +552,10 @@ export function useGameSession(): GameSessionState {
     bidReveal,
     dismissBidReveal,
     isOnline: false,
+    lastCompletedTrick,
+    lastTrickWinnerPosition,
+    peekingLastTrick,
+    setPeekingLastTrick,
     dispatch,
     playCard,
     placeBid,

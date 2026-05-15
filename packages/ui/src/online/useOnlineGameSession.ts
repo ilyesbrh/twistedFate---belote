@@ -74,6 +74,7 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
   const [hand, setHand] = useState<readonly Card[]>([]);
   const [legalIds, setLegalIds] = useState<ReadonlySet<string>>(new Set());
   const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
+  const [peekingLastTrick, setPeekingLastTrick] = useState(false);
   const [delayedWinner, setDelayedWinner] = useState<0 | 1 | null>(null);
   const [bidReveal, setBidReveal] = useState<BidReveal | null>(null);
   const bidRevealKey = useRef(0);
@@ -360,6 +361,8 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
       completedTrick,
       bidReveal,
       dismissBidReveal,
+      peekingLastTrick,
+      setPeekingLastTrick,
     });
   }, [
     pub,
@@ -373,6 +376,8 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
     completedTrick,
     bidReveal,
     dismissBidReveal,
+    peekingLastTrick,
+    setPeekingLastTrick,
   ]);
 }
 
@@ -412,6 +417,8 @@ interface AdaptInput {
   completedTrick: { cards: TrickCardData[]; winnerPosition: Position | null } | null;
   bidReveal: BidReveal | null;
   dismissBidReveal: () => void;
+  peekingLastTrick: boolean;
+  setPeekingLastTrick: (open: boolean) => void;
 }
 
 function adapt(input: AdaptInput): GameSessionState {
@@ -427,6 +434,8 @@ function adapt(input: AdaptInput): GameSessionState {
     completedTrick,
     bidReveal,
     dismissBidReveal,
+    peekingLastTrick,
+    setPeekingLastTrick,
   } = input;
   const mySeat: Seat = lobby.seat ?? 0;
 
@@ -506,6 +515,22 @@ function adapt(input: AdaptInput): GameSessionState {
   });
   const trickCards = completedTrick?.cards ?? liveTrickCards;
   const trickWinnerPosition = completedTrick?.winnerPosition ?? null;
+
+  // Last completed trick (n-1) — derived from pub.round.tricks history.
+  const lastTrickFromPub = pub?.round?.tricks.at(-1) ?? null;
+  const lastCompletedTrick: TrickCardData[] | null = lastTrickFromPub
+    ? lastTrickFromPub.cards.map((pc) => {
+        const visual = seatToPos(pc.playerPosition);
+        return {
+          suit: pc.card.suit,
+          rank: pc.card.rank,
+          position: visual,
+          ...TRICK_OFFSETS[visual],
+        };
+      })
+    : null;
+  const lastTrickWinnerPosition: Position | null =
+    lastTrickFromPub?.winnerPosition != null ? seatToPos(lastTrickFromPub.winnerPosition) : null;
 
   // Active position.
   let activePosition: Position = "south";
@@ -632,6 +657,10 @@ function adapt(input: AdaptInput): GameSessionState {
     bidReveal,
     dismissBidReveal,
     isOnline: true,
+    lastCompletedTrick,
+    lastTrickWinnerPosition,
+    peekingLastTrick,
+    setPeekingLastTrick,
     dispatch: () => undefined,
     playCard,
     placeBid,

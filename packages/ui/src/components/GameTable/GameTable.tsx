@@ -5,6 +5,7 @@ import { AvatarActionMenu } from "../AvatarActionMenu/AvatarActionMenu.js";
 import { BidPanel } from "@tunisian/ui";
 import { BidLog, type BidLogProfile, type LogBid } from "../BidLog/BidLog.js";
 import { CoinchBidPanel } from "../CoinchBidPanel/CoinchBidPanel.js";
+import { LastTrickPeek } from "../LastTrickPeek/LastTrickPeek.js";
 import { BidWinReveal } from "../BidWinReveal/BidWinReveal.js";
 import { ChatPanel } from "../ChatPanel/ChatPanel.js";
 import { GameOver } from "../GameOver/GameOver.js";
@@ -158,6 +159,38 @@ export function GameTableView({
       <div className={styles.trickArea}>
         <TrickArea cards={state.trickCards} winnerPosition={state.trickWinnerPosition} />
       </div>
+
+      {/* ── Last trick peek button — visible between tricks once one has been swept ── */}
+      {state.lastCompletedTrick !== null && state.trickCards.length === 0 && (
+        <button
+          type="button"
+          className={styles.peekBtn}
+          onClick={() => {
+            state.setPeekingLastTrick(true);
+          }}
+          aria-label="View last trick"
+          data-touch="primary"
+          data-testid="last-trick-button"
+        >
+          Last trick
+        </button>
+      )}
+
+      {/* ── Last trick peek modal ── */}
+      {state.peekingLastTrick &&
+        state.lastCompletedTrick !== null &&
+        state.lastTrickWinnerPosition !== null && (
+          <LastTrickPeek
+            cards={state.lastCompletedTrick}
+            winnerPosition={state.lastTrickWinnerPosition}
+            winnerName={
+              state.players.find((p) => p.position === state.lastTrickWinnerPosition)?.name ?? ""
+            }
+            onClose={() => {
+              state.setPeekingLastTrick(false);
+            }}
+          />
+        )}
 
       {/* ── Bid log — visible during entire auction phase ── */}
       {state.biddingRound !== null && state.biddingRound.bids.length > 0 && (

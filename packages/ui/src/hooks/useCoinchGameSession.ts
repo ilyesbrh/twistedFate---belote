@@ -215,6 +215,7 @@ export function useCoinchGameSession(): GameSessionState {
     winnerPosition: Position | null;
   } | null>(null);
   const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
+  const [peekingLastTrick, setPeekingLastTrick] = useState(false);
   const [bidReveal, setBidReveal] = useState<BidReveal | null>(null);
   const bidRevealKey = useRef(0);
   const [delayedWinnerTeamIndex, setDelayedWinnerTeamIndex] = useState<0 | 1 | null>(null);
@@ -445,6 +446,18 @@ export function useCoinchGameSession(): GameSessionState {
   const trickCards = completedTrick?.cards ?? liveTrickCards;
   const trickWinnerPosition = completedTrick?.winnerPosition ?? null;
 
+  // Last completed trick (n-1) — derived from round.tricks history.
+  const lastTrickFromCore = round?.tricks.at(-1) ?? null;
+  const lastCompletedTrick: TrickCardData[] | null = lastTrickFromCore
+    ? lastTrickFromCore.cards.map((pc): TrickCardData => {
+        const seat = getSeat(pc.playerPosition);
+        return { suit: pc.card.suit, rank: pc.card.rank, position: seat, ...TRICK_OFFSETS[seat] };
+      })
+    : null;
+  const lastTrickWinnerPosition: Position | null = lastTrickFromCore
+    ? getSeat(lastTrickFromCore.winnerPosition)
+    : null;
+
   const trumpSuit: Suit | null =
     coinchContract?.contractType === "suit" ? coinchContract.suit : null;
 
@@ -582,6 +595,10 @@ export function useCoinchGameSession(): GameSessionState {
     bidReveal,
     dismissBidReveal,
     isOnline: false,
+    lastCompletedTrick,
+    lastTrickWinnerPosition,
+    peekingLastTrick,
+    setPeekingLastTrick,
     dispatch: dispatch as GameSessionState["dispatch"],
     playCard,
     placeBid,
