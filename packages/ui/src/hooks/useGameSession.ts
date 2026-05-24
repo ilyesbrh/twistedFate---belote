@@ -14,12 +14,19 @@ import type {
   CardPlayedEvent,
   BiddingCompletedEvent,
 } from "@belote/app";
-import { BID_VALUES, getValidPlays, calculateRunningPoints, getCardRankOrder } from "@belote/core";
+import {
+  BID_VALUES,
+  getValidPlays,
+  calculateRunningPoints,
+  calculateTrickPoints,
+  getCardRankOrder,
+} from "@belote/core";
 import type { Card } from "@belote/core";
 import type { BiddingRound, BidValue, Contract, RoundScore, Suit } from "@belote/core";
 import type { CardData, PlayerData, Position, TrickCardData } from "../data/mockGame.js";
 import { eventToMessage, createBeloteMessage } from "../messages/gameMessages.js";
 import type { GameMessage } from "../messages/gameMessages.js";
+import type { TrickHistoryRecord } from "../components/TrickHistoryPanel/TrickHistoryPanel.js";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
@@ -158,14 +165,12 @@ export interface GameSessionState {
   isOnline: boolean;
   /** Round-by-round history accumulated for the end-of-game score breakdown. */
   roundHistory: readonly RoundHistoryEntry[];
-  /** The four cards of the previously-completed trick, null until one trick has been swept. */
-  lastCompletedTrick: TrickCardData[] | null;
-  /** Seat of the player who won the previous trick. */
-  lastTrickWinnerPosition: Position | null;
-  /** UI flag: is the LastTrickPeek modal currently open? */
-  peekingLastTrick: boolean;
-  /** Toggle the LastTrickPeek modal. */
-  setPeekingLastTrick: (open: boolean) => void;
+  /** All completed tricks of the current round, used by the TrickHistoryPanel drawer. */
+  tricksHistory: readonly TrickHistoryRecord[];
+  /** UI flag: is the TrickHistoryPanel drawer open? */
+  tricksPanelOpen: boolean;
+  /** Toggle the TrickHistoryPanel drawer. */
+  setTricksPanelOpen: (open: boolean) => void;
   dispatch: (cmd: GameCommand) => void;
   playCard: (cardIndex: number) => void;
   placeBid: (
@@ -191,7 +196,7 @@ export function useGameSession(): GameSessionState {
   } | null>(null);
   const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
   const [roundHistory, setRoundHistory] = useState<readonly RoundHistoryEntry[]>([]);
-  const [peekingLastTrick, setPeekingLastTrick] = useState(false);
+  const [tricksPanelOpen, setTricksPanelOpen] = useState(false);
   const [bidReveal, setBidReveal] = useState<BidReveal | null>(null);
   const bidRevealKey = useRef(0);
   /** Delayed winner — gives the player time to see the last actions before the popup. */
@@ -432,22 +437,38 @@ export function useGameSession(): GameSessionState {
   const trickCards = completedTrick?.cards ?? liveTrickCards;
   const trickWinnerPosition = completedTrick?.winnerPosition ?? null;
 
-  // Last completed trick (n-1) — derived from round.tricks history.
-  // Used by the LastTrickPeek modal so the player can review the previous trick.
-  const lastTrickFromCore = round?.tricks.at(-1) ?? null;
-  const lastCompletedTrick: TrickCardData[] | null = lastTrickFromCore
-    ? lastTrickFromCore.cards.map((pc): TrickCardData => {
-        const seat = POS_TO_SEAT[pc.playerPosition];
-        return { suit: pc.card.suit, rank: pc.card.rank, position: seat, ...TRICK_OFFSETS[seat] };
-      })
-    : null;
-  let lastTrickWinnerPosition: Position | null = null;
-  if (lastTrickFromCore?.winnerPosition != null) {
-    lastTrickWinnerPosition = POS_TO_SEAT[lastTrickFromCore.winnerPosition];
-  }
-
-  // Trump
+  // Trump (needed to compute per-trick points for the history records)
   const trumpSuit = (round?.contract?.suit ?? null) as Suit | null;
+
+  // Full tricks history of the current round — for TrickHistoryPanel.
+  const tricksHistory: readonly TrickHistoryRecord[] = round
+    ? round.tricks.map((t, i): TrickHistoryRecord => {
+        const cards: TrickCardData[] = t.cards.map((pc): TrickCardData => {
+          const seat = POS_TO_SEAT[pc.playerPosition];
+          return {
+            suit: pc.card.suit,
+            rank: pc.card.rank,
+            position: seat,
+            ...TRICK_OFFSETS[seat],
+          };
+        });
+        let winnerPosition: Position = "south";
+        let winnerName = "";
+        if (t.winnerPosition != null) {
+          winnerPosition = POS_TO_SEAT[t.winnerPosition];
+          winnerName = PROFILES[t.winnerPosition].name;
+        }
+        const points =
+          t.state === "completed" && trumpSuit !== null ? calculateTrickPoints(t, trumpSuit) : 0;
+        return {
+          trickNumber: i + 1,
+          cards,
+          winnerPosition,
+          winnerName,
+          points,
+        };
+      })
+    : [];
 
   // Active position
   let activePosition: Position = "south";
@@ -588,10 +609,9 @@ export function useGameSession(): GameSessionState {
     dismissBidReveal,
     isOnline: false,
     roundHistory,
-    lastCompletedTrick,
-    lastTrickWinnerPosition,
-    peekingLastTrick,
-    setPeekingLastTrick,
+    tricksHistory,
+    tricksPanelOpen,
+    setTricksPanelOpen,
     dispatch,
     playCard,
     placeBid,

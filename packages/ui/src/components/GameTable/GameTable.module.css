@@ -23,8 +23,8 @@
 
 .scorePanel {
   position: absolute;
-  top: env(safe-area-inset-top, 0px);
-  left: env(safe-area-inset-left, 0px);
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  left: calc(env(safe-area-inset-left, 0px) + 8px);
   z-index: 20;
 }
 
@@ -52,10 +52,11 @@
   --table-mid: 50%;
 }
 
-/* West avatar overlays the west card strip */
+/* West avatar overlays the west card strip — anchored inside the safe area
+   so the name-label never spills off the viewport edge. */
 .westAvatar {
   position: absolute;
-  left: 4px;
+  left: calc(env(safe-area-inset-left, 0px) + 4px);
   top: var(--table-mid);
   transform: translateY(-50%);
   z-index: 12;
@@ -63,7 +64,7 @@
 
 .westCards {
   position: absolute;
-  left: 4px;
+  left: calc(env(safe-area-inset-left, 0px) + 4px);
   top: var(--table-mid);
   transform: translateY(-50%);
   z-index: 8;
@@ -72,7 +73,7 @@
 /* East avatar overlays the east card strip */
 .eastAvatar {
   position: absolute;
-  right: 4px;
+  right: calc(env(safe-area-inset-right, 0px) + 4px);
   top: var(--table-mid);
   transform: translateY(-50%);
   z-index: 12;
@@ -80,7 +81,7 @@
 
 .eastCards {
   position: absolute;
-  right: 4px;
+  right: calc(env(safe-area-inset-right, 0px) + 4px);
   top: var(--table-mid);
   transform: translateY(-50%);
   z-index: 8;
@@ -152,16 +153,16 @@
   z-index: 20;
 }
 
-/* ── Last trick peek button: small pill anchored bottom-right of the trick zone.
-   Ghost style (cream paper background, ink-dark border) so it doesn't compete
-   with primary action UI. Visible only between tricks. ── */
-.peekBtn {
+/* ── Tricks history button: persistent pill anchored above the south hand.
+   Always visible during play once a trick has been completed, regardless of
+   whether the next trick is mid-flight. Ghost style. ── */
+.tricksBtn {
   position: absolute;
-  bottom: calc(50% - 80px);
-  right: calc(50% - 220px);
+  bottom: calc(var(--safe-bottom) + 140px);
+  right: var(--safe-right);
   z-index: 18;
-  min-height: 32px;
-  padding: 6px 12px;
+  min-height: var(--touch-min);
+  padding: 8px 14px;
   font-family: var(--font-hand);
   font-size: 13px;
   font-weight: 700;
@@ -176,54 +177,55 @@
   transition: transform 0.08s ease;
 }
 
-.peekBtn:hover {
+.tricksBtn:hover {
   transform: translateY(-1px);
 }
-.peekBtn:active {
+.tricksBtn:active {
   transform: translateY(1px);
 }
 
 @media (max-width: 600px) {
-  .peekBtn {
-    bottom: calc(50% - 60px);
-    right: 12px;
+  .tricksBtn {
+    bottom: calc(var(--safe-bottom) + 120px);
     font-size: 12px;
-    padding: 4px 10px;
+    padding: 6px 12px;
   }
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
-  .peekBtn {
-    bottom: 8px;
-    right: 8px;
+  .tricksBtn {
+    bottom: var(--safe-bottom);
+    right: calc(var(--safe-right) + 80px);
   }
 }
 
-/* ── Bid log: small floating panel above the bid panel, visible during the
-   entire auction phase so AI bids appear in real time. ── */
+/* ── Bid log: floating panel ABOVE the trick area, OUT of the BidPanel
+   collision zone. Visible during the entire auction phase. ── */
 .bidLog {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: calc(50% - 220px);
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
   z-index: 19;
-  width: min(320px, 92vw);
-  max-height: 9rem;
+  width: min(320px, 86vw);
+  max-height: 6.5rem;
   pointer-events: none;
 }
 
 @media (max-width: 600px) and (orientation: portrait) {
   .bidLog {
-    top: calc(50% - 160px);
-    max-height: 5.5rem;
+    /* Just under the north avatar (north avatar is at top ~16px + ~50px height ~= 90px) */
+    top: 130px;
+    max-height: 5rem;
     width: min(280px, 88vw);
   }
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
   .bidLog {
-    top: 8px;
-    max-height: 4rem;
+    top: 6px;
+    left: 50%;
+    max-height: 3.5rem;
     width: min(260px, 50vw);
   }
 }
@@ -236,10 +238,10 @@
     top: 16px;
   }
   .westAvatar {
-    left: 6px;
+    left: calc(env(safe-area-inset-left, 0px) + 6px);
   }
   .eastAvatar {
-    right: 6px;
+    right: calc(env(safe-area-inset-right, 0px) + 6px);
   }
   /* Lift south row to keep the fanned hand's outermost cards clear of
      the viewport bottom — the fan rotation pushes corner cards down a
@@ -315,16 +317,16 @@
     top: 10px;
   }
   .westAvatar {
-    left: 3px;
+    left: calc(env(safe-area-inset-left, 0px) + 3px);
   }
   .westCards {
-    left: 2px;
+    left: calc(env(safe-area-inset-left, 0px) + 2px);
   }
   .eastAvatar {
-    right: 3px;
+    right: calc(env(safe-area-inset-right, 0px) + 3px);
   }
   .eastCards {
-    right: 2px;
+    right: calc(env(safe-area-inset-right, 0px) + 2px);
   }
   .southAvatar {
     padding-bottom: 6px;

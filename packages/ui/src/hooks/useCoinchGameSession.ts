@@ -35,6 +35,7 @@ import type {
   BidReveal,
   RoundHistoryEntry,
 } from "./useGameSession.js";
+import type { TrickHistoryRecord } from "../components/TrickHistoryPanel/TrickHistoryPanel.js";
 import { SUIT_SYMBOLS } from "../messages/gameMessages.js";
 import type { GameMessage, ProfileLookup } from "../messages/gameMessages.js";
 
@@ -221,7 +222,7 @@ export function useCoinchGameSession(): GameSessionState {
   } | null>(null);
   const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
   const [roundHistory, setRoundHistory] = useState<readonly RoundHistoryEntry[]>([]);
-  const [peekingLastTrick, setPeekingLastTrick] = useState(false);
+  const [tricksPanelOpen, setTricksPanelOpen] = useState(false);
   const [bidReveal, setBidReveal] = useState<BidReveal | null>(null);
   const bidRevealKey = useRef(0);
   const [delayedWinnerTeamIndex, setDelayedWinnerTeamIndex] = useState<0 | 1 | null>(null);
@@ -471,20 +472,38 @@ export function useCoinchGameSession(): GameSessionState {
   const trickCards = completedTrick?.cards ?? liveTrickCards;
   const trickWinnerPosition = completedTrick?.winnerPosition ?? null;
 
-  // Last completed trick (n-1) — derived from round.tricks history.
-  const lastTrickFromCore = round?.tricks.at(-1) ?? null;
-  const lastCompletedTrick: TrickCardData[] | null = lastTrickFromCore
-    ? lastTrickFromCore.cards.map((pc): TrickCardData => {
-        const seat = getSeat(pc.playerPosition);
-        return { suit: pc.card.suit, rank: pc.card.rank, position: seat, ...TRICK_OFFSETS[seat] };
-      })
-    : null;
-  const lastTrickWinnerPosition: Position | null = lastTrickFromCore
-    ? getSeat(lastTrickFromCore.winnerPosition)
-    : null;
-
   const trumpSuit: Suit | null =
     coinchContract?.contractType === "suit" ? coinchContract.suit : null;
+
+  // Full tricks history of the current round — for TrickHistoryPanel.
+  const tricksHistory: readonly TrickHistoryRecord[] = round
+    ? round.tricks.map((t, i): TrickHistoryRecord => {
+        const cards: TrickCardData[] = t.cards.map((pc): TrickCardData => {
+          const seat = getSeat(pc.playerPosition);
+          return {
+            suit: pc.card.suit,
+            rank: pc.card.rank,
+            position: seat,
+            ...TRICK_OFFSETS[seat],
+          };
+        });
+        let winnerPosition: Position = "south";
+        let winnerName = "";
+        if (t.winnerPosition != null) {
+          winnerPosition = getSeat(t.winnerPosition);
+          winnerName = getProfile(t.winnerPosition).name;
+        }
+        const points =
+          t.state === "completed" && trumpSuit !== null ? calculateTrickPoints(t, trumpSuit) : 0;
+        return {
+          trickNumber: i + 1,
+          cards,
+          winnerPosition,
+          winnerName,
+          points,
+        };
+      })
+    : [];
 
   let activePosition: Position = "south";
   if (phase === "bidding" && round !== null) {
@@ -621,10 +640,9 @@ export function useCoinchGameSession(): GameSessionState {
     dismissBidReveal,
     isOnline: false,
     roundHistory,
-    lastCompletedTrick,
-    lastTrickWinnerPosition,
-    peekingLastTrick,
-    setPeekingLastTrick,
+    tricksHistory,
+    tricksPanelOpen,
+    setTricksPanelOpen,
     dispatch: dispatch as GameSessionState["dispatch"],
     playCard,
     placeBid,

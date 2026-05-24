@@ -9,7 +9,13 @@
  *   south=0, west=1, north=2, east=3
  */
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { BID_VALUES, calculateRunningPoints, getCardRankOrder, isOnSameTeam } from "@belote/core";
+import {
+  BID_VALUES,
+  calculateRunningPoints,
+  getCardPoints,
+  getCardRankOrder,
+  isOnSameTeam,
+} from "@belote/core";
 import type {
   BidValue,
   BiddingRound,
@@ -28,6 +34,7 @@ import type {
   BidReveal,
   RoundHistoryEntry,
 } from "../hooks/useGameSession.js";
+import type { TrickHistoryRecord } from "../components/TrickHistoryPanel/TrickHistoryPanel.js";
 import type { CardData, PlayerData, Position, TrickCardData } from "../data/mockGame.js";
 import { eventToMessage, createBeloteMessage } from "../messages/gameMessages.js";
 import type { GameMessage, ProfileLookup } from "../messages/gameMessages.js";
@@ -76,7 +83,7 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
   const [legalIds, setLegalIds] = useState<ReadonlySet<string>>(new Set());
   const [lastRoundResult, setLastRoundResult] = useState<LastRoundResult | null>(null);
   const [roundHistory, setRoundHistory] = useState<readonly RoundHistoryEntry[]>([]);
-  const [peekingLastTrick, setPeekingLastTrick] = useState(false);
+  const [tricksPanelOpen, setTricksPanelOpen] = useState(false);
   const [delayedWinner, setDelayedWinner] = useState<0 | 1 | null>(null);
   const [bidReveal, setBidReveal] = useState<BidReveal | null>(null);
   const bidRevealKey = useRef(0);
@@ -377,8 +384,8 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
       completedTrick,
       bidReveal,
       dismissBidReveal,
-      peekingLastTrick,
-      setPeekingLastTrick,
+      tricksPanelOpen,
+      setTricksPanelOpen,
       roundHistory,
     });
   }, [
@@ -393,8 +400,8 @@ export function useOnlineGameSession(lobby: OnlineLobbyState): GameSessionState 
     completedTrick,
     bidReveal,
     dismissBidReveal,
-    peekingLastTrick,
-    setPeekingLastTrick,
+    tricksPanelOpen,
+    setTricksPanelOpen,
     roundHistory,
   ]);
 }
@@ -435,8 +442,8 @@ interface AdaptInput {
   completedTrick: { cards: TrickCardData[]; winnerPosition: Position | null } | null;
   bidReveal: BidReveal | null;
   dismissBidReveal: () => void;
-  peekingLastTrick: boolean;
-  setPeekingLastTrick: (open: boolean) => void;
+  tricksPanelOpen: boolean;
+  setTricksPanelOpen: (open: boolean) => void;
   roundHistory: readonly RoundHistoryEntry[];
 }
 
@@ -453,8 +460,8 @@ function adapt(input: AdaptInput): GameSessionState {
     completedTrick,
     bidReveal,
     dismissBidReveal,
-    peekingLastTrick,
-    setPeekingLastTrick,
+    tricksPanelOpen,
+    setTricksPanelOpen,
     roundHistory,
   } = input;
   const mySeat: Seat = lobby.seat ?? 0;
@@ -536,22 +543,6 @@ function adapt(input: AdaptInput): GameSessionState {
   const trickCards = completedTrick?.cards ?? liveTrickCards;
   const trickWinnerPosition = completedTrick?.winnerPosition ?? null;
 
-  // Last completed trick (n-1) — derived from pub.round.tricks history.
-  const lastTrickFromPub = pub?.round?.tricks.at(-1) ?? null;
-  const lastCompletedTrick: TrickCardData[] | null = lastTrickFromPub
-    ? lastTrickFromPub.cards.map((pc) => {
-        const visual = seatToPos(pc.playerPosition);
-        return {
-          suit: pc.card.suit,
-          rank: pc.card.rank,
-          position: visual,
-          ...TRICK_OFFSETS[visual],
-        };
-      })
-    : null;
-  const lastTrickWinnerPosition: Position | null =
-    lastTrickFromPub?.winnerPosition != null ? seatToPos(lastTrickFromPub.winnerPosition) : null;
-
   // Active position.
   let activePosition: Position = "south";
   let isMyTurn = false;
@@ -609,6 +600,40 @@ function adapt(input: AdaptInput): GameSessionState {
 
   // Trump suit.
   const trumpSuit: Suit | null = (contract?.suit ?? null) as Suit | null;
+
+  // Full tricks history of the current round — for TrickHistoryPanel.
+  const tricksHistory: readonly TrickHistoryRecord[] = pub?.round
+    ? pub.round.tricks.map((t, i): TrickHistoryRecord => {
+        const cards: TrickCardData[] = t.cards.map((pc): TrickCardData => {
+          const visual = seatToPos(pc.playerPosition);
+          return {
+            suit: pc.card.suit,
+            rank: pc.card.rank,
+            position: visual,
+            ...TRICK_OFFSETS[visual],
+          };
+        });
+        let winnerPosition: Position = "south";
+        let winnerName = "";
+        if (t.winnerPosition != null) {
+          winnerPosition = seatToPos(t.winnerPosition);
+          winnerName = players[t.winnerPosition]?.name ?? "";
+        }
+        let points = 0;
+        if (trumpSuit !== null && t.winnerPosition != null) {
+          for (const pc of t.cards) {
+            points += getCardPoints(pc.card, trumpSuit);
+          }
+        }
+        return {
+          trickNumber: i + 1,
+          cards,
+          winnerPosition,
+          winnerName,
+          points,
+        };
+      })
+    : [];
 
   // Dealer name.
   const dealerSeat = pub?.round?.dealerPosition ?? 0;
@@ -678,10 +703,9 @@ function adapt(input: AdaptInput): GameSessionState {
     dismissBidReveal,
     isOnline: true,
     roundHistory,
-    lastCompletedTrick,
-    lastTrickWinnerPosition,
-    peekingLastTrick,
-    setPeekingLastTrick,
+    tricksHistory,
+    tricksPanelOpen,
+    setTricksPanelOpen,
     dispatch: () => undefined,
     playCard,
     placeBid,

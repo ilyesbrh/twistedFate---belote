@@ -5,7 +5,7 @@ import { AvatarActionMenu } from "../AvatarActionMenu/AvatarActionMenu.js";
 import { BidPanel } from "@tunisian/ui";
 import { BidLog, type BidLogProfile, type LogBid } from "../BidLog/BidLog.js";
 import { CoinchBidPanel } from "../CoinchBidPanel/CoinchBidPanel.js";
-import { LastTrickPeek } from "../LastTrickPeek/LastTrickPeek.js";
+import { TrickHistoryPanel } from "../TrickHistoryPanel/TrickHistoryPanel.js";
 import { BidWinReveal } from "../BidWinReveal/BidWinReveal.js";
 import { ChatPanel } from "../ChatPanel/ChatPanel.js";
 import { GameOver, type GameOverMode } from "../GameOver/GameOver.js";
@@ -174,37 +174,30 @@ export function GameTableView({
         <TrickArea cards={state.trickCards} winnerPosition={state.trickWinnerPosition} />
       </div>
 
-      {/* ── Last trick peek button — visible between tricks once one has been swept ── */}
-      {state.lastCompletedTrick !== null && state.trickCards.length === 0 && (
+      {/* ── Tricks history button — always visible during play once tricks exist ── */}
+      {state.tricksHistory.length > 0 && (
         <button
           type="button"
-          className={styles.peekBtn}
+          className={styles.tricksBtn}
           onClick={() => {
-            state.setPeekingLastTrick(true);
+            state.setTricksPanelOpen(true);
           }}
-          aria-label="View last trick"
+          aria-label="View trick history"
           data-touch="primary"
-          data-testid="last-trick-button"
+          data-testid="tricks-history-button"
         >
-          Last trick
+          Tricks ({state.tricksHistory.length})
         </button>
       )}
 
-      {/* ── Last trick peek modal ── */}
-      {state.peekingLastTrick &&
-        state.lastCompletedTrick !== null &&
-        state.lastTrickWinnerPosition !== null && (
-          <LastTrickPeek
-            cards={state.lastCompletedTrick}
-            winnerPosition={state.lastTrickWinnerPosition}
-            winnerName={
-              state.players.find((p) => p.position === state.lastTrickWinnerPosition)?.name ?? ""
-            }
-            onClose={() => {
-              state.setPeekingLastTrick(false);
-            }}
-          />
-        )}
+      {/* ── Trick history drawer ── */}
+      <TrickHistoryPanel
+        tricks={state.tricksHistory}
+        open={state.tricksPanelOpen}
+        onClose={() => {
+          state.setTricksPanelOpen(false);
+        }}
+      />
 
       {/* ── Bid log — visible during entire auction phase ── */}
       {state.biddingRound !== null && state.biddingRound.bids.length > 0 && (
